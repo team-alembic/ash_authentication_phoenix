@@ -17,6 +17,7 @@ defmodule DevWeb do
   # below. Instead, define any helper function in modules
   # and import those modules here.
 
+  @doc false
   def controller do
     quote do
       use Phoenix.Controller, namespace: DevWeb
@@ -26,6 +27,7 @@ defmodule DevWeb do
     end
   end
 
+  @doc false
   def view do
     quote do
       use Phoenix.View,
@@ -41,6 +43,7 @@ defmodule DevWeb do
     end
   end
 
+  @doc false
   def live_view do
     quote do
       use Phoenix.LiveView,
@@ -50,6 +53,7 @@ defmodule DevWeb do
     end
   end
 
+  @doc false
   def live_component do
     quote do
       use Phoenix.LiveComponent
@@ -58,6 +62,7 @@ defmodule DevWeb do
     end
   end
 
+  @doc false
   def component do
     quote do
       use Phoenix.Component
@@ -66,6 +71,7 @@ defmodule DevWeb do
     end
   end
 
+  @doc false
   def router do
     quote do
       use Phoenix.Router, helpers_moduledoc: false
@@ -76,6 +82,7 @@ defmodule DevWeb do
     end
   end
 
+  @doc false
   def channel do
     quote do
       use Phoenix.Channel

@@ -4,6 +4,14 @@ defmodule Example.Accounts.User do
     data_layer: Ash.DataLayer.Ets,
     extensions: [AshAuthentication, AshAuthentication.PasswordAuthentication]
 
+  @type t :: %__MODULE__{
+          id: Ecto.UUID.t(),
+          email: String.t(),
+          hashed_password: String.t(),
+          created_at: DateTime.t(),
+          updated_at: DateTime.t()
+        }
+
   actions do
     defaults([:read])
   end

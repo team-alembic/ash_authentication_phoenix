@@ -3,6 +3,8 @@ defmodule DevWeb.PageController do
 
   use DevWeb, :controller
 
+  @doc false
+  @impl true
   def index(conn, _params) do
     render(conn, "index.html")
   end
