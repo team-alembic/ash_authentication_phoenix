@@ -29,3 +29,4 @@ ash_authentication_phoenix-*.tar
 .vscode
 .DS_Store
 .envrc
+/priv/plts
