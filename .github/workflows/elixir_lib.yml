@@ -10,6 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: team-alembic/staple-actions/actions/mix-deps-get@main
+        with:
+          git-token: ${{ secrets.JIMSY_ACCESS_TOKEN }}
 
   auditor:
     name: mix hex.audit
