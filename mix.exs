@@ -1,4 +1,5 @@
-defmodule AshAuthenticationPhoenix.MixProject do
+defmodule AshAuthentication.Phoenix.MixProject do
+  @moduledoc false
   use Mix.Project
 
   @version "0.1.0"
@@ -15,9 +16,35 @@ defmodule AshAuthenticationPhoenix.MixProject do
       package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [
-        plt_add_apps: [:mix, :ex_unit],
+        plt_add_apps: [:mix, :ex_unit, :ash_authentication],
         plt_core_path: "priv/plts",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
+      ],
+      docs: [
+        main: "readme",
+        extras: ["README.md"],
+        formatters: ["html"],
+        filter_modules: ~r/^Elixir.AshAuthentication.Phoenix/,
+        source_url_pattern:
+          "https://github.com/team-alembic/ash_authentication_phoenix/blob/main/%{path}#L%{line}",
+        groups_for_modules: [
+          "Routing and Controller": [
+            AshAuthentication.Phoenix.Controller,
+            AshAuthentication.Phoenix.Plug,
+            AshAuthentication.Phoenix.Router
+          ],
+          Customisation: [
+            AshAuthentication.Phoenix.SignInLive,
+            AshAuthentication.Phoenix.Overrides,
+            AshAuthentication.Phoenix.Overrides.Default,
+            AshAuthentication.Phoenix.Components.SignIn,
+            AshAuthentication.Phoenix.Components.PasswordAuthentication,
+            AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm,
+            AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm,
+            AshAuthentication.Phoenix.Components.PasswordAuthentication.Input,
+            AshAuthentication.Phoenix.Components.Helpers
+          ]
+        ]
       ]
     ]
   end
@@ -31,7 +58,8 @@ defmodule AshAuthenticationPhoenix.MixProject do
       links: %{
         "Source" => "https://github.com/team-alembic/ash_authentication_phoenix"
       },
-      source_url: "https://github.com/team-alembic/ash_authentication_phoenix"
+      source_url: "https://github.com/team-alembic/ash_authentication_phoenix",
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*)
     ]
   end
 
@@ -53,8 +81,7 @@ defmodule AshAuthenticationPhoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication,
-       github: "team-alembic/ash_authentication", optional: true, branch: "feat/identity"},
+      {:ash_authentication, github: "team-alembic/ash_authentication", optional: true},
       {:ash_phoenix, "~> 1.1"},
       {:ash, "~> 2.2"},
       {:jason, "~> 1.0"},
@@ -83,8 +110,7 @@ defmodule AshAuthenticationPhoenix.MixProject do
         "dialyzer",
         "hex.audit",
         "test"
-      ],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      ]
     ]
   end
 

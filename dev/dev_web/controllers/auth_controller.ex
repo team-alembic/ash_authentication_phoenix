@@ -2,14 +2,13 @@ defmodule DevWeb.AuthController do
   @moduledoc false
 
   use DevWeb, :controller
-  # use AshPhoenix.Authentication.Controller
-  alias Plug.Conn
+  use AshAuthentication.Phoenix.Controller
 
   @doc false
   @impl true
   def success(conn, user, _token) do
     conn
-    # |> store_in_session(user)
+    |> store_in_session(user)
     |> assign(:current_user, user)
     |> put_status(200)
     |> render("success.html")

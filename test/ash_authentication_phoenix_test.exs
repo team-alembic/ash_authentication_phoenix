@@ -1,8 +1,5 @@
-defmodule AshAuthenticationPhoenixTest do
+defmodule AshAuthentication.PhoenixTest do
+  @moduledoc false
   use ExUnit.Case
-  doctest AshAuthenticationPhoenix
-
-  test "greets the world" do
-    assert AshAuthenticationPhoenix.hello() == :world
-  end
+  doctest AshAuthentication.Phoenix
 end
