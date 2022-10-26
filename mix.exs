@@ -28,22 +28,27 @@ defmodule AshAuthentication.Phoenix.MixProject do
         source_url_pattern:
           "https://github.com/team-alembic/ash_authentication_phoenix/blob/main/%{path}#L%{line}",
         groups_for_modules: [
+          Welcome: [
+            AshAuthentication.Phoenix
+          ],
           "Routing and Controller": [
             AshAuthentication.Phoenix.Controller,
             AshAuthentication.Phoenix.Plug,
             AshAuthentication.Phoenix.Router
           ],
           Customisation: [
-            AshAuthentication.Phoenix.SignInLive,
             AshAuthentication.Phoenix.Overrides,
-            AshAuthentication.Phoenix.Overrides.Default,
+            AshAuthentication.Phoenix.Overrides.Default
+          ],
+          Components: [
+            AshAuthentication.Phoenix.SignInLive,
             AshAuthentication.Phoenix.Components.SignIn,
             AshAuthentication.Phoenix.Components.PasswordAuthentication,
             AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm,
             AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm,
-            AshAuthentication.Phoenix.Components.PasswordAuthentication.Input,
-            AshAuthentication.Phoenix.Components.Helpers
-          ]
+            AshAuthentication.Phoenix.Components.PasswordAuthentication.Input
+          ],
+          Internals: ~r/.*/
         ]
       ]
     ]
