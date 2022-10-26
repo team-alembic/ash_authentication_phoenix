@@ -22,7 +22,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       |> redirect(to: Routes.page_path(conn, :index))
     end
 
-    def failure(conn) do
+    def failure(conn, _reason) do
       conn
       |> put_status(401)
       |> render("failure.html")
@@ -54,7 +54,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       })
     end
 
-    def failure(conn) do
+    def failure(conn, _reason) do
       conn
       |> put_status(401)
       |> json(%{
