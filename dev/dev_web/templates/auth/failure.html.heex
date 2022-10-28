@@ -1,10 +1,9 @@
 <h2>Sorry, no diggity</h2>
 
 <p>
-  Reason:
-  <pre>
+  Reason: <pre>
     <%= inspect @failure_reason %>
   </pre>
 </p>
 
-<%= link "Home", to: Routes.page_path(@conn, :index) %>
+<%= link("Home", to: Routes.page_path(@conn, :index)) %>

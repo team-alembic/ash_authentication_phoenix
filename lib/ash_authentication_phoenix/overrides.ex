@@ -1,27 +1,4 @@
 defmodule AshAuthentication.Phoenix.Overrides do
-  @configurables [
-    password_authentication_form_label_css_class: "CSS classes for generated `label` tags",
-    password_authentication_form_text_input_css_class:
-      "CSS classes for generated `input` tags of type `text`, `email` or `password`",
-    password_authentication_form_input_surround_css_class:
-      "CSS classes for the div surrounding an `label`/`input` combination.",
-    password_authentication_form_h2_css_class: "CSS classes for any form `h2` headers.",
-    password_authentication_form_submit_css_class: "CSS classes for any form submit buttons.",
-    password_authentication_form_css_class: "CSS classes for any `form` tags.",
-    password_authentication_form_error_ul_css_class: "CSS classes for `ul` tags in form errors",
-    password_authentication_form_error_li_css_class: "CSS classes for `li` tags in form errors",
-    password_authentication_box_css_class:
-      "CSS classes for the root `div` element in the `AshAuthentication.Phoenix.Components.PasswordAuthentication` component.",
-    password_authentication_box_spacer_css_class:
-      "CSS classes for the \"spacer\" in the `AshAuthentication.Phoenix.Components.PasswordAuthentication` component - if enabled.",
-    sign_in_box_css_class:
-      "CSS classes for the root `div` element in the `AshAuthentication.Phoenix.Components.SignIn` component.",
-    sign_in_row_css_class:
-      "CSS classes for each row in the `AshAuthentication.Phoenix.Components.SignIn` component.",
-    sign_in_live_css_class:
-      "CSS classes for the root element of the `AshAuthentication.Phoenix.SignInLive` live view."
-  ]
-
   @moduledoc """
   Behaviour for overriding component styles and attributes in your application.
 
@@ -32,7 +9,7 @@ defmodule AshAuthentication.Phoenix.Overrides do
   You can override by setting the following in your `config.exs`:
 
   ```elixir
-  config :my_app, AshAuthentication.Phoenix, override_module: MyAppWeb.AuthOverrides
+  config :my_app, AshAuthentication.Phoenix, overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
   ```
 
   and defining `lib/my_app_web/auth_styles.ex` within which you can set CSS
@@ -45,55 +22,63 @@ defmodule AshAuthentication.Phoenix.Overrides do
   defmodule MyAppWeb.AuthOverrides do
     use AshAuthentication.Phoenix.Overrides
 
-    def password_authentication_form_label_css_class, do: "my-custom-css-class"
+    override
   end
   ```
 
   ## Configuration
 
-  #{Enum.map(@configurables, &"  * `#{elem(&1, 0)}` - #{elem(&1, 1)}\n")}
   """
 
-  alias __MODULE__
-
-  for {name, doc} <- @configurables do
-    Module.put_attribute(__MODULE__, :doc, {__ENV__.line, doc})
-    @callback unquote({name, [], Elixir}) :: nil | String.t()
+  @doc """
+  Retrieve the override for a specific component and selector.
+  """
+  @spec override_for(otp_app :: atom, component :: module, selector :: atom) :: any
+  def override_for(otp_app, component, selector)
+      when is_atom(otp_app) and is_atom(component) and is_atom(selector) do
+    otp_app
+    |> Application.get_env(AshAuthentication.Phoenix, [])
+    |> Keyword.get(:overrides, [__MODULE__.Default])
+    |> Enum.find_value(fn module ->
+      module.overrides()
+      |> Map.get({component, selector})
+    end)
   end
 
-  @doc false
-  @spec __using__(any) :: Macro.t()
-  defmacro __using__(_) do
+  defmacro __using__(_env) do
     quote do
-      require Overrides
-      @behaviour Overrides
-
-      Overrides.generate_default_implementations()
-      Overrides.make_overridable()
+      require AshAuthentication.Phoenix.Overrides
+      import AshAuthentication.Phoenix.Overrides, only: :macros
+      Module.register_attribute(__MODULE__, :override, accumulate: true)
+      @component nil
+      @before_compile AshAuthentication.Phoenix.Overrides
     end
   end
 
-  @doc false
-  @spec generate_default_implementations :: Macro.t()
-  defmacro generate_default_implementations do
-    for {name, doc} <- @configurables do
-      quote do
-        @impl true
-        @doc unquote(doc)
-        def unquote({name, [], Elixir}), do: nil
+  defmacro override(component, do: block) do
+    quote do
+      @component unquote(component)
+      unquote(block)
+    end
+  end
+
+  defmacro set(selector, value) do
+    quote do
+      @override {@component, unquote(selector), unquote(value)}
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    overrides =
+      env.module
+      |> Module.get_attribute(:override, [])
+      |> Map.new(fn {component, selector, value} -> {{component, selector}, value} end)
+      |> Macro.escape()
+
+    quote do
+      def overrides do
+        unquote(overrides)
       end
-    end
-  end
-
-  @doc false
-  @spec make_overridable :: Macro.t()
-  defmacro make_overridable do
-    callbacks =
-      @configurables
-      |> Enum.map(&put_elem(&1, 1, 0))
-
-    quote do
-      defoverridable unquote(callbacks)
     end
   end
 end
