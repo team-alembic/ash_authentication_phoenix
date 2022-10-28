@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.2.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v0.1.0...v0.2.0) (2022-10-28)
+
+
+
+
+### Features:
+
+* UI refresh. (#3)
+
 ## [v0.1.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v0.1.0...v0.1.0) (2022-10-25)
 
 
