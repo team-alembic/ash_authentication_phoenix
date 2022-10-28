@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <%= csrf_meta_tag() %>
-    <%= live_title_tag assigns[:page_title] || "Dev" %>
-    <script defer src="https://cdn.tailwindcss.com"></script>
+    <%= live_title_tag(assigns[:page_title] || "Dev") %>
+    <script defer src="https://cdn.tailwindcss.com">
+    </script>
     <script type="module" crossorigin>
       import 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix_html@v3.2.0/priv/static/phoenix_html.js';
       import { Socket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix@v1.6.14/priv/static/phoenix.mjs';

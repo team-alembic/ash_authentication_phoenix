@@ -1,5 +1,9 @@
 defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm do
-  @default_debounce 750
+  use AshAuthentication.Phoenix.Overrides.Overridable,
+    root_class: "CSS class for the root `div` element.",
+    label_class: "CSS class for the `h2` element.",
+    form_class: "CSS class for the `form` element.",
+    slot_class: "CSS class for the `div` surrounding the slot."
 
   @moduledoc """
   Generates a default sign in form.
@@ -26,16 +30,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
       Generated from the configured action name (via
       `Phoenix.HTML.Form.humanize/1`) if not supplied.
       Set to `false` to disable.
-    * `debounce` - The number of milliseconds to wait before firing a change
-      event to prevent too many events being fired to the server.
-      Defaults to `#{@default_debounce}`.
 
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_h2_css_class` - applied to the `h2` element used to render the label.
-    * `password_authentication_form_css_class` - applied to the `form` element.
+  #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
@@ -43,14 +39,13 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
   alias AshAuthentication.Phoenix.Components.PasswordAuthentication
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
+  import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
   import Phoenix.HTML.Form
-  import AshAuthentication.Phoenix.Components.Helpers
 
   @type props :: %{
           required(:socket) => Socket.t(),
           required(:config) => AshAuthentication.resource_config(),
-          optional(:label) => String.t() | false,
-          optional(:debounce) => millis :: pos_integer()
+          optional(:label) => String.t() | false
         }
 
   @doc false
@@ -74,35 +69,55 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
       |> assign(assigns)
       |> assign(form: form, trigger_action: false)
       |> assign_new(:label, fn -> humanize(action) end)
-      |> assign_new(:debounce, fn -> @default_debounce end)
+      |> assign_new(:inner_block, fn -> nil end)
 
     {:ok, socket}
   end
 
   @doc false
   @impl true
-  @spec render(props) :: Rendered.t() | no_return
+  @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
-    <div>
-      <h2 class={override_for(@socket, :password_authentication_form_h2_css_class)}><%= @label %></h2>
+    <div class={override_for(@socket, :root_class)}>
+      <%= if @label do %>
+        <h2 class={override_for(@socket, :label_class)}><%= @label %></h2>
+      <% end %>
 
-      <.form :let={f}
-            for={@form}
-            phx-change="change"
-            phx-submit="submit"
-            phx-trigger-action={@trigger_action}
-            phx-target={@myself}
-            phx-debounce={@debounce}
-            action={route_helpers(@socket).auth_callback_path(@socket.endpoint, :callback, @config.subject_name, @provider.provides())}
-            method="POST"
-            class={override_for(@socket, :password_authentication_form_css_class)}>
+      <.form
+        :let={form}
+        for={@form}
+        phx-submit="submit"
+        phx-trigger-action={@trigger_action}
+        phx-target={@myself}
+        action={
+          route_helpers(@socket).auth_callback_path(
+            @socket.endpoint,
+            :callback,
+            @config.subject_name,
+            @provider.provides()
+          )
+        }
+        method="POST"
+        class={override_for(@socket, :form_class)}
+      >
+        <%= hidden_input(form, :action, value: "sign_in") %>
 
-        <%= hidden_input f, :action, value: "sign_in" %>
+        <PasswordAuthentication.Input.identity_field socket={@socket} config={@config} form={form} />
+        <PasswordAuthentication.Input.password_field socket={@socket} config={@config} form={form} />
 
-        <PasswordAuthentication.Input.identity_field socket={@socket} config={@config} form={f} />
-        <PasswordAuthentication.Input.password_field socket={@socket} config={@config} form={f} />
-        <PasswordAuthentication.Input.submit socket={@socket} config={@config} form={f} action={:sign_in}/>
+        <%= if @inner_block do %>
+          <div class={override_for(@socket, :slot_class)}>
+            <%= render_slot(@inner_block) %>
+          </div>
+        <% end %>
+
+        <PasswordAuthentication.Input.submit
+          socket={@socket}
+          config={@config}
+          form={form}
+          action={:sign_in}
+        />
       </.form>
     </div>
     """
@@ -112,17 +127,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
   @impl true
   @spec handle_event(String.t(), %{required(String.t()) => String.t()}, Socket.t()) ::
           {:noreply, Socket.t()}
-  def handle_event("change", params, socket) do
-    params = Map.get(params, to_string(socket.assigns.config.subject_name))
-    form = Form.validate(socket.assigns.form, params)
-
-    socket =
-      socket
-      |> assign(:form, form)
-
-    {:noreply, socket}
-  end
-
   def handle_event("submit", params, socket) do
     params = Map.get(params, to_string(socket.assigns.config.subject_name))
     form = Form.validate(socket.assigns.form, params)

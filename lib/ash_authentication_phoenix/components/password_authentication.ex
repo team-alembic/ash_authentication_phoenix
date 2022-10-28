@@ -1,5 +1,13 @@
 defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
-  @default_debounce 750
+  use AshAuthentication.Phoenix.Overrides.Overridable,
+    root_class: "CSS class for the root `div` element.",
+    hide_class: "CSS class to apply to hide an element.",
+    show_first: "The form to show on first load.  Either `:sign_in` or `:register`.",
+    interstitial_class: "CSS class for the `div` element between the form and the button.",
+    sign_in_toggle_text: "Toggle text to display when the sign in form is showing.",
+    register_toggle_text: "Toggle text to display when the register form is showing.",
+    toggler_class: "CSS class for the toggler `a` element."
+
   @moduledoc """
   Generates sign in and registration forms for a resource.
 
@@ -17,62 +25,94 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
     * `config` - The configuration man as per
       `AshAuthentication.authenticated_resources/1`.
       Required.
-    * `debounce` - The number of milliseconds to wait before firing a change
-      event to prevent too many events being fired to the server.
-      Defaults to `#{@default_debounce}`.
-    * `show_forms` - Explicitly enable/disable a specific form.
-      A list containing `:sign_in`, `:register` or both.
-    * `spacer` - A string containing text to display in the spacer element.
-      Defaults to `"or"`.
-      Set to `false` to disable.
-      Also disabled if `show_forms` does not contain both forms.
 
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_box_css_class` - applied to the root `div` element of this component.
-    * `password_authentication_box_spacer_css_class` - applied to the spacer element, if enabled.
+  #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
   alias __MODULE__
   alias AshAuthentication.PasswordAuthentication.Info
-  alias Phoenix.LiveView.Rendered
-  import AshAuthentication.Phoenix.Components.Helpers
-
-  @type props :: %{
-          required(:config) => AshAuthentication.resource_config(),
-          optional(:debounce) => millis :: pos_integer(),
-          optional(:spacer) => String.t() | false,
-          optional(:show_forms) => [:sign_in | :register]
-        }
+  alias Phoenix.LiveView.{JS, Rendered, Socket}
 
   @doc false
-  @spec render(props) :: Rendered.t() | no_return
+  @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
+    config = assigns.config
+    provider = assigns.provider
+    sign_in_action = Info.sign_in_action_name!(assigns.config.resource)
+    register_action = Info.register_action_name!(assigns.config.resource)
+
     assigns =
       assigns
-      |> assign(:sign_in_action, Info.sign_in_action_name!(assigns.config.resource))
-      |> assign(:register_action, Info.register_action_name!(assigns.config.resource))
-      |> assign_new(:debounce, fn -> @default_debounce end)
-      |> assign_new(:spacer, fn -> "or" end)
-      |> assign_new(:show_forms, fn -> [:sign_in, :register] end)
+      |> assign(:sign_in_action, sign_in_action)
+      |> assign_new(:sign_in_id, fn ->
+        "#{config.subject_name}_#{provider.provides}_#{sign_in_action}"
+      end)
+      |> assign(:register_action, register_action)
+      |> assign_new(:register_id, fn ->
+        "#{config.subject_name}_#{provider.provides}_#{register_action}"
+      end)
+      |> assign_new(:show_first, fn ->
+        override_for(assigns.socket, :show_first, :sign_in)
+      end)
+      |> assign_new(:hide_class, fn ->
+        override_for(assigns.socket, :hide_class)
+      end)
 
     ~H"""
-    <div class={override_for(@socket, :password_authentication_box_css_class)}>
-      <%= if :sign_in in @show_forms do %>
-        <.live_component module={PasswordAuthentication.SignInForm} id={"#{@config.subject_name}_#{@provider.provides}_#{@sign_in_action}"} provider={@provider} config={@config} debounce={@debounce} />
-      <% end %>
-      <%= if length(@show_forms) > 1 && @spacer do %>
-        <div class={override_for(@socket, :password_authentication_box_spacer_css_class)}>
-          <%= @spacer %>
-        </div>
-      <% end %>
-      <%= if :register in @show_forms do %>
-        <.live_component module={PasswordAuthentication.RegisterForm} id={"#{@config.subject_name}_#{@provider.provides}_#{@register_action}"} provider={@provider} config={@config} debounce={@debounce} />
-      <% end %>
+    <div class={override_for(@socket, :root_class)}>
+      <div id={"#{@sign_in_id}-wrapper"} class={unless @show_first == :sign_in, do: @hide_class}>
+        <.live_component
+          module={PasswordAuthentication.SignInForm}
+          id={@sign_in_id}
+          provider={@provider}
+          config={@config}
+          label={false}
+        >
+          <div class={override_for(@socket, :interstitial_class)}>
+            <.toggler
+              socket={@socket}
+              register_id={@register_id}
+              sign_in_id={@sign_in_id}
+              message={override_for(@socket, :sign_in_toggle_text)}
+            />
+          </div>
+        </.live_component>
+      </div>
+      <div id={"#{@register_id}-wrapper"} class={unless @show_first == :register, do: @hide_class}>
+        <.live_component
+          module={PasswordAuthentication.RegisterForm}
+          id={@register_id}
+          provider={@provider}
+          config={@config}
+          label={false}
+        >
+          <div class={override_for(@socket, :interstitial_class)}>
+            <.toggler
+              socket={@socket}
+              register_id={@register_id}
+              sign_in_id={@sign_in_id}
+              message={override_for(@socket, :register_toggle_text)}
+            />
+          </div>
+        </.live_component>
+      </div>
     </div>
+    """
+  end
+
+  def toggler(assigns) do
+    ~H"""
+    <a
+      href="#"
+      phx-click={
+        JS.toggle(to: "##{@register_id}-wrapper")
+        |> JS.toggle(to: "##{@sign_in_id}-wrapper")
+      }
+      class={override_for(@socket, :toggler_class)}
+    >
+      <%= @message %>
+    </a>
     """
   end
 end

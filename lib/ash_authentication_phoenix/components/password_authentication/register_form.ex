@@ -1,5 +1,9 @@
 defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm do
-  @default_debounce 750
+  use AshAuthentication.Phoenix.Overrides.Overridable,
+    root_class: "CSS class for the root `div` element.",
+    label_class: "CSS class for the `h2` element.",
+    form_class: "CSS class for the `form` element.",
+    slot_class: "CSS class for the `div` surrounding the slot."
 
   @moduledoc """
   Generates a default registration form.
@@ -24,16 +28,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
       Generated from the configured action name (via
       `Phoenix.HTML.Form.humanize/1`) if not supplied.
       Set to `false` to disable.
-    * `debounce` - The number of milliseconds to wait before firing a change
-      event to prevent too many events being fired to the server.
-      Defaults to `#{@default_debounce}`.
 
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_h2_css_class` - applied to the `h2` element used to render the label.
-    * `password_authentication_form_css_class` - applied to the `form` element.
+  #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
@@ -44,16 +40,9 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
   import Phoenix.HTML.Form
   import AshAuthentication.Phoenix.Components.Helpers
 
-  @type props :: %{
-          required(:socket) => Socket.t(),
-          required(:config) => AshAuthentication.resource_config(),
-          optional(:label) => String.t() | false,
-          optional(:debounce) => millis :: pos_integer()
-        }
-
   @doc false
   @impl true
-  @spec update(props, Socket.t()) :: {:ok, Socket.t()}
+  @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     config = assigns.config
     action = Info.register_action_name!(config.resource)
@@ -73,43 +62,65 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
       |> assign(assigns)
       |> assign(form: form, trigger_action: false, confirm?: confirm?)
       |> assign_new(:label, fn -> humanize(action) end)
-      |> assign_new(:debounce, fn -> @default_debounce end)
+      |> assign_new(:inner_block, fn -> nil end)
 
     {:ok, socket}
   end
 
   @doc false
   @impl true
-  @spec render(props) :: Rendered.t() | no_return
+  @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
-    <div>
+    <div class={override_for(@socket, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@socket, :password_authentication_form_h2_css_class)}><%= @label %></h2>
+        <h2 class={override_for(@socket, :label_class)}>
+          <%= @label %>
+        </h2>
       <% end %>
 
       <.form
-            :let={f}
-            for={@form}
-            phx-change="change"
-            phx-submit="submit"
-            phx-trigger-action={@trigger_action}
-            phx-target={@myself}
-            phx-debounce={@debounce}
-            action={route_helpers(@socket).auth_callback_path(@socket.endpoint, :callback, @config.subject_name, @provider.provides)}
-            method="POST"
-            class={override_for(@socket, :password_authentication_form_css_class)}>
+        :let={form}
+        for={@form}
+        phx-submit="submit"
+        phx-trigger-action={@trigger_action}
+        phx-target={@myself}
+        action={
+          route_helpers(@socket).auth_callback_path(
+            @socket.endpoint,
+            :callback,
+            @config.subject_name,
+            @provider.provides
+          )
+        }
+        method="POST"
+        class={override_for(@socket, :form_class)}
+      >
+        <%= hidden_input(form, :action, value: "register") %>
 
-        <%= hidden_input f, :action, value: "register" %>
-
-        <PasswordAuthentication.Input.identity_field socket={@socket} config={@config} form={f} />
-        <PasswordAuthentication.Input.password_field socket={@socket} config={@config} form={f} />
+        <PasswordAuthentication.Input.identity_field socket={@socket} config={@config} form={form} />
+        <PasswordAuthentication.Input.password_field socket={@socket} config={@config} form={form} />
 
         <%= if @confirm? do %>
-          <PasswordAuthentication.Input.password_confirmation_field socket={@socket} config={@config} form={f} />
+          <PasswordAuthentication.Input.password_confirmation_field
+            socket={@socket}
+            config={@config}
+            form={form}
+          />
         <% end %>
 
-        <PasswordAuthentication.Input.submit socket={@socket} config={@config} form={f} action={:register}/>
+        <%= if @inner_block do %>
+          <div class={override_for(@socket, :slot_class)}>
+            <%= render_slot(@inner_block) %>
+          </div>
+        <% end %>
+
+        <PasswordAuthentication.Input.submit
+          socket={@socket}
+          config={@config}
+          form={form}
+          action={:register}
+        />
       </.form>
     </div>
     """
@@ -119,20 +130,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
   @impl true
   @spec handle_event(String.t(), %{required(String.t()) => String.t()}, Socket.t()) ::
           {:noreply, Socket.t()}
-  def handle_event("change", params, socket) do
-    params = Map.get(params, to_string(socket.assigns.config.subject_name))
-
-    form =
-      socket.assigns.form
-      |> Form.validate(params)
-
-    socket =
-      socket
-      |> assign(:form, form)
-
-    {:noreply, socket}
-  end
-
   def handle_event("submit", params, socket) do
     params = Map.get(params, to_string(socket.assigns.config.subject_name))
 

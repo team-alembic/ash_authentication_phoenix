@@ -1,4 +1,14 @@
 defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
+  use AshAuthentication.Phoenix.Overrides.Overridable,
+    field_class: "CSS class for `div` elements surrounding the fields.",
+    label_class: "CSS class for `label` elements.",
+    input_class: "CSS class for text/password `input` elements.",
+    input_class_with_error:
+      "CSS class for text/password `input` elements when there is a validation error.",
+    submit_class: "CSS class for the form submit `input` element.",
+    error_ul: "CSS class for the `ul` element on error lists.",
+    error_li: "CSS class for the `li` elements on error lists."
+
   @moduledoc """
   Function components for dealing with form input during password authentication.
 
@@ -7,6 +17,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   These function components are consumed by
   `AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm` and
   `AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm`.
+
+  #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.Component
@@ -14,7 +26,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import Phoenix.HTML.Form
-  import AshAuthentication.Phoenix.Components.Helpers
 
   @doc """
   Generate a form field for the configured identity field.
@@ -31,15 +42,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       Required.
     * `input_type` - Either `:text` or `:email`.
       If not set it will try and guess based on the name of the identity field.
-
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_input_surround_css_class` - applied to the div surrounding the `label` and
-      `input` elements.
-    * `password_authentication_form_label_css_class` - applied to the `label` tag.
-    * `password_authentication_form_text_input_css_class` - applied to the `input` tag.
   """
   @spec identity_field(%{
           required(:socket) => Socket.t(),
@@ -62,11 +64,18 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
           _ -> :text
         end)
       end)
+      |> assign_new(:input_class, fn ->
+        if has_error?(assigns.form, identity_field) do
+          override_for(assigns.socket, :input_class_with_error)
+        else
+          override_for(assigns.socket, :input_class)
+        end
+      end)
 
     ~H"""
-    <div class={override_for(@socket, :password_authentication_form_input_surround_css_class)}>
-      <%= label @form, @identity_field, class: override_for(@socket, :password_authentication_form_label_css_class) %>
-      <%= text_input @form, @identity_field, type: to_string(@input_type), class: override_for(@socket, :password_authentication_form_text_input_css_class) %>
+    <div class={override_for(@socket, :field_class)}>
+      <%= label(@form, @identity_field, class: override_for(@socket, :label_class)) %>
+      <%= text_input(@form, @identity_field, type: to_string(@input_type), class: @input_class) %>
       <.error socket={@socket} form={@form} field={@identity_field} />
     </div>
     """
@@ -85,17 +94,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       Required.
     * `form` - An `AshPhoenix.Form`.
       Required.
-
-
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_input_surround_css_class` - applied to the div surrounding the `label` and
-      `input` elements.
-    * `password_authentication_form_label_css_class` - applied to the `label` tag.
-    * `password_authentication_form_text_input_css_class` - applied to the `input` tag.
-
   """
   @spec password_field(%{
           required(:socket) => Socket.t(),
@@ -103,14 +101,26 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
           required(:form) => AshPhoenix.Form.t()
         }) :: Rendered.t() | no_return
   def password_field(assigns) do
+    password_field = Info.password_field!(assigns.config.resource)
+
     assigns =
       assigns
-      |> assign(:password_field, Info.password_field!(assigns.config.resource))
+      |> assign(:password_field, password_field)
+      |> assign_new(:input_class, fn ->
+        if has_error?(assigns.form, password_field) do
+          override_for(assigns.socket, :input_class_with_error)
+        else
+          override_for(assigns.socket, :input_class)
+        end
+      end)
 
     ~H"""
-    <div class={override_for(@socket, :password_authentication_form_input_surround_css_class)}>
-      <%= label @form, @password_field, class: override_for(@socket, :password_authentication_form_label_css_class) %>
-      <%= password_input @form, @password_field, class: override_for(@socket, :password_authentication_form_text_input_css_class), value: input_value(@form, @password_field) %>
+    <div class={override_for(@socket, :field_class)}>
+      <%= label(@form, @password_field, class: override_for(@socket, :label_class)) %>
+      <%= password_input(@form, @password_field,
+        class: @input_class,
+        value: input_value(@form, @password_field)
+      ) %>
       <.error socket={@socket} form={@form} field={@password_field} />
     </div>
     """
@@ -129,16 +139,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       Required.
     * `form` - An `AshPhoenix.Form`.
       Required.
-
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_input_surround_css_class` - applied to the div surrounding the `label` and
-      `input` elements.
-    * `password_authentication_form_label_css_class` - applied to the `label` tag.
-    * `password_authentication_form_text_input_css_class` - applied to the `input` tag.
-
   """
   @spec password_confirmation_field(%{
           required(:socket) => Socket.t(),
@@ -146,17 +146,26 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
           required(:form) => AshPhoenix.Form.t()
         }) :: Rendered.t() | no_return
   def password_confirmation_field(assigns) do
+    password_confirmation_field = Info.password_confirmation_field!(assigns.config.resource)
+
     assigns =
       assigns
-      |> assign(
-        :password_confirmation_field,
-        Info.password_confirmation_field!(assigns.config.resource)
-      )
+      |> assign(:password_confirmation_field, password_confirmation_field)
+      |> assign_new(:input_class, fn ->
+        if has_error?(assigns.form, password_confirmation_field) do
+          override_for(assigns.socket, :input_class_with_error)
+        else
+          override_for(assigns.socket, :input_class)
+        end
+      end)
 
     ~H"""
-    <div class={override_for(@socket, :password_authentication_form_input_surround_css_class)}>
-      <%= label @form, @password_confirmation_field, class: override_for(@socket, :password_authentication_form_label_css_class) %>
-      <%= password_input @form, @password_confirmation_field, class: override_for(@socket, :password_authentication_form_text_input_css_class), value: input_value(@form, @password_confirmation_field) %>
+    <div class={override_for(@socket, :field_class)}>
+      <%= label(@form, @password_confirmation_field, class: override_for(@socket, :label_class)) %>
+      <%= password_input(@form, @password_confirmation_field,
+        class: @input_class,
+        value: input_value(@form, @password_confirmation_field)
+      ) %>
       <.error socket={@socket} form={@form} field={@password_confirmation_field} />
     </div>
     """
@@ -180,12 +189,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     * `label` - The text to show in the submit label.
       Generated from the configured action name (via
       `Phoenix.HTML.Form.humanize/1`) if not supplied.
-
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_submit_css_class` - applied to the `button` element.
   """
   @spec submit(%{
           required(:socket) => Socket.t(),
@@ -211,7 +214,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       end)
 
     ~H"""
-    <%= submit @label, class: override_for(@socket, :password_authentication_form_submit_css_class) %>
+    <%= submit(@label, class: override_for(@socket, :submit_class)) %>
     """
   end
 
@@ -227,13 +230,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       Required.
     * `field` - The field for which to retrieve the errors.
       Required.
-
-  ## Overrides
-
-  See `AshAuthentication.Phoenix.Overrides` for more information.
-
-    * `password_authentication_form_error_ul_css_class` - applied to the `ul` element.
-    * `password_authentication_form_error_li_css_class` - applied to the `li` element.
   """
   @spec error(%{
           required(:socket) => Socket.t(),
@@ -254,14 +250,20 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
 
     ~H"""
     <%= if Enum.any?(@errors) do %>
-      <ul class={override_for(@socket, :password_authentication_form_error_ul_css_class)}>
+      <ul class={override_for(@socket, :error_ul)}>
         <%= for error <- @errors do %>
-          <li class={override_for(@socket, :password_authentication_form_error_li_css_class)} phx-feedback-for={input_name(@form, @field)}>
+          <li class={override_for(@socket, :error_li)} phx-feedback-for={input_name(@form, @field)}>
             <%= @field_label %> <%= error %>
           </li>
         <% end %>
       </ul>
     <% end %>
     """
+  end
+
+  defp has_error?(form, field) do
+    form
+    |> Form.errors()
+    |> Keyword.has_key?(field)
   end
 end
