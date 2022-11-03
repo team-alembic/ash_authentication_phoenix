@@ -7,12 +7,13 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       "CSS class for text/password `input` elements when there is a validation error.",
     submit_class: "CSS class for the form submit `input` element.",
     error_ul: "CSS class for the `ul` element on error lists.",
-    error_li: "CSS class for the `li` elements on error lists."
+    error_li: "CSS class for the `li` elements on error lists.",
+    input_debounce: "Number of milliseconds to debounce input by (or `nil` to disable)."
 
   @moduledoc """
   Function components for dealing with form input during password authentication.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
   These function components are consumed by
   `AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm` and
@@ -22,7 +23,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   """
 
   use Phoenix.Component
-  alias AshAuthentication.PasswordAuthentication.Info
+  alias AshAuthentication.{PasswordAuthentication, PasswordReset}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import Phoenix.HTML.Form
@@ -50,7 +51,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
           optional(:input_type) => :text | :email
         }) :: Rendered.t() | no_return
   def identity_field(assigns) do
-    identity_field = Info.identity_field!(assigns.config.resource)
+    identity_field =
+      PasswordAuthentication.Info.password_authentication_identity_field!(assigns.config.resource)
 
     assigns =
       assigns
@@ -75,7 +77,11 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     ~H"""
     <div class={override_for(@socket, :field_class)}>
       <%= label(@form, @identity_field, class: override_for(@socket, :label_class)) %>
-      <%= text_input(@form, @identity_field, type: to_string(@input_type), class: @input_class) %>
+      <%= text_input(@form, @identity_field,
+        type: to_string(@input_type),
+        class: @input_class,
+        phx_debounce: override_for(@socket, :input_debounce)
+      ) %>
       <.error socket={@socket} form={@form} field={@identity_field} />
     </div>
     """
@@ -101,7 +107,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
           required(:form) => AshPhoenix.Form.t()
         }) :: Rendered.t() | no_return
   def password_field(assigns) do
-    password_field = Info.password_field!(assigns.config.resource)
+    password_field =
+      PasswordAuthentication.Info.password_authentication_password_field!(assigns.config.resource)
 
     assigns =
       assigns
@@ -119,7 +126,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       <%= label(@form, @password_field, class: override_for(@socket, :label_class)) %>
       <%= password_input(@form, @password_field,
         class: @input_class,
-        value: input_value(@form, @password_field)
+        value: input_value(@form, @password_field),
+        phx_debounce: override_for(@socket, :input_debounce)
       ) %>
       <.error socket={@socket} form={@form} field={@password_field} />
     </div>
@@ -146,7 +154,10 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
           required(:form) => AshPhoenix.Form.t()
         }) :: Rendered.t() | no_return
   def password_confirmation_field(assigns) do
-    password_confirmation_field = Info.password_confirmation_field!(assigns.config.resource)
+    password_confirmation_field =
+      PasswordAuthentication.Info.password_authentication_password_confirmation_field!(
+        assigns.config.resource
+      )
 
     assigns =
       assigns
@@ -164,7 +175,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       <%= label(@form, @password_confirmation_field, class: override_for(@socket, :label_class)) %>
       <%= password_input(@form, @password_confirmation_field,
         class: @input_class,
-        value: input_value(@form, @password_confirmation_field)
+        value: input_value(@form, @password_confirmation_field),
+        phx_debounce: override_for(@socket, :input_debounce)
       ) %>
       <.error socket={@socket} form={@form} field={@password_confirmation_field} />
     </div>
@@ -202,19 +214,24 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       assigns
       |> assign_new(:label, fn ->
         case assigns.action do
+          :request_reset ->
+            assigns.config.resource
+            |> PasswordReset.Info.request_password_reset_action_name!()
+
           :sign_in ->
             assigns.config.resource
-            |> Info.sign_in_action_name!()
+            |> PasswordAuthentication.Info.password_authentication_sign_in_action_name!()
 
           :register ->
             assigns.config.resource
-            |> Info.register_action_name!()
+            |> PasswordAuthentication.Info.password_authentication_register_action_name!()
         end
         |> humanize()
       end)
+      |> assign_new(:disable_text, fn -> nil end)
 
     ~H"""
-    <%= submit(@label, class: override_for(@socket, :submit_class)) %>
+    <%= submit(@label, class: override_for(@socket, :submit_class), phx_disable_with: @disable_text) %>
     """
   end
 

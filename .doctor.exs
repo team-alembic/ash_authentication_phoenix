@@ -1,5 +1,5 @@
 %Doctor.Config{
-  ignore_modules: [~r/^Inspect\./, ~r/.Plug$/, AshAuthentication.Phoenix.Overrides],
+  ignore_modules: [~r/^Inspect\./, ~r/.Plug$/, ~r/^Example/, AshAuthentication.Phoenix.Overrides],
   ignore_paths: [],
   min_module_doc_coverage: 40,
   min_module_spec_coverage: 0,

@@ -42,10 +42,11 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override Components.PasswordAuthentication do
     set :root_class, "mt-4 mb-4"
-    set :interstitial_class, "flex justify-center text-sm font-medium"
-    set :toggler_class, "text-blue-500 hover:text-blue-600"
-    set :sign_in_toggle_text, "Need an account?"
-    set :register_toggle_text, "Already have an account?"
+    set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
+    set :toggler_class, "flex-none text-blue-500 hover:text-blue-600"
+    set :sign_in_toggle_text, "Already have an account?"
+    set :register_toggle_text, "Need an account?"
+    set :reset_toggle_text, "Forgot your password?"
     set :show_first, :sign_in
     set :hide_class, "hidden"
   end
@@ -55,6 +56,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
     set :form_class, nil
     set :slot_class, "my-4"
+    set :disable_button_text, "Signing in ..."
   end
 
   override Components.PasswordAuthentication.RegisterForm do
@@ -62,6 +64,19 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
     set :form_class, nil
     set :slot_class, "my-4"
+    set :disable_button_text, "Registering ..."
+  end
+
+  override Components.PasswordAuthentication.ResetForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
+    set :form_class, nil
+    set :slot_class, "my-4"
+
+    set :reset_flash_text,
+        "If this user exists in our system, you will be contacted with reset instructions shortly."
+
+    set :disable_button_text, "Requesting ..."
   end
 
   override Components.PasswordAuthentication.Input do
@@ -88,5 +103,6 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :error_ul, "text-red-400 font-light my-3 italic text-sm"
     set :error_li, nil
+    set :input_debounce, 350
   end
 end
