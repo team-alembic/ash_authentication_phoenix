@@ -3,12 +3,13 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
-    slot_class: "CSS class for the `div` surrounding the slot."
+    slot_class: "CSS class for the `div` surrounding the slot.",
+    disable_button_text: "Text for the submit button when the request is happening."
 
   @moduledoc """
   Generates a default registration form.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
   This is a child of `AshAuthentication.Phoenix.Components.PasswordAuthentication`.
 
@@ -33,8 +34,12 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.PasswordAuthentication.Info
-  alias AshAuthentication.Phoenix.Components.PasswordAuthentication
+
+  alias AshAuthentication.{
+    PasswordAuthentication,
+    Phoenix.Components.PasswordAuthentication.Input
+  }
+
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import Phoenix.HTML.Form
@@ -45,16 +50,19 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
   @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     config = assigns.config
-    action = Info.register_action_name!(config.resource)
-    confirm? = Info.confirmation_required?(config.resource)
+
+    action =
+      PasswordAuthentication.Info.password_authentication_register_action_name!(config.resource)
+
+    confirm? =
+      PasswordAuthentication.Info.password_authentication_confirmation_required?(config.resource)
 
     form =
       config.resource
       |> Form.for_action(action,
         api: config.api,
         as: to_string(config.subject_name),
-        id:
-          "#{AshAuthentication.PasswordAuthentication.provides()}_#{config.subject_name}_#{action}"
+        id: "#{PasswordAuthentication.provides()}_#{config.subject_name}_#{action}"
       )
 
     socket =
@@ -82,6 +90,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
       <.form
         :let={form}
         for={@form}
+        phx-change="change"
         phx-submit="submit"
         phx-trigger-action={@trigger_action}
         phx-target={@myself}
@@ -98,15 +107,11 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
       >
         <%= hidden_input(form, :action, value: "register") %>
 
-        <PasswordAuthentication.Input.identity_field socket={@socket} config={@config} form={form} />
-        <PasswordAuthentication.Input.password_field socket={@socket} config={@config} form={form} />
+        <Input.identity_field socket={@socket} config={@config} form={form} />
+        <Input.password_field socket={@socket} config={@config} form={form} />
 
         <%= if @confirm? do %>
-          <PasswordAuthentication.Input.password_confirmation_field
-            socket={@socket}
-            config={@config}
-            form={form}
-          />
+          <Input.password_confirmation_field socket={@socket} config={@config} form={form} />
         <% end %>
 
         <%= if @inner_block do %>
@@ -115,11 +120,12 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
           </div>
         <% end %>
 
-        <PasswordAuthentication.Input.submit
+        <Input.submit
           socket={@socket}
           config={@config}
           form={form}
           action={:register}
+          disable_text={override_for(@socket, :disable_button_text)}
         />
       </.form>
     </div>
@@ -130,6 +136,18 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
   @impl true
   @spec handle_event(String.t(), %{required(String.t()) => String.t()}, Socket.t()) ::
           {:noreply, Socket.t()}
+
+  def handle_event("change", params, socket) do
+    config = socket.assigns.config
+    params = Map.get(params, to_string(config.subject_name))
+
+    form =
+      socket.assigns.form
+      |> Form.validate(params, errors: false)
+
+    {:noreply, assign(socket, form: form)}
+  end
+
   def handle_event("submit", params, socket) do
     params = Map.get(params, to_string(socket.assigns.config.subject_name))
 

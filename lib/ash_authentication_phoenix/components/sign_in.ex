@@ -14,7 +14,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   `AshAuthentication.Phoenix.Components.PasswordAuthentication`) and is rendered
   into the output.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
   This is the top-most authentication component.
 

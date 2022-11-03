@@ -2,7 +2,6 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   @moduledoc """
   Helpers which are commonly needed inside the various components.
   """
-  alias AshAuthentication.Phoenix.Overrides
   alias Phoenix.LiveView.Socket
 
   @doc """

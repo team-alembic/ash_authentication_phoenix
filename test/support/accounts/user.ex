@@ -2,7 +2,14 @@ defmodule Example.Accounts.User do
   @moduledoc false
   use Ash.Resource,
     data_layer: Ash.DataLayer.Ets,
-    extensions: [AshAuthentication, AshAuthentication.PasswordAuthentication]
+    extensions: [
+      AshAuthentication,
+      AshAuthentication.PasswordAuthentication,
+      AshAuthentication.PasswordReset,
+      AshAuthentication.FacebookAuthentication
+    ]
+
+  require Logger
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
@@ -33,6 +40,17 @@ defmodule Example.Accounts.User do
   password_authentication do
     identity_field(:email)
     hashed_password_field(:hashed_password)
+  end
+
+  password_reset do
+    sender(fn user, token ->
+      Logger.debug("Password reset request for #{user.email} with token #{inspect(token)}")
+    end)
+  end
+
+  tokens do
+    enabled?(true)
+    revocation_resource(Example.Accounts.TokenRevocation)
   end
 
   identities do
