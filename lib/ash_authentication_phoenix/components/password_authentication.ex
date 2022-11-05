@@ -53,11 +53,11 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
       assigns
       |> assign(:sign_in_action, sign_in_action)
       |> assign_new(:sign_in_id, fn ->
-        "#{config.subject_name}_#{provider.provides}_#{sign_in_action}"
+        "#{config.subject_name}_#{provider.provides(config.resource)}_#{sign_in_action}"
       end)
       |> assign(:register_action, register_action)
       |> assign_new(:register_id, fn ->
-        "#{config.subject_name}_#{provider.provides}_#{register_action}"
+        "#{config.subject_name}_#{provider.provides(config.resource)}_#{register_action}"
       end)
       |> assign_new(:show_first, fn ->
         override_for(assigns.socket, :show_first, :sign_in)
@@ -67,7 +67,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
       end)
       |> assign(:reset_enabled?, reset_enabled?)
       |> assign_new(:reset_id, fn ->
-        if reset_enabled?, do: "#{config.subject_name}_#{provider.provides}_#{reset_action}"
+        if reset_enabled?,
+          do: "#{config.subject_name}_#{provider.provides(config.resource)}_#{reset_action}"
       end)
 
     ~H"""

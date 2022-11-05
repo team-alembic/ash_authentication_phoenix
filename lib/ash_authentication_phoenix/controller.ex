@@ -243,7 +243,7 @@ defmodule AshAuthentication.Phoenix.Controller do
           |> Map.delete(:providers)
           |> Map.put(:provider, provider)
 
-        {{subject_name, provider.provides()}, config}
+        {{subject_name, provider.provides(config.resource)}, config}
       end)
     end)
     |> Map.new()

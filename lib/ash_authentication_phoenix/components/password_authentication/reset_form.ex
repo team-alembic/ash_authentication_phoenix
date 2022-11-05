@@ -44,6 +44,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import Phoenix.HTML.Form
+  import AshAuthentication.Phoenix.Components.Helpers
 
   @doc false
   @impl true
@@ -82,6 +83,15 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
         phx-submit="submit"
         phx-change="change"
         phx-target={@myself}
+        action={
+          route_helpers(@socket).auth_request_path(
+            @socket.endpoint,
+            :request,
+            @config.subject_name,
+            @provider.provides(@config.resource)
+          )
+        }
+        method="POST"
         class={override_for(@socket, :form_class)}
       >
         <%= hidden_input(form, :action, value: "request_password_reset") %>
@@ -154,7 +164,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
     |> Form.for_action(action,
       api: config.api,
       as: to_string(config.subject_name),
-      id: "#{PasswordAuthentication.provides()}_#{config.subject_name}_#{action}"
+      id: "#{PasswordAuthentication.provides(config.resource)}_#{config.subject_name}_#{action}"
     )
   end
 end

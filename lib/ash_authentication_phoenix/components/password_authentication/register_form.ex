@@ -62,7 +62,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
       |> Form.for_action(action,
         api: config.api,
         as: to_string(config.subject_name),
-        id: "#{PasswordAuthentication.provides()}_#{config.subject_name}_#{action}"
+        id: "#{PasswordAuthentication.provides(config.resource)}_#{config.subject_name}_#{action}"
       )
 
     socket =
@@ -99,7 +99,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
             @socket.endpoint,
             :callback,
             @config.subject_name,
-            @provider.provides
+            @provider.provides(@config.resource)
           )
         }
         method="POST"

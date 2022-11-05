@@ -65,14 +65,18 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       <%= for {_subject_name, configs} <- @resources do %>
         <%= for config <- configs do %>
           <%= for provider <- config.providers do %>
-            <div class={override_for(@socket, :provider_class)}>
-              <.live_component
-                module={component_for_provider(provider)}
-                id={provider_id(provider, config)}
-                provider={provider}
-                config={config}
-              />
-            </div>
+            <%= case component_for_provider(provider) do %>
+              <% nil -> %>
+              <% component -> %>
+                <div class={override_for(@socket, :provider_class)}>
+                  <.live_component
+                    module={component}
+                    id={provider_id(provider, config)}
+                    provider={provider}
+                    config={config}
+                  />
+                </div>
+            <% end %>
           <% end %>
         <% end %>
       <% end %>
@@ -80,14 +84,17 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     """
   end
 
-  defp component_for_provider(provider),
-    do:
+  defp component_for_provider(provider) do
+    component =
       provider
       |> Module.split()
       |> List.last()
       |> then(&Module.concat(Components, &1))
 
+    if function_exported?(component, :__info__, 1), do: component, else: nil
+  end
+
   defp provider_id(provider, config) do
-    "sign-in-#{config.subject_name}-with-#{provider.provides()}"
+    "sign-in-#{config.subject_name}-with-#{provider.provides(config.resource)}"
   end
 end

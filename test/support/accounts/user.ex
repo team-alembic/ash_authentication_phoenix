@@ -4,6 +4,7 @@ defmodule Example.Accounts.User do
     data_layer: Ash.DataLayer.Ets,
     extensions: [
       AshAuthentication,
+      AshAuthentication.Confirmation,
       AshAuthentication.PasswordAuthentication,
       AshAuthentication.PasswordReset,
       AshAuthentication.FacebookAuthentication
@@ -35,6 +36,14 @@ defmodule Example.Accounts.User do
 
   authentication do
     api(Example.Accounts)
+  end
+
+  confirmation do
+    monitor_fields([:email])
+
+    sender(fn user, token ->
+      Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")
+    end)
   end
 
   password_authentication do

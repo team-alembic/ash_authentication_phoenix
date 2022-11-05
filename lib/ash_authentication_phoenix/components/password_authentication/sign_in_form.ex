@@ -62,7 +62,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
         api: config.api,
         as: to_string(config.subject_name),
         id:
-          "#{AshAuthentication.PasswordAuthentication.provides()}_#{config.subject_name}_#{action}"
+          "#{AshAuthentication.PasswordAuthentication.provides(config.resource)}_#{config.subject_name}_#{action}"
       )
 
     socket =
@@ -97,7 +97,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
             @socket.endpoint,
             :callback,
             @config.subject_name,
-            @provider.provides()
+            @provider.provides(@config.resource)
           )
         }
         method="POST"
