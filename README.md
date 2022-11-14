@@ -74,3 +74,6 @@ branch](https://team-alembic.github.io/ash_authentication_phoenix).
   * Please use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) - this allows us to dynamically generate the changelog.
   * Feel free to ask any questions on out [GitHub discussions page](https://github.com/team-alembic/ash_authentication_phoenix/discussions).
 
+## Licence
+
+MIT
