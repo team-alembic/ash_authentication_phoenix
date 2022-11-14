@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.5.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v0.4.0...v0.5.0) (2022-11-14)
+
+
+
+
+### Features:
+
+* OAuth2: Add OAuth2 link component. (#12)
+
 ## [v0.4.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v0.3.0...v0.4.0) (2022-11-10)
 
 
