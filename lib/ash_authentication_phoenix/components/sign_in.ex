@@ -64,18 +64,17 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
       <%= for {_subject_name, configs} <- @resources do %>
         <%= for config <- configs do %>
-          <%= for provider <- config.providers do %>
-            <%= case component_for_provider(provider) do %>
-              <% nil -> %>
-              <% component -> %>
-                <div class={override_for(@socket, :provider_class)}>
-                  <.live_component
-                    module={component}
-                    id={provider_id(provider, config)}
-                    provider={provider}
-                    config={config}
-                  />
-                </div>
+          <%= if has_form?(config) do %>
+            <%= for widget <- form_components(config) do %>
+              <.widget widget={widget} socket={@socket} />
+            <% end %>
+          <% end %>
+          <%= if has_form?(config) && has_links?(config) do %>
+            <.live_component module={Components.HorizontalRule} id="hr" />
+          <% end %>
+          <%= if has_links?(config) do %>
+            <%= for widget <- link_components(config) do %>
+              <.widget widget={widget} socket={@socket} />
             <% end %>
           <% end %>
         <% end %>
@@ -84,17 +83,50 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     """
   end
 
-  defp component_for_provider(provider) do
-    component =
-      provider
-      |> Module.split()
-      |> List.last()
-      |> then(&Module.concat(Components, &1))
-
-    if function_exported?(component, :__info__, 1), do: component, else: nil
+  defp widget(assigns) do
+    ~H"""
+    <div class={override_for(@socket, :provider_class)}>
+      <.live_component
+        module={@widget.component}
+        id={provider_id(@widget.provider, @widget.config)}
+        provider={@widget.provider}
+        config={@widget.config}
+      />
+    </div>
+    """
   end
 
   defp provider_id(provider, config) do
     "sign-in-#{config.subject_name}-with-#{provider.provides(config.resource)}"
+  end
+
+  defp has_form?(config), do: config |> form_components() |> Enum.any?()
+  defp has_links?(config), do: config |> link_components() |> Enum.any?()
+
+  defp form_components(config) do
+    config
+    |> provider_components()
+    |> Enum.filter(& &1.component.form?())
+  end
+
+  defp link_components(config) do
+    config
+    |> provider_components()
+    |> Enum.filter(& &1.component.link?())
+  end
+
+  defp provider_components(%{providers: providers, resource: resource} = config) do
+    providers
+    |> Enum.sort_by(& &1.provides(resource))
+    |> Enum.map(fn provider ->
+      component =
+        provider
+        |> Module.split()
+        |> List.last()
+        |> then(&Module.concat(Components, &1))
+
+      %{component: component, provider: provider, config: config}
+    end)
+    |> Enum.filter(&Code.ensure_loaded?(&1.component))
   end
 end

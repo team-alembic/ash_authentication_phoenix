@@ -32,7 +32,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   end
 
   override Components.HorizontalRule do
-    set :root_class, "relative"
+    set :root_class, "relative my-2"
     set :hr_outer_class, "absolute inset-0 flex items-center"
     set :hr_inner_class, "w-full border-t border-gray-300"
     set :text_outer_class, "relative flex justify-center text-sm"
@@ -104,5 +104,15 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :error_ul, "text-red-400 font-light my-3 italic text-sm"
     set :error_li, nil
     set :input_debounce, 350
+  end
+
+  override Components.OAuth2Authentication do
+    set :root_class, "w-full mt-2 mb-4"
+
+    set :link_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-black bg-gray-200 hover:bg-gray-300
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    """
   end
 end

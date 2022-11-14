@@ -6,8 +6,7 @@ defmodule Example.Accounts.User do
       AshAuthentication,
       AshAuthentication.Confirmation,
       AshAuthentication.PasswordAuthentication,
-      AshAuthentication.PasswordReset,
-      AshAuthentication.FacebookAuthentication
+      AshAuthentication.PasswordReset
     ]
 
   require Logger
@@ -22,13 +21,29 @@ defmodule Example.Accounts.User do
 
   actions do
     defaults([:read])
+
+    create :register_with_auth0 do
+      argument :user_info, :map, allow_nil?: false
+      argument :oauth_tokens, :map, allow_nil?: false
+      upsert? true
+      upsert_identity :unique_email
+
+      change AshAuthentication.GenerateTokenChange
+
+      change fn changeset, _ ->
+        user_info = Ash.Changeset.get_argument(changeset, :user_info)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:email, user_info["email"])
+      end
+    end
   end
 
   attributes do
     uuid_primary_key(:id)
 
     attribute(:email, :ci_string, allow_nil?: false)
-    attribute(:hashed_password, :string, allow_nil?: false, sensitive?: true, private?: true)
+    attribute(:hashed_password, :string, allow_nil?: true, sensitive?: true, private?: true)
 
     create_timestamp(:created_at)
     update_timestamp(:updated_at)
@@ -63,6 +78,6 @@ defmodule Example.Accounts.User do
   end
 
   identities do
-    identity(:email, [:email], pre_check_with: Example.Accounts)
+    identity(:unique_email, [:email], pre_check_with: Example.Accounts)
   end
 end
