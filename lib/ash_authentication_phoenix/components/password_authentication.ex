@@ -14,7 +14,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
 
   ## Component hierarchy
 
-  This is the top-most provider-specific component, nested below `AshAuthentication.Phoenix.Components.SignIn`.
+  This is the top-most provider-specific component, nested below
+  `AshAuthentication.Phoenix.Components.SignIn`.
 
   Children:
 
@@ -24,14 +25,14 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
 
   ## Props
 
-    * `config` - The configuration man as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
+    * `config` - The configuration as per
+      `AshAuthentication.authenticated_resources/1`.  Required.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.AuthenticationComponent, style: :form
   alias __MODULE__
   alias AshAuthentication.{PasswordAuthentication.Info, PasswordReset}
   alias Phoenix.LiveView.{JS, Rendered, Socket}

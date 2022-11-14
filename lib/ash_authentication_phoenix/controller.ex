@@ -94,7 +94,7 @@ defmodule AshAuthentication.Phoenix.Controller do
   @doc """
   Called when authentication (or registration, depending on the provider) has been successful.
   """
-  @callback success(Conn.t(), actor :: Ash.Resource.record(), token :: String.t()) :: Conn.t()
+  @callback success(Conn.t(), user :: Ash.Resource.record(), token :: String.t()) :: Conn.t()
 
   @doc """
   Called when authentication fails.
@@ -141,9 +141,9 @@ defmodule AshAuthentication.Phoenix.Controller do
       @impl true
       @spec success(Conn.t(), Ash.Resource.record(), nil | AshAuthentication.Jwt.token()) ::
               Conn.t()
-      def success(conn, actor, _token) do
+      def success(conn, user, _token) do
         conn
-        |> store_in_session(actor)
+        |> store_in_session(user)
         |> put_status(200)
         |> render("success.html")
       end
@@ -182,14 +182,18 @@ defmodule AshAuthentication.Phoenix.Controller do
     handle(conn, params, :callback, return_to)
   end
 
-  defp handle(
-         conn,
-         %{"subject_name" => subject_name, "provider" => provider} = _params,
-         phase,
-         return_to
-       ) do
-    routes = generate_routes(conn)
+  defp handle(conn, _params, phase, return_to) do
+    conn
+    |> generate_routes()
+    |> dispatch(phase, conn)
+    |> return(return_to)
+  end
 
+  defp dispatch(
+         routes,
+         phase,
+         %{params: %{"subject_name" => subject_name, "provider" => provider}} = conn
+       ) do
     case Map.get(routes, {subject_name, provider}) do
       config when is_map(config) ->
         conn = Conn.put_private(conn, :authenticator, config)
@@ -202,24 +206,29 @@ defmodule AshAuthentication.Phoenix.Controller do
       _ ->
         conn
     end
-    |> case do
-      %{state: :sent} ->
-        conn
-
-      %{private: %{authentication_result: {:success, actor}}} ->
-        return_to.success(conn, actor, Map.get(actor.__metadata__, :token))
-
-      %{private: %{authentication_result: {:failure, reason}}} ->
-        return_to.failure(conn, reason)
-
-      _ ->
-        return_to.failure(conn, nil)
-    end
   end
 
-  defp handle(conn, _, _, return_to) do
-    return_to.failure(conn, nil)
-  end
+  defp dispatch(_routes, _phase, conn), do: conn
+
+  defp return(
+         %{
+           private: %{
+             authentication_result: {:success, user},
+             authenticator: %{resource: resource}
+           }
+         } = conn,
+         return_to
+       )
+       when is_struct(user, resource),
+       do: return_to.success(conn, user, Map.get(user.__metadata__, :token))
+
+  defp return(%{private: %{authentication_result: {:success, nil}}} = conn, return_to),
+    do: return_to.success(conn, nil, nil)
+
+  defp return(%{private: %{authentication_result: {:failure, reason}}} = conn, return_to),
+    do: return_to.failure(conn, reason)
+
+  defp return(conn, return_to), do: return_to.failure(conn, nil)
 
   # Doing this on every request is probably a really bad idea, but if I do it at
   # compile time I need to ask for the OTP app all over the place and it reduces
