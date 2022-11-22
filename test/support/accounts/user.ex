@@ -6,7 +6,8 @@ defmodule Example.Accounts.User do
       AshAuthentication,
       AshAuthentication.Confirmation,
       AshAuthentication.PasswordAuthentication,
-      AshAuthentication.PasswordReset
+      AshAuthentication.PasswordReset,
+      AshAuthentication.OAuth2Authentication
     ]
 
   require Logger
@@ -72,6 +73,20 @@ defmodule Example.Accounts.User do
     end)
   end
 
+  oauth2_authentication do
+    provider_name(:auth0)
+    client_id(&get_config/3)
+    redirect_uri(&get_config/3)
+    client_secret(&get_config/3)
+    site(&get_config/3)
+
+    authorize_path("/authorize")
+    token_path("/oauth/token")
+    user_path("/userinfo")
+    authorization_params(scope: "openid profile email")
+    auth_method(:client_secret_post)
+  end
+
   tokens do
     enabled?(true)
     revocation_resource(Example.Accounts.TokenRevocation)
@@ -79,5 +94,14 @@ defmodule Example.Accounts.User do
 
   identities do
     identity(:unique_email, [:email], pre_check_with: Example.Accounts)
+  end
+
+  def get_config(path, resource, _opts) do
+    value =
+      :ash_authentication_phoenix
+      |> Application.get_env(resource, [])
+      |> get_in(path)
+
+    {:ok, value}
   end
 end
