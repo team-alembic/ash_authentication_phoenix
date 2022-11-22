@@ -25,3 +25,11 @@ config :ash_authentication, AshAuthentication.Jwt,
   signing_secret: "All I wanna do is to thank you, even though I don't know who you are."
 
 config :phoenix, :json_library, Jason
+
+config :ash_authentication_phoenix, Example.Accounts.User,
+  oauth2_authentication: [
+    client_id: System.get_env("OAUTH2_CLIENT_ID"),
+    client_secret: System.get_env("OAUTH2_CLIENT_SECRET"),
+    redirect_uri: "http://localhost:4000/auth",
+    site: System.get_env("OAUTH2_SITE")
+  ]
