@@ -87,7 +87,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, github: "team-alembic/ash_authentication", tag: "v1.0.0"},
+      {:ash_authentication, github: "team-alembic/ash_authentication", tag: "v2.0.0"},
       {:ash_phoenix, "~> 1.1"},
       {:ash, "~> 2.2"},
       {:jason, "~> 1.0"},
