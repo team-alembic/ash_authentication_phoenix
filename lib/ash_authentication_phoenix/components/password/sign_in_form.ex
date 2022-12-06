@@ -1,4 +1,4 @@
-defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm do
+defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -11,41 +11,39 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
 
   ## Component hierarchy
 
-  This is a child of `AshAuthentication.Phoenix.Components.PasswordAuthentication`.
+  This is a child of `AshAuthentication.Phoenix.Components.Password`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.identity_field/1`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.password_field/1`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.submit/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.password_field/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.submit/1`
 
   ## Props
 
     * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
-      the correct CSS configuration.
-      Required.
-    * `config` - The configuration map as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
-    * `label` - The text to show in the submit label.
-      Generated from the configured action name (via
-      `Phoenix.HTML.Form.humanize/1`) if not supplied.
-      Set to `false` to disable.
+      the correct CSS configuration. Required.
+    * `strategy` - The configuration map as per
+      `AshAuthentication.Info.strategy/2`. Required.
+    * `label` - The text to show in the submit label. Generated from the
+      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
+      supplied. Set to `false` to disable.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.PasswordAuthentication.Info
-  alias AshAuthentication.Phoenix.Components.PasswordAuthentication
+  alias AshAuthentication.Info
+  alias AshAuthentication.Phoenix.Components.Password
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
   import Phoenix.HTML.Form
+  import Slug
 
   @type props :: %{
           required(:socket) => Socket.t(),
-          required(:config) => AshAuthentication.resource_config(),
+          required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:label) => String.t() | false
         }
 
@@ -53,23 +51,24 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
   @impl true
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
-    config = assigns.config
-    action = Info.password_authentication_sign_in_action_name!(config.resource)
+    strategy = assigns.strategy
+    api = Info.authentication_api!(strategy.resource)
+    subject_name = Info.authentication_subject_name!(strategy.resource)
 
     form =
-      config.resource
-      |> Form.for_action(action,
-        api: config.api,
-        as: to_string(config.subject_name),
-        id:
-          "#{AshAuthentication.PasswordAuthentication.provides(config.resource)}_#{config.subject_name}_#{action}"
+      strategy.resource
+      |> Form.for_action(strategy.sign_in_action_name,
+        api: api,
+        as: subject_name |> to_string(),
+        id: "#{subject_name}-#{strategy.name}-#{strategy.sign_in_action_name}" |> slugify(),
+        context: %{strategy: strategy}
       )
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(form: form, trigger_action: false)
-      |> assign_new(:label, fn -> humanize(action) end)
+      |> assign(form: form, trigger_action: false, subject_name: subject_name)
+      |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
 
     {:ok, socket}
@@ -93,20 +92,16 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
         phx-trigger-action={@trigger_action}
         phx-target={@myself}
         action={
-          route_helpers(@socket).auth_callback_path(
+          route_helpers(@socket).auth_path(
             @socket.endpoint,
-            :callback,
-            @config.subject_name,
-            @provider.provides(@config.resource)
+            {@subject_name, @strategy.name, :sign_in}
           )
         }
         method="POST"
         class={override_for(@socket, :form_class)}
       >
-        <%= hidden_input(form, :action, value: "sign_in") %>
-
-        <PasswordAuthentication.Input.identity_field socket={@socket} config={@config} form={form} />
-        <PasswordAuthentication.Input.password_field socket={@socket} config={@config} form={form} />
+        <Password.Input.identity_field socket={@socket} strategy={@strategy} form={form} />
+        <Password.Input.password_field socket={@socket} strategy={@strategy} form={form} />
 
         <%= if @inner_block do %>
           <div class={override_for(@socket, :slot_class)}>
@@ -114,9 +109,9 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
           </div>
         <% end %>
 
-        <PasswordAuthentication.Input.submit
+        <Password.Input.submit
           socket={@socket}
-          config={@config}
+          strategy={@strategy}
           form={form}
           action={:sign_in}
           disable_text={override_for(@socket, :disable_button_text)}
@@ -132,8 +127,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
           {:noreply, Socket.t()}
 
   def handle_event("change", params, socket) do
-    config = socket.assigns.config
-    params = Map.get(params, to_string(config.subject_name))
+    params = get_params(params, socket.assigns.strategy)
 
     form =
       socket.assigns.form
@@ -143,7 +137,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
   end
 
   def handle_event("submit", params, socket) do
-    params = Map.get(params, to_string(socket.assigns.config.subject_name))
+    params = get_params(params, socket.assigns.strategy)
     form = Form.validate(socket.assigns.form, params)
 
     socket =
@@ -152,5 +146,15 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm
       |> assign(:trigger_action, form.valid?)
 
     {:noreply, socket}
+  end
+
+  defp get_params(params, strategy) do
+    param_key =
+      strategy.resource
+      |> Info.authentication_subject_name!()
+      |> to_string()
+      |> slugify()
+
+    Map.get(params, param_key, %{})
   end
 end

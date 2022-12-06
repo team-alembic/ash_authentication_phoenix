@@ -1,4 +1,4 @@
-defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
+defmodule AshAuthentication.Phoenix.Components.Password do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     hide_class: "CSS class to apply to hide an element.",
@@ -10,7 +10,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
     toggler_class: "CSS class for the toggler `a` element."
 
   @moduledoc """
-  Generates sign in and registration forms for a resource.
+  Generates sign in, registration and reset forms for a resource.
 
   ## Component hierarchy
 
@@ -19,67 +19,71 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm`
+    * `AshAuthentication.Phoenix.Components.Password.SignInForm`
+    * `AshAuthentication.Phoenix.Components.Password.RegisterForm`
+    * `AshAuthentication.Phoenix.Components.Password.ResetForm`
 
   ## Props
 
-    * `config` - The configuration as per
-      `AshAuthentication.authenticated_resources/1`.  Required.
+    * `strategy` - The strategy configuration as per
+      `AshAuthentication.Info.strategy/2`.  Required.
+    * `socket` - Needed to infer the otp-app from the Phoenix endpoint.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
-  use AshAuthentication.Phoenix.AuthenticationComponent, style: :form
-  alias __MODULE__
-  alias AshAuthentication.{PasswordAuthentication.Info, PasswordReset}
+  alias AshAuthentication.{Info, Phoenix.Components.Password}
   alias Phoenix.LiveView.{JS, Rendered, Socket}
+  import Slug
 
   @doc false
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
-    config = assigns.config
-    provider = assigns.provider
-    sign_in_action = Info.password_authentication_sign_in_action_name!(assigns.config.resource)
-    register_action = Info.password_authentication_register_action_name!(assigns.config.resource)
-    reset_enabled? = PasswordReset.enabled?(assigns.config.resource)
+    strategy = assigns.strategy
 
-    reset_action =
-      if reset_enabled?,
-        do: PasswordReset.Info.request_password_reset_action_name!(assigns.config.resource)
+    subject_name =
+      assigns.strategy.resource
+      |> Info.authentication_get_by_subject_action_name!()
+      |> to_string()
+      |> slugify()
+
+    strategy_name =
+      assigns.strategy.name
+      |> to_string()
+      |> slugify()
+
+    reset_enabled? = Enum.any?(strategy.resettable)
+
+    reset_id =
+      strategy.resettable
+      |> Enum.map(
+        &generate_id(subject_name, strategy_name, &1.request_password_reset_action_name)
+      )
+      |> List.first()
 
     assigns =
       assigns
-      |> assign(:sign_in_action, sign_in_action)
-      |> assign_new(:sign_in_id, fn ->
-        "#{config.subject_name}_#{provider.provides(config.resource)}_#{sign_in_action}"
-      end)
-      |> assign(:register_action, register_action)
-      |> assign_new(:register_id, fn ->
-        "#{config.subject_name}_#{provider.provides(config.resource)}_#{register_action}"
-      end)
-      |> assign_new(:show_first, fn ->
-        override_for(assigns.socket, :show_first, :sign_in)
-      end)
-      |> assign_new(:hide_class, fn ->
-        override_for(assigns.socket, :hide_class)
-      end)
+      |> assign(
+        :sign_in_id,
+        generate_id(subject_name, strategy_name, strategy.sign_in_action_name)
+      )
+      |> assign(
+        :register_id,
+        generate_id(subject_name, strategy_name, strategy.register_action_name)
+      )
+      |> assign(:show_first, override_for(assigns.socket, :show_first, :sign_in))
+      |> assign(:hide_class, override_for(assigns.socket, :hide_class))
       |> assign(:reset_enabled?, reset_enabled?)
-      |> assign_new(:reset_id, fn ->
-        if reset_enabled?,
-          do: "#{config.subject_name}_#{provider.provides(config.resource)}_#{reset_action}"
-      end)
+      |> assign(:reset_id, reset_id)
 
     ~H"""
     <div class={override_for(@socket, :root_class)}>
       <div id={"#{@sign_in_id}-wrapper"} class={unless @show_first == :sign_in, do: @hide_class}>
         <.live_component
-          module={PasswordAuthentication.SignInForm}
+          module={Password.SignInForm}
           id={@sign_in_id}
-          provider={@provider}
-          config={@config}
+          strategy={@strategy}
           label={false}
         >
           <div class={override_for(@socket, :interstitial_class)}>
@@ -101,12 +105,12 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
           </div>
         </.live_component>
       </div>
+
       <div id={"#{@register_id}-wrapper"} class={unless @show_first == :register, do: @hide_class}>
         <.live_component
-          module={PasswordAuthentication.RegisterForm}
+          module={Password.RegisterForm}
           id={@register_id}
-          provider={@provider}
-          config={@config}
+          strategy={@strategy}
           label={false}
         >
           <div class={override_for(@socket, :interstitial_class)}>
@@ -118,7 +122,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
                 message={override_for(@socket, :reset_toggle_text)}
               />
             <% end %>
-
             <.toggler
               socket={@socket}
               show={@sign_in_id}
@@ -128,13 +131,13 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
           </div>
         </.live_component>
       </div>
+
       <%= if @reset_enabled? do %>
         <div id={"#{@reset_id}-wrapper"} class={unless @show_first == :reset, do: @hide_class}>
           <.live_component
-            module={PasswordAuthentication.ResetForm}
+            module={Password.ResetForm}
             id={@reset_id}
-            provider={@provider}
-            config={@config}
+            strategy={@strategy}
             label={false}
           >
             <div class={override_for(@socket, :interstitial_class)}>
@@ -144,7 +147,6 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
                 hide={[@sign_in_id, @reset_id]}
                 message={override_for(@socket, :register_toggle_text)}
               />
-
               <.toggler
                 socket={@socket}
                 show={@sign_in_id}
@@ -157,6 +159,15 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication do
       <% end %>
     </div>
     """
+  end
+
+  defp generate_id(subject_name, strategy_name, action) do
+    action =
+      action
+      |> to_string()
+      |> slugify()
+
+    "#{subject_name}-#{strategy_name}-#{action}"
   end
 
   @doc false

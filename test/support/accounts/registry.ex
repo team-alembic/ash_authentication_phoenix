@@ -4,5 +4,6 @@ defmodule Example.Accounts.Registry do
 
   entries do
     entry Example.Accounts.User
+    entry Example.Accounts.Token
   end
 end

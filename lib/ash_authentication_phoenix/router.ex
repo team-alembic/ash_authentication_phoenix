@@ -28,16 +28,28 @@ defmodule AshAuthentication.Phoenix.Router do
       pipe_through :browser
       sign_in_route
       sign_out_route AuthController
-      auth_routes AuthController
+      auth_routes_for MyApp.Accounts.User, to: AuthController
     end
   ```
   """
 
   require Logger
 
+  @typedoc "Options that can be passed to `auth_routes_for`."
+  @type auth_route_options :: [path_option | to_option | scope_opts_option]
+
+  @typedoc "A sub-path if required.  Defaults to `/auth`."
+  @type path_option :: {:path, String.t()}
+
+  @typedoc "The controller which will handle success and failure."
+  @type to_option :: {:to, AshAuthentication.Phoenix.Controller.t()}
+
+  @typedoc "Any options which should be passed to the generated scope."
+  @type scope_opts_option :: {:scope_opts, keyword}
+
   @doc false
   @spec __using__(any) :: Macro.t()
-  defmacro __using__(_opts) do
+  defmacro __using__(_) do
     quote do
       import AshAuthentication.Phoenix.Router
       import AshAuthentication.Phoenix.Plug
@@ -45,23 +57,51 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
-  Generates the routes needed for the various subjects and providers
-  authenticating with AshAuthentication.
+  Generates the routes needed for the various strategies for a given
+  AshAuthentication resource.
 
   This is required if you wish to use authentication.
+
+  ## Options
+
+    * `to` - a module which implements the
+      `AshAuthentication.Phoenix.Controller` behaviour.  This is required.
+    * `path` - a string (starting with "/") wherein to mount the generated
+      routes.
+    * `scope_opts` - any options to pass to the generated scope.
+
+  ## Example
+
+  ```elixir
+  scope "/", DevWeb do
+    auth_routes_for(MyApp.Accounts.User,
+      to: AuthController,
+      path: "/authentication",
+      scope_opts: [host: "auth.example.com"]
+    )
+  end
+  ```
   """
-  defmacro auth_routes(auth_controller, path \\ "auth", opts \\ []) do
-    opts =
-      opts
-      |> Keyword.put_new(:as, :auth)
+  @spec auth_routes_for(Ash.Resource.t(), auth_route_options) :: Macro.t()
+  defmacro auth_routes_for(resource, opts) when is_list(opts) do
+    quote location: :keep do
+      subject_name = AshAuthentication.Info.authentication_subject_name!(unquote(resource))
+      controller = Keyword.fetch!(unquote(opts), :to)
+      path = Keyword.get(unquote(opts), :path, "/auth")
+      scope_opts = Keyword.get(unquote(opts), :scope_opts, [])
 
-    quote do
-      scope unquote(path), unquote(opts) do
-        match(:*, "/:subject_name/:provider", unquote(auth_controller), :request, as: :request)
+      strategies =
+        AshAuthentication.Info.authentication_add_ons(unquote(resource)) ++
+          AshAuthentication.Info.authentication_strategies(unquote(resource))
 
-        match(:*, "/:subject_name/:provider/callback", unquote(auth_controller), :callback,
-          as: :callback
-        )
+      scope path, scope_opts do
+        for strategy <- strategies do
+          for {path, phase} <- AshAuthentication.Strategy.routes(strategy) do
+            match :*, path, controller, {subject_name, strategy.name, phase},
+              as: :auth,
+              private: %{strategy: strategy}
+          end
+        end
       end
     end
   end

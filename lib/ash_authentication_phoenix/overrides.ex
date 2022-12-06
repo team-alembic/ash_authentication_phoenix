@@ -9,25 +9,30 @@ defmodule AshAuthentication.Phoenix.Overrides do
   You can override by setting the following in your `config.exs`:
 
   ```elixir
-  config :my_app, AshAuthentication.Phoenix, overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+  config :my_app, AshAuthentication.Phoenix,
+    overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
   ```
 
-  and defining `lib/my_app_web/auth_styles.ex` within which you can set CSS
-  classes for any values you want.
+  and defining `lib/my_app_web/auth_overrides.ex` within which you can set any
+  overrides.
 
   The `use` macro defines overridable versions of all callbacks which return
   `nil`, so you only need to define the functions that you care about.
 
+  Each of the override modules specified in the config will be called in the
+  order that they're specified, so you can still use the defaults if you just
+  override some properties.
+
   ```elixir
   defmodule MyAppWeb.AuthOverrides do
     use AshAuthentication.Phoenix.Overrides
+    alias AshAuthentication.Phoenix.Components
 
-    override
+    override Components.Banner do
+      set :image_url, "/images/sign_in_logo.png"
+    end
   end
   ```
-
-  ## Configuration
-
   """
 
   @doc """
@@ -45,6 +50,8 @@ defmodule AshAuthentication.Phoenix.Overrides do
     end)
   end
 
+  @doc false
+  @spec __using__(any) :: Macro.t()
   defmacro __using__(_env) do
     quote do
       require AshAuthentication.Phoenix.Overrides
@@ -55,6 +62,10 @@ defmodule AshAuthentication.Phoenix.Overrides do
     end
   end
 
+  @doc """
+  Define overrides for a specific component.
+  """
+  @spec override(component :: module, do: Macro.t()) :: Macro.t()
   defmacro override(component, do: block) do
     quote do
       @component unquote(component)
@@ -62,12 +73,18 @@ defmodule AshAuthentication.Phoenix.Overrides do
     end
   end
 
+  @doc """
+  Override a setting within a component.
+  """
+  @spec set(atom, any) :: Macro.t()
   defmacro set(selector, value) do
     quote do
       @override {@component, unquote(selector), unquote(value)}
     end
   end
 
+  @doc false
+  @spec __before_compile__(any) :: Macro.t()
   defmacro __before_compile__(env) do
     overrides =
       env.module
