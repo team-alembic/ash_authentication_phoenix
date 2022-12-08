@@ -5,6 +5,10 @@ The `ash_authentication_phoenix` package extends
 adding router helpers, plugs and behaviours that makes adding authentication to
 an existing Ash-based Phoenix application dead easy.
 
+## Warning
+
+This is **beta** software.  Please don't use it without talking to us!
+
 ## Installation
 
 The package can be installed by adding `ash_authentication_phoenix` to your list
