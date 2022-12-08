@@ -1,4 +1,4 @@
-defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm do
+defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -13,53 +13,45 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
 
   ## Component hierarchy
 
-  This is a child of `AshAuthentication.Phoenix.Components.PasswordAuthentication`.
+  This is a child of `AshAuthentication.Phoenix.Components.Password`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.identity_field/1`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.submit/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.submit/1`
 
   ## Props
 
-    * `config` - The configuration map as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
-    * `label` - The text to show in the submit label.
-      Generated from the configured action name (via
-      `Phoenix.HTML.Form.humanize/1`) if not supplied.
-      Set to `false` to disable.
+    * `strategy` - The configuration map as per
+      `AshAuthentication.Info.strategy/2`. Required.
+    * `label` - The text to show in the submit label.  Generated from the
+      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
+      supplied.  Set to `false` to disable.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
 
-  alias AshAuthentication.{
-    PasswordAuthentication,
-    PasswordReset,
-    Phoenix.Components.PasswordAuthentication.Input
-  }
+  alias AshAuthentication.{Info, Phoenix.Components.Password.Input}
 
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
-  import Phoenix.HTML.Form
   import AshAuthentication.Phoenix.Components.Helpers
+  import Slug
 
   @doc false
   @impl true
   @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
-    config = assigns.config
-    form = blank_form(config)
+    strategy = assigns.strategy
+    form = blank_form(strategy)
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(form: form)
-      |> assign_new(:label, fn ->
-        humanize(PasswordReset.Info.request_password_reset_action_name!(config.resource))
-      end)
+      |> assign(form: form, subject_name: Info.authentication_subject_name!(strategy.resource))
+      |> assign_new(:label, fn -> strategy.request_password_reset_action_name end)
       |> assign_new(:inner_block, fn -> nil end)
 
     {:ok, socket}
@@ -84,19 +76,15 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
         phx-change="change"
         phx-target={@myself}
         action={
-          route_helpers(@socket).auth_request_path(
+          route_helpers(@socket).auth_path(
             @socket.endpoint,
-            :request,
-            @config.subject_name,
-            @provider.provides(@config.resource)
+            {@subject_name, @strategy.name, :reset_request}
           )
         }
         method="POST"
         class={override_for(@socket, :form_class)}
       >
-        <%= hidden_input(form, :action, value: "request_password_reset") %>
-
-        <Input.identity_field socket={@socket} config={@config} form={form} />
+        <Input.identity_field socket={@socket} strategy={@strategy} form={form} />
 
         <%= if @inner_block do %>
           <div class={override_for(@socket, :slot_class)}>
@@ -106,7 +94,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
 
         <Input.submit
           socket={@socket}
-          config={@config}
+          strategy={@strategy}
           form={form}
           action={:request_reset}
           disable_text={override_for(@socket, :disable_button_text)}
@@ -122,8 +110,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
           {:noreply, Socket.t()}
 
   def handle_event("change", params, socket) do
-    config = socket.assigns.config
-    params = Map.get(params, to_string(config.subject_name))
+    params = get_params(params, socket.assigns.strategy)
 
     form =
       socket.assigns.form
@@ -133,8 +120,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
   end
 
   def handle_event("submit", params, socket) do
-    config = socket.assigns.config
-    params = Map.get(params, to_string(config.subject_name))
+    strategy = socket.assigns.strategy
+    params = get_params(params, strategy)
 
     socket.assigns.form
     |> Form.validate(params)
@@ -144,7 +131,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
 
     socket =
       socket
-      |> assign(:form, blank_form(config))
+      |> assign(:form, blank_form(strategy))
 
     socket =
       if flash do
@@ -157,14 +144,28 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.ResetForm 
     {:noreply, socket}
   end
 
-  defp blank_form(config) do
-    action = PasswordReset.Info.request_password_reset_action_name!(config.resource)
+  defp get_params(params, strategy) do
+    param_key =
+      strategy.resource
+      |> Info.authentication_subject_name!()
+      |> to_string()
+      |> slugify()
 
-    config.resource
-    |> Form.for_action(action,
-      api: config.api,
-      as: to_string(config.subject_name),
-      id: "#{PasswordAuthentication.provides(config.resource)}_#{config.subject_name}_#{action}"
+    Map.get(params, param_key, %{})
+  end
+
+  defp blank_form(%{resettable: [resettable]} = strategy) do
+    api = Info.authentication_api!(strategy.resource)
+    subject_name = Info.authentication_subject_name!(strategy.resource)
+
+    strategy.resource
+    |> Form.for_action(resettable.request_password_reset_action_name,
+      api: api,
+      as: subject_name |> to_string(),
+      id:
+        "#{subject_name}-#{strategy.name}-#{resettable.request_password_reset_action_name}"
+        |> slugify(),
+      context: %{strategy: strategy}
     )
   end
 end

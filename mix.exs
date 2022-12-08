@@ -87,7 +87,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, github: "team-alembic/ash_authentication", tag: "v1.0.0"},
+      {:ash_authentication, github: "team-alembic/ash_authentication", tag: "v3.0.3"},
       {:ash_phoenix, "~> 1.1"},
       {:ash, "~> 2.2"},
       {:jason, "~> 1.0"},
@@ -95,6 +95,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:phoenix_live_view, "~> 0.18"},
       {:phoenix, "~> 1.6"},
       {:bcrypt_elixir, "~> 3.0"},
+      {:slugify, "~> 1.3"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},

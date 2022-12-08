@@ -1,6 +1,7 @@
 defmodule AshAuthentication.Phoenix.SignInLive do
   use AshAuthentication.Phoenix.Overrides.Overridable,
-    root_class: "CSS class for the root `div` element."
+    root_class: "CSS class for the root `div` element.",
+    sign_in_id: "Element ID for the `SignIn` LiveComponent."
 
   @moduledoc """
   A generic, white-label sign-in page.
@@ -27,7 +28,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
   def render(assigns) do
     ~H"""
     <div class={override_for(@socket, :root_class)}>
-      <.live_component module={Components.SignIn} id="sign-in" />
+      <.live_component module={Components.SignIn} id={override_for(@socket, :sign_in_id, "sign-in")} />
     </div>
     """
   end

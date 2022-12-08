@@ -2,7 +2,7 @@ defmodule DevWeb.Router do
   @moduledoc false
 
   use DevWeb, :router
-  use AshAuthentication.Phoenix.Router
+  use AshAuthentication.Phoenix.Router, otp_app: :ash_authentication_phoenix
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -31,7 +31,7 @@ defmodule DevWeb.Router do
 
   scope "/", DevWeb do
     pipe_through :browser
-    auth_routes(AuthController, "/auth")
+    auth_routes_for(Example.Accounts.User, to: AuthController, path: "/auth")
     sign_in_route("/sign-in")
     sign_out_route(AuthController, "/sign-out")
   end

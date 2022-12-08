@@ -1,17 +1,18 @@
 defmodule AshAuthentication.Phoenix.Components.SignIn do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
-    provider_class: "CSS class for a `div` surrounding each provider component."
+    strategy_class: "CSS class for a `div` surrounding each strategy component.",
+    show_banner: "Whether or not to show the banner."
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
 
   This means that it will render sign-in UI for all of the authentication
-  providers for a resource.
+  strategies for a resource.
 
-  For each provider configured on the resource a component name is inferred
-  (e.g. `AshAuthentication.PasswordAuthentication` becomes
-  `AshAuthentication.Phoenix.Components.PasswordAuthentication`) and is rendered
+  For each strategy configured on the resource a component name is inferred
+  (e.g. `AshAuthentication.Strategy.Password` becomes
+  `AshAuthentication.Phoenix.Components.Strategy.Passowrd`) and is rendered
   into the output.
 
   ## Component hierarchy
@@ -20,36 +21,38 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication`.
-
-  ## Props
-
-    * `config` - The configuration man as per
-    `AshAuthentication.authenticated_resources/1`.  Required.
+    * `AshAuthentication.Phoenix.Components.Strategy.Password`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.Phoenix.Components
+  alias AshAuthentication.{Info, Phoenix.Components, Strategy}
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers
+  import Slug
 
   @doc false
   @impl true
   @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
-    resources =
+    strategies_by_resource =
       socket
       |> otp_app_from_socket()
       |> AshAuthentication.authenticated_resources()
-      |> Enum.group_by(& &1.subject_name)
-      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.sort_by(&Info.authentication_subject_name!/1)
+      |> Enum.map(fn resource ->
+        resource
+        |> Info.authentication_strategies()
+        |> Enum.group_by(&strategy_style/1)
+        |> Map.update(:form, [], &sort_strategies_by_name/1)
+        |> Map.update(:link, [], &sort_strategies_by_name/1)
+      end)
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(:resources, resources)
+      |> assign(:strategies_by_resource, strategies_by_resource)
 
     {:ok, socket}
   end
@@ -60,22 +63,32 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   def render(assigns) do
     ~H"""
     <div class={override_for(@socket, :root_class)}>
-      <.live_component module={Components.Banner} socket={@socket} id="sign-in-banner" />
+      <%= if override_for(@socket, :show_banner, true) do %>
+        <.live_component module={Components.Banner} socket={@socket} id="sign-in-banner" />
+      <% end %>
 
-      <%= for {_subject_name, configs} <- @resources do %>
-        <%= for config <- configs do %>
-          <%= if has_form?(config) do %>
-            <%= for widget <- form_components(config) do %>
-              <.widget widget={widget} socket={@socket} />
-            <% end %>
+      <%= for strategies <- @strategies_by_resource do %>
+        <%= if Enum.any?(strategies.form) do %>
+          <%= for strategy <- strategies.form do %>
+            <.strategy
+              component={component_for_strategy(strategy)}
+              strategy={strategy}
+              socket={@socket}
+            />
           <% end %>
-          <%= if has_form?(config) && has_links?(config) do %>
-            <.live_component module={Components.HorizontalRule} id="hr" />
-          <% end %>
-          <%= if has_links?(config) do %>
-            <%= for widget <- link_components(config) do %>
-              <.widget widget={widget} socket={@socket} />
-            <% end %>
+        <% end %>
+
+        <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>
+          <.live_component module={Components.HorizontalRule} id="sign-in-hr" />
+        <% end %>
+
+        <%= if Enum.any?(strategies.link) do %>
+          <%= for strategy <- strategies.link do %>
+            <.strategy
+              component={component_for_strategy(strategy)}
+              strategy={strategy}
+              socket={@socket}
+            />
           <% end %>
         <% end %>
       <% end %>
@@ -83,50 +96,33 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     """
   end
 
-  defp widget(assigns) do
+  defp strategy(assigns) do
     ~H"""
-    <div class={override_for(@socket, :provider_class)}>
-      <.live_component
-        module={@widget.component}
-        id={provider_id(@widget.provider, @widget.config)}
-        provider={@widget.provider}
-        config={@widget.config}
-      />
+    <div class={override_for(@socket, :strategy_class)}>
+      <.live_component module={@component} id={strategy_id(@strategy)} strategy={@strategy} />
     </div>
     """
   end
 
-  defp provider_id(provider, config) do
-    "sign-in-#{config.subject_name}-with-#{provider.provides(config.resource)}"
+  defp sort_strategies_by_name(strategies), do: Enum.sort_by(strategies, & &1.name)
+
+  defp strategy_id(strategy) do
+    subject_name =
+      strategy.resource
+      |> Info.authentication_subject_name!()
+
+    "sign-in-#{subject_name}-with-#{strategy.name}"
+    |> slugify()
   end
 
-  defp has_form?(config), do: config |> form_components() |> Enum.any?()
-  defp has_links?(config), do: config |> link_components() |> Enum.any?()
+  defp strategy_style(%Strategy.Password{}), do: :form
+  defp strategy_style(_), do: :link
 
-  defp form_components(config) do
-    config
-    |> provider_components()
-    |> Enum.filter(& &1.component.form?())
-  end
-
-  defp link_components(config) do
-    config
-    |> provider_components()
-    |> Enum.filter(& &1.component.link?())
-  end
-
-  defp provider_components(%{providers: providers, resource: resource} = config) do
-    providers
-    |> Enum.sort_by(& &1.provides(resource))
-    |> Enum.map(fn provider ->
-      component =
-        provider
-        |> Module.split()
-        |> List.last()
-        |> then(&Module.concat(Components, &1))
-
-      %{component: component, provider: provider, config: config}
-    end)
-    |> Enum.filter(&Code.ensure_loaded?(&1.component))
+  defp component_for_strategy(strategy) do
+    strategy.__struct__
+    |> Module.split()
+    |> List.replace_at(1, "Components")
+    |> List.insert_at(1, "Phoenix")
+    |> Module.concat()
   end
 end

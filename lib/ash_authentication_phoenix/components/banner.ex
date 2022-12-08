@@ -11,6 +11,8 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
   @moduledoc """
   Renders a very simple banner at the top of the sign-in component.
 
+  Can show either an image or some text, depending on the provided overrides.
+
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 

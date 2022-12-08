@@ -1,4 +1,4 @@
-defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
+defmodule AshAuthentication.Phoenix.Components.Password.Input do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     field_class: "CSS class for `div` elements surrounding the fields.",
     label_class: "CSS class for `label` elements.",
@@ -11,19 +11,21 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     input_debounce: "Number of milliseconds to debounce input by (or `nil` to disable)."
 
   @moduledoc """
-  Function components for dealing with form input during password authentication.
+  Function components for dealing with form input during password
+  authentication.
 
   ## Component hierarchy
 
   These function components are consumed by
-  `AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm` and
-  `AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm`.
+  `AshAuthentication.Phoenix.Components.Password.SignInForm`,
+  `AshAuthentication.Phoenix.Components.Password.RegisterForm` and
+  `AshAuthentication.Phoenix.Components.ResetForm`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.Component
-  alias AshAuthentication.{PasswordAuthentication, PasswordReset}
+  alias AshAuthentication.Strategy
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import Phoenix.HTML.Form
@@ -36,7 +38,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     * `socket` - Phoenix LiveView socket.
       This is needed to be able to retrieve the correct CSS configuration.
       Required.
-    * `config` - The configuration map as per
+    * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.
       Required.
     * `form` - An `AshPhoenix.Form`.
@@ -46,13 +48,12 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   """
   @spec identity_field(%{
           required(:socket) => Socket.t(),
-          required(:config) => AshAuthentication.resource_config(),
-          required(:form) => AshPhoenix.Form.t(),
+          required(:strategy) => Strategy.t(),
+          required(:form) => Form.t(),
           optional(:input_type) => :text | :email
         }) :: Rendered.t() | no_return
   def identity_field(assigns) do
-    identity_field =
-      PasswordAuthentication.Info.password_authentication_identity_field!(assigns.config.resource)
+    identity_field = assigns.strategy.identity_field
 
     assigns =
       assigns
@@ -60,7 +61,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       |> assign_new(:input_type, fn ->
         identity_field
         |> to_string()
-        |> String.starts_with?("email")
+        |> String.contains?("email")
         |> then(fn
           true -> :email
           _ -> :text
@@ -95,7 +96,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     * `socket` - Phoenix LiveView socket.
       This is needed to be able to retrieve the correct CSS configuration.
       Required.
-    * `config` - The configuration map as per
+    * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.
       Required.
     * `form` - An `AshPhoenix.Form`.
@@ -103,12 +104,11 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   """
   @spec password_field(%{
           required(:socket) => Socket.t(),
-          required(:config) => AshAuthentication.resource_config(),
-          required(:form) => AshPhoenix.Form.t()
+          required(:strategy) => Strategy.t(),
+          required(:form) => Form.t()
         }) :: Rendered.t() | no_return
   def password_field(assigns) do
-    password_field =
-      PasswordAuthentication.Info.password_authentication_password_field!(assigns.config.resource)
+    password_field = assigns.strategy.password_field
 
     assigns =
       assigns
@@ -142,7 +142,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     * `socket` - Phoenix LiveView socket.
       This is needed to be able to retrieve the correct CSS configuration.
       Required.
-    * `config` - The configuration map as per
+    * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.
       Required.
     * `form` - An `AshPhoenix.Form`.
@@ -150,14 +150,11 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   """
   @spec password_confirmation_field(%{
           required(:socket) => Socket.t(),
-          required(:config) => AshAuthentication.resource_config(),
-          required(:form) => AshPhoenix.Form.t()
+          required(:strategy) => Strategy.t(),
+          required(:form) => Form.t()
         }) :: Rendered.t() | no_return
   def password_confirmation_field(assigns) do
-    password_confirmation_field =
-      PasswordAuthentication.Info.password_authentication_password_confirmation_field!(
-        assigns.config.resource
-      )
+    password_confirmation_field = assigns.strategy.password_confirmation_field
 
     assigns =
       assigns
@@ -191,7 +188,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
     * `socket` - Phoenix LiveView socket.
       This is needed to be able to retrieve the correct CSS configuration.
       Required.
-    * `config` - The configuration map as per
+    * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.
       Required.
     * `form` - An `AshPhoenix.Form`.
@@ -204,8 +201,8 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
   """
   @spec submit(%{
           required(:socket) => Socket.t(),
-          required(:config) => AshAuthentication.resource_config(),
-          required(:form) => AshPhoenix.Form.t(),
+          required(:strategy) => Strategy.t(),
+          required(:form) => Form.t(),
           required(:action) => :sign_in | :register,
           optional(:label) => String.t()
         }) :: Rendered.t() | no_return
@@ -215,16 +212,15 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.Input do
       |> assign_new(:label, fn ->
         case assigns.action do
           :request_reset ->
-            assigns.config.resource
-            |> PasswordReset.Info.request_password_reset_action_name!()
+            assigns.strategy.resettable
+            |> Enum.map(& &1.request_password_reset_action_name)
+            |> List.first() || :reqest_reset
 
           :sign_in ->
-            assigns.config.resource
-            |> PasswordAuthentication.Info.password_authentication_sign_in_action_name!()
+            assigns.strategy.sign_in_action_name
 
           :register ->
-            assigns.config.resource
-            |> PasswordAuthentication.Info.password_authentication_register_action_name!()
+            assigns.strategy.register_action_name
         end
         |> humanize()
       end)

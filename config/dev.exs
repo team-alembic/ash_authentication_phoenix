@@ -27,9 +27,13 @@ config :ash_authentication, AshAuthentication.Jwt,
 config :phoenix, :json_library, Jason
 
 config :ash_authentication_phoenix, Example.Accounts.User,
-  oauth2_authentication: [
-    client_id: System.get_env("OAUTH2_CLIENT_ID"),
-    client_secret: System.get_env("OAUTH2_CLIENT_SECRET"),
-    redirect_uri: "http://localhost:4000/auth",
-    site: System.get_env("OAUTH2_SITE")
+  authentication: [
+    strategies: [
+      auth0: [
+        client_id: System.get_env("OAUTH2_CLIENT_ID"),
+        client_secret: System.get_env("OAUTH2_CLIENT_SECRET"),
+        redirect_uri: "http://localhost:4000/auth",
+        site: System.get_env("OAUTH2_SITE")
+      ]
+    ]
   ]

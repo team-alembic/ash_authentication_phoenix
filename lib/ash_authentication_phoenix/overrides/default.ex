@@ -40,7 +40,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :text, "or"
   end
 
-  override Components.PasswordAuthentication do
+  override Components.Password do
     set :root_class, "mt-4 mb-4"
     set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
     set :toggler_class, "flex-none text-blue-500 hover:text-blue-600"
@@ -51,7 +51,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :hide_class, "hidden"
   end
 
-  override Components.PasswordAuthentication.SignInForm do
+  override Components.Password.SignInForm do
     set :root_class, nil
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
     set :form_class, nil
@@ -59,7 +59,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :disable_button_text, "Signing in ..."
   end
 
-  override Components.PasswordAuthentication.RegisterForm do
+  override Components.Password.RegisterForm do
     set :root_class, nil
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
     set :form_class, nil
@@ -67,7 +67,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :disable_button_text, "Registering ..."
   end
 
-  override Components.PasswordAuthentication.ResetForm do
+  override Components.Password.ResetForm do
     set :root_class, nil
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
     set :form_class, nil
@@ -79,7 +79,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :disable_button_text, "Requesting ..."
   end
 
-  override Components.PasswordAuthentication.Input do
+  override Components.Password.Input do
     set :field_class, "mt-2 mb-2"
     set :label_class, "block text-sm font-medium text-gray-700 mb-1"
 
@@ -106,7 +106,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :input_debounce, 350
   end
 
-  override Components.OAuth2Authentication do
+  override Components.OAuth2 do
     set :root_class, "w-full mt-2 mb-4"
 
     set :link_class, """

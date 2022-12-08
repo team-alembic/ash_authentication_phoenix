@@ -1,4 +1,4 @@
-defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm do
+defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -11,65 +11,61 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
 
   ## Component hierarchy
 
-  This is a child of `AshAuthentication.Phoenix.Components.PasswordAuthentication`.
+  This is a child of `AshAuthentication.Phoenix.Components.Password`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.identity_field/1`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.password_field/1`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.password_confirmation_field/1`
-    * `AshAuthentication.Phoenix.Components.PasswordAuthentication.Input.submit/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.password_field/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.password_confirmation_field/1`
+    * `AshAuthentication.Phoenix.Components.Password.Input.submit/1`
 
   ## Props
 
-    * `config` - The configuration map as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
-    * `label` - The text to show in the submit label.
-      Generated from the configured action name (via
-      `Phoenix.HTML.Form.humanize/1`) if not supplied.
-      Set to `false` to disable.
+    * `strategy` - The strategy configuration as per
+      `AshAuthentication.Info.strategy/2`.  Required.
+    * `socket` - Needed to infer the otp-app from the Phoenix endpoint.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
 
-  alias AshAuthentication.{
-    PasswordAuthentication,
-    Phoenix.Components.PasswordAuthentication.Input
-  }
-
+  alias AshAuthentication.{Info, Phoenix.Components.Password.Input}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
+
   import Phoenix.HTML.Form
   import AshAuthentication.Phoenix.Components.Helpers
+  import Slug
 
   @doc false
   @impl true
   @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
-    config = assigns.config
+    strategy = assigns.strategy
 
-    action =
-      PasswordAuthentication.Info.password_authentication_register_action_name!(config.resource)
-
-    confirm? =
-      PasswordAuthentication.Info.password_authentication_confirmation_required?(config.resource)
+    api = Info.authentication_api!(strategy.resource)
+    subject_name = Info.authentication_subject_name!(strategy.resource)
 
     form =
-      config.resource
-      |> Form.for_action(action,
-        api: config.api,
-        as: to_string(config.subject_name),
-        id: "#{PasswordAuthentication.provides(config.resource)}_#{config.subject_name}_#{action}"
+      strategy.resource
+      |> Form.for_action(strategy.register_action_name,
+        api: api,
+        as: subject_name |> to_string(),
+        id: "#{subject_name}-#{strategy.name}-#{strategy.register_action_name}" |> slugify(),
+        context: %{strategy: strategy}
       )
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(form: form, trigger_action: false, confirm?: confirm?)
-      |> assign_new(:label, fn -> humanize(action) end)
+      |> assign(
+        form: form,
+        trigger_action: false,
+        subject_name: subject_name
+      )
+      |> assign_new(:label, fn -> humanize(strategy.register_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
 
     {:ok, socket}
@@ -95,23 +91,19 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
         phx-trigger-action={@trigger_action}
         phx-target={@myself}
         action={
-          route_helpers(@socket).auth_callback_path(
+          route_helpers(@socket).auth_path(
             @socket.endpoint,
-            :callback,
-            @config.subject_name,
-            @provider.provides(@config.resource)
+            {@subject_name, @strategy.name, :register}
           )
         }
         method="POST"
         class={override_for(@socket, :form_class)}
       >
-        <%= hidden_input(form, :action, value: "register") %>
+        <Input.identity_field socket={@socket} strategy={@strategy} form={form} />
+        <Input.password_field socket={@socket} strategy={@strategy} form={form} />
 
-        <Input.identity_field socket={@socket} config={@config} form={form} />
-        <Input.password_field socket={@socket} config={@config} form={form} />
-
-        <%= if @confirm? do %>
-          <Input.password_confirmation_field socket={@socket} config={@config} form={form} />
+        <%= if @strategy.confirmation_required? do %>
+          <Input.password_confirmation_field socket={@socket} strategy={@strategy} form={form} />
         <% end %>
 
         <%= if @inner_block do %>
@@ -122,7 +114,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
 
         <Input.submit
           socket={@socket}
-          config={@config}
+          strategy={@strategy}
           form={form}
           action={:register}
           disable_text={override_for(@socket, :disable_button_text)}
@@ -138,8 +130,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
           {:noreply, Socket.t()}
 
   def handle_event("change", params, socket) do
-    config = socket.assigns.config
-    params = Map.get(params, to_string(config.subject_name))
+    params = get_params(params, socket.assigns.strategy)
 
     form =
       socket.assigns.form
@@ -149,7 +140,7 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
   end
 
   def handle_event("submit", params, socket) do
-    params = Map.get(params, to_string(socket.assigns.config.subject_name))
+    params = get_params(params, socket.assigns.strategy)
 
     form = Form.validate(socket.assigns.form, params)
 
@@ -159,5 +150,15 @@ defmodule AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterFo
       |> assign(:trigger_action, form.valid?)
 
     {:noreply, socket}
+  end
+
+  defp get_params(params, strategy) do
+    param_key =
+      strategy.resource
+      |> Info.authentication_subject_name!()
+      |> to_string()
+      |> slugify()
+
+    Map.get(params, param_key, %{})
   end
 end

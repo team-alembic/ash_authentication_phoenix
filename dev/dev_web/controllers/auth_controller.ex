@@ -6,7 +6,7 @@ defmodule DevWeb.AuthController do
 
   @doc false
   @impl true
-  def success(conn, user, _token) do
+  def success(conn, _activity, user, _token) do
     conn
     |> store_in_session(user)
     |> assign(:current_user, user)
@@ -16,7 +16,7 @@ defmodule DevWeb.AuthController do
 
   @doc false
   @impl true
-  def failure(conn, reason) do
+  def failure(conn, _activity, reason) do
     conn
     |> assign(:failure_reason, reason)
     |> put_status(401)

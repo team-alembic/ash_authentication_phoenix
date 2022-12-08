@@ -42,7 +42,9 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
     end
   end
 
-  @doc false
+  @doc """
+  Retrieve configuration for a potentially overriden value.
+  """
   @spec override_for(Socket.t(), atom, any) :: any
   defmacro override_for(socket, selector, default \\ nil) do
     overrides =

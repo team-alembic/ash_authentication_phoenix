@@ -2,13 +2,7 @@ defmodule Example.Accounts.User do
   @moduledoc false
   use Ash.Resource,
     data_layer: Ash.DataLayer.Ets,
-    extensions: [
-      AshAuthentication,
-      AshAuthentication.Confirmation,
-      AshAuthentication.PasswordAuthentication,
-      AshAuthentication.PasswordReset,
-      AshAuthentication.OAuth2Authentication
-    ]
+    extensions: [AshAuthentication]
 
   require Logger
 
@@ -50,53 +44,60 @@ defmodule Example.Accounts.User do
     update_timestamp(:updated_at)
   end
 
+  # wat 2
   authentication do
     api(Example.Accounts)
-  end
 
-  confirmation do
-    monitor_fields([:email])
+    add_ons do
+      confirmation :confirm do
+        monitor_fields([:email])
 
-    sender(fn user, token ->
-      Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")
-    end)
-  end
+        sender(fn user, token ->
+          Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")
+        end)
+      end
+    end
 
-  password_authentication do
-    identity_field(:email)
-    hashed_password_field(:hashed_password)
-  end
+    strategies do
+      password :password do
+        identity_field(:email)
+        hashed_password_field(:hashed_password)
 
-  password_reset do
-    sender(fn user, token ->
-      Logger.debug("Password reset request for #{user.email} with token #{inspect(token)}")
-    end)
-  end
+        resettable do
+          sender(fn user, token ->
+            Logger.debug("Password reset request for #{user.email} with token #{inspect(token)}")
+          end)
+        end
+      end
 
-  oauth2_authentication do
-    provider_name(:auth0)
-    client_id(&get_config/3)
-    redirect_uri(&get_config/3)
-    client_secret(&get_config/3)
-    site(&get_config/3)
+      oauth2 :auth0 do
+        client_id(&get_config/2)
+        redirect_uri(&get_config/2)
+        client_secret(&get_config/2)
+        site(&get_config/2)
 
-    authorize_path("/authorize")
-    token_path("/oauth/token")
-    user_path("/userinfo")
-    authorization_params(scope: "openid profile email")
-    auth_method(:client_secret_post)
-  end
+        authorize_path("/authorize")
+        token_path("/oauth/token")
+        user_path("/userinfo")
+        authorization_params(scope: "openid profile email")
+        auth_method(:client_secret_post)
+      end
+    end
 
-  tokens do
-    enabled?(true)
-    revocation_resource(Example.Accounts.TokenRevocation)
+    tokens do
+      enabled?(true)
+      token_resource(Example.Accounts.Token)
+    end
   end
 
   identities do
-    identity(:unique_email, [:email], pre_check_with: Example.Accounts)
+    identity(:unique_email, [:email],
+      pre_check_with: Example.Accounts,
+      eager_check_with: Example.Accounts
+    )
   end
 
-  def get_config(path, resource, _opts) do
+  def get_config(path, resource) do
     value =
       :ash_authentication_phoenix
       |> Application.get_env(resource, [])
