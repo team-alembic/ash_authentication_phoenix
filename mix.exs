@@ -8,6 +8,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
     [
       app: :ash_authentication_phoenix,
       version: @version,
+      description: "Phoenix integration for Ash Authentication",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       preferred_cli_env: [ci: :test],
@@ -43,11 +44,11 @@ defmodule AshAuthentication.Phoenix.MixProject do
           Components: [
             AshAuthentication.Phoenix.SignInLive,
             AshAuthentication.Phoenix.Components.SignIn,
-            AshAuthentication.Phoenix.Components.OAuth2Authentication,
-            AshAuthentication.Phoenix.Components.PasswordAuthentication,
-            AshAuthentication.Phoenix.Components.PasswordAuthentication.SignInForm,
-            AshAuthentication.Phoenix.Components.PasswordAuthentication.RegisterForm,
-            AshAuthentication.Phoenix.Components.PasswordAuthentication.Input
+            AshAuthentication.Phoenix.Components.OAuth2,
+            AshAuthentication.Phoenix.Components.Password,
+            AshAuthentication.Phoenix.Components.Password.SignInForm,
+            AshAuthentication.Phoenix.Components.Password.RegisterForm,
+            AshAuthentication.Phoenix.Components.Password.Input
           ],
           Internals: ~r/.*/
         ]
@@ -58,14 +59,15 @@ defmodule AshAuthentication.Phoenix.MixProject do
   def package do
     [
       maintainers: [
-        "James Harton <james.harton@alembic.com.au>"
+        "James Harton <james.harton@alembic.com.au>",
+        "Zach Daniel <zach@zachdaniel.dev>"
       ],
       licenses: ["MIT"],
       links: %{
         "Source" => "https://github.com/team-alembic/ash_authentication_phoenix"
       },
       source_url: "https://github.com/team-alembic/ash_authentication_phoenix",
-      files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*)
+      files: ~w[lib .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation]
     ]
   end
 
@@ -87,7 +89,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, github: "team-alembic/ash_authentication", tag: "v3.0.3"},
+      {:ash_authentication, "~> 3.0"},
       {:ash_phoenix, "~> 1.1"},
       {:ash, "~> 2.2"},
       {:jason, "~> 1.0"},

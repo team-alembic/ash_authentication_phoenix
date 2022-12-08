@@ -43,7 +43,7 @@ defmodule MyAppWeb.Router do
     pipe_through :browser
     sign_in_route
     sign_out_route MyAppWeb.AuthController
-    auth_routes MyAppWeb.AuthController
+    auth_routes_for MyApp.Accounts.User, to: MyAppWeb.AuthController
   end
 end
 ```
