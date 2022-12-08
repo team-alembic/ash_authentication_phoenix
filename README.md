@@ -22,6 +22,19 @@ def deps do
 end
 ```
 
+If you wish to use our default [Tailwind](https://tailwindcss.com/)-based
+components, you will need to add the path to `ash_authentication_phoenix`'s
+components in your `assets/tailwind.config.js`:
+
+```javascript
+module.exports = {
+  content: [
+    // Other paths.
+    "../deps/ash_authentication_phoenix/**/*.ex"
+  ]
+}
+```
+
 ## Usage
 
 This package assumes that you have [Phoenix](https://phoenixframework.org/),
