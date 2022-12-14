@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.0.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.0.0...v1.0.1) (2022-12-14)
+
+
+
+
+### Improvements:
+
+* Components.Banner: Allow image, text and hrefs to be disabled with `nil`. (#35)
+
 ## [v0.5.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v0.4.0...v0.5.0) (2022-11-14)
 
 
