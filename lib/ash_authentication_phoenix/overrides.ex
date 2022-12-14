@@ -7,7 +7,7 @@ defmodule AshAuthentication.Phoenix.Overrides do
   generic looking user interface.
 
   You can override this by adding your own override modules to the
-  `AshAuthentication.Phoenix.Router.sign_in_route/3` macro in your router:
+  `AshAuthentication.Phoenix.Router.sign_in_route/1` macro in your router:
 
   ```elixir
   sign_in_route overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]

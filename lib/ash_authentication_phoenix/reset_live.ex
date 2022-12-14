@@ -1,19 +1,17 @@
-defmodule AshAuthentication.Phoenix.SignInLive do
+defmodule AshAuthentication.Phoenix.ResetLive do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
-    sign_in_id: "Element ID for the `SignIn` LiveComponent."
+    reset_id: "Element ID for the `Reset` LiveComponent."
 
   @moduledoc """
-  A generic, white-label sign-in page.
+  A generic, white-label password reset page.
 
   This live-view can be rendered into your app using the
-  `AshAuthentication.Phoenix.Router.sign_in_route/1` macro in your router (or by
+  `AshAuthentication.Phoenix.Router.reset_route/1` macro in your router (or by
   using `Phoenix.LiveView.Controller.live_render/3` directly in your markup).
 
-  This live-view finds all Ash resources with an authentication configuration
-  (via `AshAuthentication.authenticated_resources/1`) and renders the
-  appropriate UI for their providers using
-  `AshAuthentication.Phoenix.Components.SignIn`.
+  This live-view looks for the `token` URL parameter, and if found passes it to
+  `AshAuthentication.Phoenix.Components.Reset`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -38,13 +36,21 @@ defmodule AshAuthentication.Phoenix.SignInLive do
 
   @doc false
   @impl true
+  @spec handle_params(map, String.t(), Socket.t()) :: {:noreply, Socket.t()}
+  def handle_params(%{"token" => token}, _uri, socket) do
+    {:noreply, assign(socket, :token, token)}
+  end
+
+  @doc false
+  @impl true
   @spec render(Socket.assigns()) :: Rendered.t()
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <.live_component
-        module={Components.SignIn}
-        id={override_for(@overrides, :sign_in_id, "sign-in")}
+        module={Components.Reset}
+        id={override_for(@overrides, :reset_id, "reset")}
+        token={@token}
         overrides={@overrides}
       />
     </div>

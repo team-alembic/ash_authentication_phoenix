@@ -21,7 +21,7 @@ config :ash_authentication_phoenix, DevWeb.Endpoint,
 
 config :ash_authentication_phoenix, ash_apis: [Example.Accounts], namespace: Dev
 
-config :ash_authentication, AshAuthentication.Jwt,
+config :ash_authentication_phoenix,
   signing_secret: "All I wanna do is to thank you, even though I don't know who you are."
 
 config :phoenix, :json_library, Jason
