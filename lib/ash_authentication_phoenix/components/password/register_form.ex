@@ -25,6 +25,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `socket` - Needed to infer the otp-app from the Phoenix endpoint.
+    * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -39,9 +40,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   import AshAuthentication.Phoenix.Components.Helpers
   import Slug
 
+  @type props :: %{
+          required(:strategy) => AshAuthentication.Strategy.t(),
+          optional(:overrides) => [module]
+        }
+
   @doc false
   @impl true
-  @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
+  @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
 
@@ -67,6 +73,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       )
       |> assign_new(:label, fn -> humanize(strategy.register_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     {:ok, socket}
   end
@@ -76,9 +83,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
+    <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@socket, :label_class)}>
+        <h2 class={override_for(@overrides, :label_class)}>
           <%= @label %>
         </h2>
       <% end %>
@@ -97,17 +104,32 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
           )
         }
         method="POST"
-        class={override_for(@socket, :form_class)}
+        class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field socket={@socket} strategy={@strategy} form={form} />
-        <Input.password_field socket={@socket} strategy={@strategy} form={form} />
+        <Input.identity_field
+          socket={@socket}
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+        />
+        <Input.password_field
+          socket={@socket}
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+        />
 
         <%= if @strategy.confirmation_required? do %>
-          <Input.password_confirmation_field socket={@socket} strategy={@strategy} form={form} />
+          <Input.password_confirmation_field
+            socket={@socket}
+            strategy={@strategy}
+            form={form}
+            overrides={@overrides}
+          />
         <% end %>
 
         <%= if @inner_block do %>
-          <div class={override_for(@socket, :slot_class)}>
+          <div class={override_for(@overrides, :slot_class)}>
             <%= render_slot(@inner_block) %>
           </div>
         <% end %>
@@ -117,7 +139,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
           strategy={@strategy}
           form={form}
           action={:register}
-          disable_text={override_for(@socket, :disable_button_text)}
+          disable_text={override_for(@overrides, :disable_button_text)}
+          overrides={@overrides}
         />
       </.form>
     </div>

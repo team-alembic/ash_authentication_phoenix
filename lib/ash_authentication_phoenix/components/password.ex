@@ -27,7 +27,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
-    * `socket` - Needed to infer the otp-app from the Phoenix endpoint.
+    * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -37,8 +37,13 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   alias Phoenix.LiveView.{JS, Rendered, Socket}
   import Slug
 
+  @type props :: %{
+          required(:strategy) => AshAuthentication.Strategy.t(),
+          optional(:overrides) => [module]
+        }
+
   @doc false
-  @spec render(Socket.assigns()) :: Rendered.t() | no_return
+  @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
     strategy = assigns.strategy
 
@@ -72,27 +77,30 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         :register_id,
         generate_id(subject_name, strategy_name, strategy.register_action_name)
       )
-      |> assign(:show_first, override_for(assigns.socket, :show_first, :sign_in))
-      |> assign(:hide_class, override_for(assigns.socket, :hide_class))
+      |> assign(:show_first, override_for(assigns.overrides, :show_first, :sign_in))
+      |> assign(:hide_class, override_for(assigns.overrides, :hide_class))
       |> assign(:reset_enabled?, reset_enabled?)
       |> assign(:reset_id, reset_id)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
+    <div class={override_for(@overrides, :root_class)}>
       <div id={"#{@sign_in_id}-wrapper"} class={unless @show_first == :sign_in, do: @hide_class}>
         <.live_component
           module={Password.SignInForm}
           id={@sign_in_id}
           strategy={@strategy}
           label={false}
+          overrides={@overrides}
         >
-          <div class={override_for(@socket, :interstitial_class)}>
+          <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
                 socket={@socket}
                 show={@reset_id}
                 hide={[@sign_in_id, @register_id]}
-                message={override_for(@socket, :reset_toggle_text)}
+                message={override_for(@overrides, :reset_toggle_text)}
+                overrides={@overrides}
               />
             <% end %>
 
@@ -100,7 +108,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
               socket={@socket}
               show={@register_id}
               hide={[@sign_in_id, @reset_id]}
-              message={override_for(@socket, :register_toggle_text)}
+              message={override_for(@overrides, :register_toggle_text)}
+              overrides={@overrides}
             />
           </div>
         </.live_component>
@@ -112,21 +121,24 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           id={@register_id}
           strategy={@strategy}
           label={false}
+          overrides={@overrides}
         >
-          <div class={override_for(@socket, :interstitial_class)}>
+          <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
                 socket={@socket}
                 show={@reset_id}
                 hide={[@sign_in_id, @register_id]}
-                message={override_for(@socket, :reset_toggle_text)}
+                message={override_for(@overrides, :reset_toggle_text)}
+                overrides={@overrides}
               />
             <% end %>
             <.toggler
               socket={@socket}
               show={@sign_in_id}
               hide={[@register_id, @reset_id]}
-              message={override_for(@socket, :sign_in_toggle_text)}
+              message={override_for(@overrides, :sign_in_toggle_text)}
+              overrides={@overrides}
             />
           </div>
         </.live_component>
@@ -139,19 +151,22 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             id={@reset_id}
             strategy={@strategy}
             label={false}
+            overrides={@overrides}
           >
-            <div class={override_for(@socket, :interstitial_class)}>
+            <div class={override_for(@overrides, :interstitial_class)}>
               <.toggler
                 socket={@socket}
                 show={@register_id}
                 hide={[@sign_in_id, @reset_id]}
-                message={override_for(@socket, :register_toggle_text)}
+                message={override_for(@overrides, :register_toggle_text)}
+                overrides={@overrides}
               />
               <.toggler
                 socket={@socket}
                 show={@sign_in_id}
                 hide={[@register_id, @reset_id]}
-                message={override_for(@socket, :sign_in_toggle_text)}
+                message={override_for(@overrides, :sign_in_toggle_text)}
+                overrides={@overrides}
               />
             </div>
           </.live_component>
@@ -174,7 +189,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   @spec toggler(Socket.assigns()) :: Rendered.t() | no_return
   def toggler(assigns) do
     ~H"""
-    <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@socket, :toggler_class)}>
+    <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@overrides, :toggler_class)}>
       <%= @message %>
     </a>
     """

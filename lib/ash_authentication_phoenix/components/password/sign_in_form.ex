@@ -21,13 +21,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
 
   ## Props
 
-    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
-      the correct CSS configuration. Required.
     * `strategy` - The configuration map as per
       `AshAuthentication.Info.strategy/2`. Required.
     * `label` - The text to show in the submit label. Generated from the
       configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
       supplied. Set to `false` to disable.
+    * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -42,9 +41,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   import Slug
 
   @type props :: %{
-          required(:socket) => Socket.t(),
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:label) => String.t() | false
+          optional(:label) => String.t() | false,
+          optional(:overrides) => [module]
         }
 
   @doc false
@@ -70,6 +69,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign(form: form, trigger_action: false, subject_name: subject_name)
       |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     {:ok, socket}
   end
@@ -79,9 +79,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
+    <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@socket, :label_class)}><%= @label %></h2>
+        <h2 class={override_for(@overrides, :label_class)}><%= @label %></h2>
       <% end %>
 
       <.form
@@ -98,13 +98,23 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           )
         }
         method="POST"
-        class={override_for(@socket, :form_class)}
+        class={override_for(@overrides, :form_class)}
       >
-        <Password.Input.identity_field socket={@socket} strategy={@strategy} form={form} />
-        <Password.Input.password_field socket={@socket} strategy={@strategy} form={form} />
+        <Password.Input.identity_field
+          socket={@socket}
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+        />
+        <Password.Input.password_field
+          socket={@socket}
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+        />
 
         <%= if @inner_block do %>
-          <div class={override_for(@socket, :slot_class)}>
+          <div class={override_for(@overrides, :slot_class)}>
             <%= render_slot(@inner_block) %>
           </div>
         <% end %>
@@ -114,7 +124,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           strategy={@strategy}
           form={form}
           action={:sign_in}
-          disable_text={override_for(@socket, :disable_button_text)}
+          disable_text={override_for(@overrides, :disable_button_text)}
+          overrides={@overrides}
         />
       </.form>
     </div>

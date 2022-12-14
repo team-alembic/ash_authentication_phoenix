@@ -6,11 +6,11 @@ defmodule AshAuthentication.Phoenix.Overrides do
   which uses [TailwindCSS](https://tailwindcss.com/) to generate a fairly
   generic looking user interface.
 
-  You can override by setting the following in your `config.exs`:
+  You can override this by adding your own override modules to the
+  `AshAuthentication.Phoenix.Router.sign_in_route/3` macro in your router:
 
   ```elixir
-  config :my_app, AshAuthentication.Phoenix,
-    overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+  sign_in_route overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
   ```
 
   and defining `lib/my_app_web/auth_overrides.ex` within which you can set any
@@ -34,21 +34,6 @@ defmodule AshAuthentication.Phoenix.Overrides do
   end
   ```
   """
-
-  @doc """
-  Retrieve the override for a specific component and selector.
-  """
-  @spec override_for(otp_app :: atom, component :: module, selector :: atom) :: any
-  def override_for(otp_app, component, selector)
-      when is_atom(otp_app) and is_atom(component) and is_atom(selector) do
-    otp_app
-    |> Application.get_env(AshAuthentication.Phoenix, [])
-    |> Keyword.get(:overrides, [__MODULE__.Default])
-    |> Enum.find_value(fn module ->
-      module.overrides()
-      |> Map.get({component, selector})
-    end)
-  end
 
   @doc false
   @spec __using__(any) :: Macro.t()
