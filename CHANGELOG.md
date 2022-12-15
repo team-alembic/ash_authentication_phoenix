@@ -5,6 +5,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.2.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.1.0...v1.2.0) (2022-12-15)
+
+
+
+
+### Features:
+
+* PasswordReset: Add a generic password reset form (#37)
+
+* PasswordReset: Add a generic password reset form
+
+### Improvements:
+
+* Input.submit: trim trailing "with password" from submit buttons.
+
 ## [v1.1.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.0.1...v1.1.0) (2022-12-15)
 
 
