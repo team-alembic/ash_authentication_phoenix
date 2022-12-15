@@ -45,15 +45,21 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       Required.
     * `input_type` - Either `:text` or `:email`.
       If not set it will try and guess based on the name of the identity field.
+    * `overrides` - A list of override modules.
   """
   @spec identity_field(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
-          optional(:input_type) => :text | :email
+          optional(:input_type) => :text | :email,
+          optional(:overrides) => [module]
         }) :: Rendered.t() | no_return
   def identity_field(assigns) do
     identity_field = assigns.strategy.identity_field
+
+    assigns =
+      assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     assigns =
       assigns
@@ -69,21 +75,21 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       end)
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, identity_field) do
-          override_for(assigns.socket, :input_class_with_error)
+          override_for(assigns.overrides, :input_class_with_error)
         else
-          override_for(assigns.socket, :input_class)
+          override_for(assigns.overrides, :input_class)
         end
       end)
 
     ~H"""
-    <div class={override_for(@socket, :field_class)}>
-      <%= label(@form, @identity_field, class: override_for(@socket, :label_class)) %>
+    <div class={override_for(@overrides, :field_class)}>
+      <%= label(@form, @identity_field, class: override_for(@overrides, :label_class)) %>
       <%= text_input(@form, @identity_field,
         type: to_string(@input_type),
         class: @input_class,
-        phx_debounce: override_for(@socket, :input_debounce)
+        phx_debounce: override_for(@overrides, :input_debounce)
       ) %>
-      <.error socket={@socket} form={@form} field={@identity_field} />
+      <.error socket={@socket} form={@form} field={@identity_field} overrides={@overrides} />
     </div>
     """
   end
@@ -93,43 +99,46 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
   ## Props
 
-    * `socket` - Phoenix LiveView socket.
-      This is needed to be able to retrieve the correct CSS configuration.
-      Required.
+    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
+      the correct CSS configuration.  Required.
     * `strategy` - The configuration map as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
-    * `form` - An `AshPhoenix.Form`.
-      Required.
+      `AshAuthentication.authenticated_resources/1`.  Required.
+    * `form` - An `AshPhoenix.Form`.  Required.
+    * `overrides` - A list of override modules.
   """
   @spec password_field(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
-          required(:form) => Form.t()
+          required(:form) => Form.t(),
+          optional(:overrides) => [module]
         }) :: Rendered.t() | no_return
   def password_field(assigns) do
     password_field = assigns.strategy.password_field
 
     assigns =
       assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+
+    assigns =
+      assigns
       |> assign(:password_field, password_field)
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_field) do
-          override_for(assigns.socket, :input_class_with_error)
+          override_for(assigns.overrides, :input_class_with_error)
         else
-          override_for(assigns.socket, :input_class)
+          override_for(assigns.overrides, :input_class)
         end
       end)
 
     ~H"""
-    <div class={override_for(@socket, :field_class)}>
-      <%= label(@form, @password_field, class: override_for(@socket, :label_class)) %>
+    <div class={override_for(@overrides, :field_class)}>
+      <%= label(@form, @password_field, class: override_for(@overrides, :label_class)) %>
       <%= password_input(@form, @password_field,
         class: @input_class,
         value: input_value(@form, @password_field),
-        phx_debounce: override_for(@socket, :input_debounce)
+        phx_debounce: override_for(@overrides, :input_debounce)
       ) %>
-      <.error socket={@socket} form={@form} field={@password_field} />
+      <.error socket={@socket} form={@form} field={@password_field} overrides={@overrides} />
     </div>
     """
   end
@@ -139,43 +148,51 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
   ## Props
 
-    * `socket` - Phoenix LiveView socket.
-      This is needed to be able to retrieve the correct CSS configuration.
-      Required.
+    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
+      the correct CSS configuration.  Required.
     * `strategy` - The configuration map as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
-    * `form` - An `AshPhoenix.Form`.
-      Required.
+      `AshAuthentication.authenticated_resources/1`.  Required.
+    * `form` - An `AshPhoenix.Form`.  Required.
+    * `overrides` - A list of override modules.
   """
   @spec password_confirmation_field(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
-          required(:form) => Form.t()
+          required(:form) => Form.t(),
+          optional(:overrides) => [module]
         }) :: Rendered.t() | no_return
   def password_confirmation_field(assigns) do
     password_confirmation_field = assigns.strategy.password_confirmation_field
 
     assigns =
       assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+
+    assigns =
+      assigns
       |> assign(:password_confirmation_field, password_confirmation_field)
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_confirmation_field) do
-          override_for(assigns.socket, :input_class_with_error)
+          override_for(assigns.overrides, :input_class_with_error)
         else
-          override_for(assigns.socket, :input_class)
+          override_for(assigns.overrides, :input_class)
         end
       end)
 
     ~H"""
-    <div class={override_for(@socket, :field_class)}>
-      <%= label(@form, @password_confirmation_field, class: override_for(@socket, :label_class)) %>
+    <div class={override_for(@overrides, :field_class)}>
+      <%= label(@form, @password_confirmation_field, class: override_for(@overrides, :label_class)) %>
       <%= password_input(@form, @password_confirmation_field,
         class: @input_class,
         value: input_value(@form, @password_confirmation_field),
-        phx_debounce: override_for(@socket, :input_debounce)
+        phx_debounce: override_for(@overrides, :input_debounce)
       ) %>
-      <.error socket={@socket} form={@form} field={@password_confirmation_field} />
+      <.error
+        socket={@socket}
+        form={@form}
+        field={@password_confirmation_field}
+        overrides={@overrides}
+      />
     </div>
     """
   end
@@ -185,30 +202,29 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
   ## Props
 
-    * `socket` - Phoenix LiveView socket.
-      This is needed to be able to retrieve the correct CSS configuration.
-      Required.
+    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
+      the correct CSS configuration.  Required.
     * `strategy` - The configuration map as per
-      `AshAuthentication.authenticated_resources/1`.
-      Required.
-    * `form` - An `AshPhoenix.Form`.
-      Required.
-    * `action` - Either `:sign_in` or `:register`.
-      Required.
-    * `label` - The text to show in the submit label.
-      Generated from the configured action name (via
-      `Phoenix.HTML.Form.humanize/1`) if not supplied.
+      `AshAuthentication.authenticated_resources/1`.  Required.
+    * `form` - An `AshPhoenix.Form`.  Required.
+    * `action` - Either `:sign_in` or `:register`.  Required.
+    * `label` - The text to show in the submit label.  Generated from the
+      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
+      supplied.
+    * `overrides` - A list of override modules.
   """
   @spec submit(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
           required(:action) => :sign_in | :register,
-          optional(:label) => String.t()
+          optional(:label) => String.t(),
+          optional(:overrides) => [module]
         }) :: Rendered.t() | no_return
   def submit(assigns) do
     assigns =
       assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:label, fn ->
         case assigns.action do
           :request_reset ->
@@ -227,7 +243,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       |> assign_new(:disable_text, fn -> nil end)
 
     ~H"""
-    <%= submit(@label, class: override_for(@socket, :submit_class), phx_disable_with: @disable_text) %>
+    <%= submit(@label, class: override_for(@overrides, :submit_class), phx_disable_with: @disable_text) %>
     """
   end
 
@@ -236,13 +252,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
   ## Props
 
-    * `socket` - Phoenix LiveView socket.
-      This is needed to be able to retrieve the correct CSS configuration.
-      Required.
-    * `form` - An `AshPhoenix.Form`.
-      Required.
-    * `field` - The field for which to retrieve the errors.
-      Required.
+    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
+      the correct CSS configuration.  Required.
+    * `form` - An `AshPhoenix.Form`.  Required.
+    * `field` - The field for which to retrieve the errors.  Required.
+    * `overrides` - A list of override modules.
   """
   @spec error(%{
           required(:socket) => Socket.t(),
@@ -254,6 +268,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   def error(assigns) do
     assigns =
       assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:errors, fn ->
         assigns.form
         |> Form.errors()
@@ -263,9 +278,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <%= if Enum.any?(@errors) do %>
-      <ul class={override_for(@socket, :error_ul)}>
+      <ul class={override_for(@overrides, :error_ul)}>
         <%= for error <- @errors do %>
-          <li class={override_for(@socket, :error_li)} phx-feedback-for={input_name(@form, @field)}>
+          <li class={override_for(@overrides, :error_li)} phx-feedback-for={input_name(@form, @field)}>
             <%= @field_label %> <%= error %>
           </li>
         <% end %>

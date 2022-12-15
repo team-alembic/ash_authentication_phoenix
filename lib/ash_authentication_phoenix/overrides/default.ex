@@ -43,7 +43,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   override Components.Password do
     set :root_class, "mt-4 mb-4"
     set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
-    set :toggler_class, "flex-none text-blue-500 hover:text-blue-600"
+    set :toggler_class, "flex-none text-blue-500 hover:text-blue-600 px-2 first:pl-0 last:pr-0"
     set :sign_in_toggle_text, "Already have an account?"
     set :register_toggle_text, "Need an account?"
     set :reset_toggle_text, "Forgot your password?"

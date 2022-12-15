@@ -22,8 +22,13 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   Children:
 
     * `AshAuthentication.Phoenix.Components.Strategy.Password`.
+    * `AshAuthentication.Phoenix.Components.Strategy.OAuth2`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
+
+  ## Props
+
+    * `overrides` - A list of override modules.
   """
 
   use Phoenix.LiveComponent
@@ -32,9 +37,13 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   import AshAuthentication.Phoenix.Components.Helpers
   import Slug
 
+  @type props :: %{
+          optional(:overrides) => [module]
+        }
+
   @doc false
   @impl true
-  @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
+  @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategies_by_resource =
       socket
@@ -53,6 +62,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       socket
       |> assign(assigns)
       |> assign(:strategies_by_resource, strategies_by_resource)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     {:ok, socket}
   end
@@ -62,9 +72,14 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
-      <%= if override_for(@socket, :show_banner, true) do %>
-        <.live_component module={Components.Banner} socket={@socket} id="sign-in-banner" />
+    <div class={override_for(@overrides, :root_class)}>
+      <%= if override_for(@overrides, :show_banner, true) do %>
+        <.live_component
+          module={Components.Banner}
+          socket={@socket}
+          id="sign-in-banner"
+          overrides={@overrides}
+        />
       <% end %>
 
       <%= for strategies <- @strategies_by_resource do %>
@@ -74,12 +89,13 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               component={component_for_strategy(strategy)}
               strategy={strategy}
               socket={@socket}
+              overrides={@overrides}
             />
           <% end %>
         <% end %>
 
         <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>
-          <.live_component module={Components.HorizontalRule} id="sign-in-hr" />
+          <.live_component module={Components.HorizontalRule} id="sign-in-hr" overrides={@overrides} />
         <% end %>
 
         <%= if Enum.any?(strategies.link) do %>
@@ -88,6 +104,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               component={component_for_strategy(strategy)}
               strategy={strategy}
               socket={@socket}
+              overrides={@overrides}
             />
           <% end %>
         <% end %>
@@ -98,8 +115,13 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   defp strategy(assigns) do
     ~H"""
-    <div class={override_for(@socket, :strategy_class)}>
-      <.live_component module={@component} id={strategy_id(@strategy)} strategy={@strategy} />
+    <div class={override_for(@overrides, :strategy_class)}>
+      <.live_component
+        module={@component}
+        id={strategy_id(@strategy)}
+        strategy={@strategy}
+        overrides={@overrides}
+      />
     </div>
     """
   end

@@ -107,17 +107,39 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
-  Generates a generic, white-label sign-in page using LiveView and the
-  components in `AshAuthentication.Phoenix.Components`.
+    Generates a generic, white-label sign-in page using LiveView and the
+    components in `AshAuthentication.Phoenix.Components`.
 
-  This is completely optional.
+    This is completely optional.
+
+    Available options are:
+
+    * `path` the path under which to mount the live-view. Defaults to
+      `"/sign-in"`.
+    * `live_view` the name of the live view to render. Defaults to
+      `AshAuthentication.Phoenix.SignInLive`.
+    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+    * `overrides` specify any override modules for customisation.  See
+      `AshAuthentication.Phoenix.Overrides` for more information.
+
+      all other options are passed to the generated `scope`.
   """
-  defmacro sign_in_route(
-             path \\ "/sign-in",
-             live_view \\ AshAuthentication.Phoenix.SignInLive,
-             opts \\ []
-           ) do
+  @spec sign_in_route(
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro sign_in_route(opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/sign-in")
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignInLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
 
     opts =
       opts
@@ -125,9 +147,9 @@ defmodule AshAuthentication.Phoenix.Router do
 
     quote do
       scope unquote(path), unquote(opts) do
-        import Phoenix.LiveView.Router, only: [live: 4, live_session: 2]
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
-        live_session :sign_in do
+        live_session :sign_in, session: %{"overrides" => unquote(overrides)} do
           live("/", unquote(live_view), :sign_in, as: unquote(as))
         end
       end
@@ -140,6 +162,9 @@ defmodule AshAuthentication.Phoenix.Router do
 
   This is optional, but you probably want it.
   """
+  @spec sign_out_route(AshAuthentication.Phoenix.Controller.t(), path :: String.t(), [
+          {:as, atom} | {atom, any}
+        ]) :: Macro.t()
   defmacro sign_out_route(auth_controller, path \\ "/sign-out", opts \\ []) do
     {as, opts} = Keyword.pop(opts, :as, :auth)
 

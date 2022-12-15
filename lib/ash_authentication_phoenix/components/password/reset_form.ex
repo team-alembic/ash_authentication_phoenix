@@ -27,6 +27,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     * `label` - The text to show in the submit label.  Generated from the
       configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
       supplied.  Set to `false` to disable.
+    * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -40,9 +41,15 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   import AshAuthentication.Phoenix.Components.Helpers
   import Slug
 
+  @type props :: %{
+          required(:strategy) => AshAuthentication.Strategy.t(),
+          optional(:label) => String.t() | false,
+          optional(:overrides) => [module]
+        }
+
   @doc false
   @impl true
-  @spec update(Socket.assigns(), Socket.t()) :: {:ok, Socket.t()}
+  @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
     form = blank_form(strategy)
@@ -53,6 +60,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       |> assign(form: form, subject_name: Info.authentication_subject_name!(strategy.resource))
       |> assign_new(:label, fn -> strategy.request_password_reset_action_name end)
       |> assign_new(:inner_block, fn -> nil end)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     {:ok, socket}
   end
@@ -62,9 +70,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
+    <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@socket, :label_class)}>
+        <h2 class={override_for(@overrides, :label_class)}>
           <%= @label %>
         </h2>
       <% end %>
@@ -82,12 +90,17 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
           )
         }
         method="POST"
-        class={override_for(@socket, :form_class)}
+        class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field socket={@socket} strategy={@strategy} form={form} />
+        <Input.identity_field
+          socket={@socket}
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+        />
 
         <%= if @inner_block do %>
-          <div class={override_for(@socket, :slot_class)}>
+          <div class={override_for(@overrides, :slot_class)}>
             <%= render_slot(@inner_block) %>
           </div>
         <% end %>
@@ -97,7 +110,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
           strategy={@strategy}
           form={form}
           action={:request_reset}
-          disable_text={override_for(@socket, :disable_button_text)}
+          disable_text={override_for(@overrides, :disable_button_text)}
+          overrides={@overrides}
         />
       </.form>
     </div>

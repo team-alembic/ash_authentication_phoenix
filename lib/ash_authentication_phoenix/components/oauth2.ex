@@ -15,26 +15,32 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
 
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
-    * `socket` - Needed to infer the otp-app from the Phoenix endpoint.
+    * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
   alias AshAuthentication.Info
-  alias Phoenix.LiveView.{Rendered, Socket}
+  alias Phoenix.LiveView.Rendered
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
   import Phoenix.HTML.Form
 
+  @type props :: %{
+          required(:strategy) => AshAuthentication.Strategy.t(),
+          optional(:overrides) => [module]
+        }
+
   @doc false
-  @spec render(Socket.assigns()) :: Rendered.t() | no_return
+  @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
     assigns =
       assigns
       |> assign(:subject_name, Info.authentication_subject_name!(assigns.strategy.resource))
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
+    <div class={override_for(@overrides, :root_class)}>
       <a
         href={
           route_helpers(@socket).auth_path(
@@ -42,7 +48,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
             {@subject_name, @strategy.name, :request}
           )
         }
-        class={override_for(@socket, :link_class)}
+        class={override_for(@overrides, :link_class)}
       >
         Sign in with <%= strategy_name(@strategy) %>
       </a>

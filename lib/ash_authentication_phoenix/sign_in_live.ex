@@ -24,11 +24,29 @@ defmodule AshAuthentication.Phoenix.SignInLive do
 
   @doc false
   @impl true
+  def mount(_params, session, socket) do
+    overrides =
+      session
+      |> Map.get("overrides", [AshAuthentication.Phoenix.Overrides.Default])
+
+    socket =
+      socket
+      |> assign(overrides: overrides)
+
+    {:ok, socket}
+  end
+
+  @doc false
+  @impl true
   @spec render(Socket.assigns()) :: Rendered.t()
   def render(assigns) do
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
-      <.live_component module={Components.SignIn} id={override_for(@socket, :sign_in_id, "sign-in")} />
+    <div class={override_for(@overrides, :root_class)}>
+      <.live_component
+        module={Components.SignIn}
+        id={override_for(@overrides, :sign_in_id, "sign-in")}
+        overrides={@overrides}
+      />
     </div>
     """
   end

@@ -3,8 +3,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
   Auto generates documentation and helpers for components.
   """
 
-  alias AshAuthentication.Phoenix.{Components.Helpers, Overrides}
-  alias Phoenix.LiveView.Socket
+  alias AshAuthentication.Phoenix.Overrides
 
   @doc false
   @spec __using__(keyword) :: Macro.t()
@@ -19,10 +18,10 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
       |> Macro.escape()
 
     quote do
-      require AshAuthentication.Phoenix.Overrides
-      require AshAuthentication.Phoenix.Overrides.Overridable
+      require Overrides
+      require Overrides.Overridable
       @overrides unquote(overrides)
-      import AshAuthentication.Phoenix.Overrides.Overridable, only: :macros
+      import Overrides.Overridable, only: :macros
     end
   end
 
@@ -45,18 +44,23 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
   @doc """
   Retrieve configuration for a potentially overriden value.
   """
-  @spec override_for(Socket.t(), atom, any) :: any
-  defmacro override_for(socket, selector, default \\ nil) do
-    overrides =
-      __CALLER__.module
-      |> Module.get_attribute(:overrides, %{})
+  @spec override_for([module], atom, any) :: any
+  defmacro override_for(overrides, selector, default \\ nil) do
+    component = __CALLER__.module
+    component_overrides = Module.get_attribute(component, :overrides, %{})
 
-    if Map.has_key?(overrides, selector) do
+    if Map.has_key?(component_overrides, selector) do
       quote do
         override =
-          unquote(socket)
-          |> Helpers.otp_app_from_socket()
-          |> Overrides.override_for(__MODULE__, unquote(selector))
+          unquote(overrides)
+          |> Enum.reduce_while(nil, fn module, _ ->
+            module.overrides()
+            |> Map.fetch({unquote(component), unquote(selector)})
+            |> case do
+              {:ok, value} -> {:halt, value}
+              :error -> {:cont, nil}
+            end
+          end)
 
         override || unquote(default)
       end

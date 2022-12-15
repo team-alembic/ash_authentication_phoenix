@@ -14,35 +14,47 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
   Can show either an image or some text, depending on the provided overrides.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
+
+   ## Props
+
+      * `overrides` - A list of override modules.
   """
 
   use Phoenix.LiveComponent
-  alias Phoenix.LiveView.{Rendered, Socket}
+  alias Phoenix.LiveView.Rendered
+
+  @type props :: %{
+          optional(:overrides) => [module]
+        }
 
   @doc false
   @impl true
-  @spec render(Socket.assigns()) :: Rendered.t() | no_return
+  @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+
     ~H"""
-    <div class={override_for(@socket, :root_class)}>
-      <%= case {override_for(@socket, :href_url), override_for(@socket, :image_url)} do %>
+    <div class={override_for(@overrides, :root_class)}>
+      <%= case {override_for(@overrides, :href_url), override_for(@overrides, :image_url)} do %>
         <% {nil, nil} -> %>
         <% {nil, img} -> %>
-          <img class={override_for(@socket, :image_class)} src={img} />
+          <img class={override_for(@overrides, :image_class)} src={img} />
         <% {hrf, img} -> %>
-          <a class={override_for(@socket, :href_class)} href={hrf}>
-            <img class={override_for(@socket, :image_class)} src={img} />
+          <a class={override_for(@overrides, :href_class)} href={hrf}>
+            <img class={override_for(@overrides, :image_class)} src={img} />
           </a>
       <% end %>
-      <%= case  {override_for(@socket, :href_url), override_for(@socket, :text)} do %>
+      <%= case  {override_for(@overrides, :href_url), override_for(@overrides, :text)} do %>
         <% {nil, nil} -> %>
         <% {nil, txt} -> %>
-          <div class={override_for(@socket, :text_class)}>
+          <div class={override_for(@overrides, :text_class)}>
             <%= txt %>
           </div>
         <% {hrf, txt} -> %>
-          <div class={override_for(@socket, :text_class)}>
-            <a class={override_for(@socket, :href_class)} href={hrf}>
+          <div class={override_for(@overrides, :text_class)}>
+            <a class={override_for(@overrides, :href_class)} href={hrf}>
               <%= txt %>
             </a>
           </div>
