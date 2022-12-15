@@ -230,13 +230,19 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
           :request_reset ->
             assigns.strategy.resettable
             |> Enum.map(& &1.request_password_reset_action_name)
-            |> List.first() || :reqest_reset
+            |> List.first(:request_reset)
+            |> to_string()
+            |> String.trim_trailing("_with_password")
 
           :sign_in ->
             assigns.strategy.sign_in_action_name
+            |> to_string()
+            |> String.trim_trailing("_with_password")
 
           :register ->
             assigns.strategy.register_action_name
+            |> to_string()
+            |> String.trim_trailing("_with_password")
         end
         |> humanize()
       end)
