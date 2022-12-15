@@ -29,6 +29,7 @@ defmodule AshAuthentication.Phoenix.Router do
       sign_in_route
       sign_out_route AuthController
       auth_routes_for MyApp.Accounts.User, to: AuthController
+      reset_route
     end
   ```
   """
@@ -171,6 +172,58 @@ defmodule AshAuthentication.Phoenix.Router do
     quote do
       scope unquote(path), unquote(opts) do
         get("/", unquote(auth_controller), :sign_out, as: unquote(as))
+      end
+    end
+  end
+
+  @doc """
+  Generates a generic, white-label password reset page using LiveView and the
+  components in `AshAuthentication.Phoenix.Components`.
+
+  Available options are:
+
+    * `path` the path under which to mount the live-view. Defaults to
+      `"/password-reset"`.
+    * `live_view` the name of the live view to render. Defaults to
+      `AshAuthentication.Phoenix.ResetLive`.
+    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+    * `overrides` specify any override modules for customisation.  See
+      `AshAuthentication.Phoenix.Overrides` for more information. all other
+      options are passed to the generated `scope`.
+
+  This is completely optional.
+  """
+  @spec reset_route(
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro reset_route(opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/password-reset")
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.ResetLive)
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    opts =
+      opts
+      |> Keyword.put_new(:alias, false)
+
+    quote do
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 2]
+
+        live_session :reset do
+          live("/:token", unquote(live_view), :reset,
+            as: unquote(as),
+            private: %{overrides: unquote(overrides)}
+          )
+        end
       end
     end
   end

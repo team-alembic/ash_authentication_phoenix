@@ -6,10 +6,31 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   """
 
   use AshAuthentication.Phoenix.Overrides
-  alias AshAuthentication.Phoenix.{Components, SignInLive}
+  alias AshAuthentication.Phoenix.{Components, ResetLive, SignInLive}
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center"
+  end
+
+  override ResetLive do
+    set :root_class, "grid h-screen place-items-center"
+  end
+
+  override Components.Reset do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24
+    """
+
+    set :strategy_class, "mx-auth w-full max-w-sm lg:w-96"
+  end
+
+  override Components.Reset.Form do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
+    set :form_class, nil
+    set :spacer_class, "py-1"
+    set :disable_button_text, "Changing password ..."
   end
 
   override Components.SignIn do
@@ -18,7 +39,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     lg:px-20 xl:px-24
     """
 
-    set :provider_class, "mx-auth w-full max-w-sm lg:w-96"
+    set :strategy_class, "mx-auth w-full max-w-sm lg:w-96"
   end
 
   override Components.Banner do
@@ -98,7 +119,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     w-full flex justify-center py-2 px-4 border border-transparent rounded-md
     shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-    mt-2 mb-4
+    mt-4 mb-4
     """
 
     set :error_ul, "text-red-400 font-light my-3 italic text-sm"

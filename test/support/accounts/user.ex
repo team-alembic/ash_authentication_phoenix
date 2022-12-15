@@ -87,6 +87,10 @@ defmodule Example.Accounts.User do
     tokens do
       enabled?(true)
       token_resource(Example.Accounts.Token)
+
+      signing_secret(fn _, _ ->
+        Application.fetch_env(:ash_authentication_phoenix, :signing_secret)
+      end)
     end
   end
 
