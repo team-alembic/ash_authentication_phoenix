@@ -70,17 +70,11 @@ defmodule Example.Accounts.User do
         end
       end
 
-      oauth2 :auth0 do
+      auth0 :auth0 do
         client_id(&get_config/2)
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         site(&get_config/2)
-
-        authorize_path("/authorize")
-        token_path("/oauth/token")
-        user_path("/userinfo")
-        authorization_params(scope: "openid profile email")
-        auth_method(:client_secret_post)
       end
     end
 
