@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.3.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.2.0...v1.3.0) (2022-12-16)
+
+
+
+
+### Features:
+
+* Add Auth0 icon.
+
 ## [v1.2.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.1.0...v1.2.0) (2022-12-15)
 
 
