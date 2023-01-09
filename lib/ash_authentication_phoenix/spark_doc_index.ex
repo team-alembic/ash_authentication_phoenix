@@ -22,7 +22,7 @@ defmodule AshAuthentication.Phoenix.SparkDocIndex do
 
   @doc false
   @impl true
-  @spec code_modules :: [{String.t(), [module]}]
+  @spec code_modules :: Keyword.t()
   def code_modules do
     [
       Welcome: [
