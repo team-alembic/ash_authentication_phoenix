@@ -89,7 +89,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 3.3.1"},
+      {:ash_authentication, "~> 3.3"},
       {:ash_phoenix, "~> 1.1"},
       {:ash, "~> 2.2"},
       {:jason, "~> 1.0"},
@@ -103,7 +103,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:doctor, "~> 0.18", only: [:dev, :test]},
       {:elixir_sense, github: "elixir-lsp/elixir_sense", only: [:dev, :test]},
       {:ex_doc, "~> 0.23", only: :dev, runtime: false},
-      {:faker, "~> 0.17.0", only: [:dev, :test]},
+      {:faker, "~> 0.17", only: [:dev, :test]},
       {:git_ops, "~> 2.4", only: [:dev, :test], runtime: false},
       {:mimic, "~> 1.7", only: [:dev, :test]},
       {:plug_cowboy, "~> 2.5", only: [:dev, :test]}
