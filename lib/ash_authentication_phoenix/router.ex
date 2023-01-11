@@ -54,6 +54,7 @@ defmodule AshAuthentication.Phoenix.Router do
     quote do
       import AshAuthentication.Phoenix.Router
       import AshAuthentication.Phoenix.Plug
+      import AshAuthentication.Phoenix.LiveSession, only: :macros
     end
   end
 
@@ -108,22 +109,22 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
-    Generates a generic, white-label sign-in page using LiveView and the
-    components in `AshAuthentication.Phoenix.Components`.
+  Generates a generic, white-label sign-in page using LiveView and the
+  components in `AshAuthentication.Phoenix.Components`.
 
-    This is completely optional.
+  This is completely optional.
 
-    Available options are:
+  Available options are:
 
-    * `path` the path under which to mount the live-view. Defaults to
-      `"/sign-in"`.
-    * `live_view` the name of the live view to render. Defaults to
-      `AshAuthentication.Phoenix.SignInLive`.
-    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
-    * `overrides` specify any override modules for customisation.  See
-      `AshAuthentication.Phoenix.Overrides` for more information.
+  * `path` the path under which to mount the live-view. Defaults to
+    `"/sign-in"`.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.SignInLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation.  See
+    `AshAuthentication.Phoenix.Overrides` for more information.
 
-      all other options are passed to the generated `scope`.
+    all other options are passed to the generated `scope`.
   """
   @spec sign_in_route(
           opts :: [

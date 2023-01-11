@@ -21,13 +21,10 @@ defmodule DevWeb.Router do
   scope "/", DevWeb do
     pipe_through(:browser)
 
-    get "/", PageController, :index
+    ash_authentication_live_session do
+      live "/", HomePageLive
+    end
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", DevWeb do
-  #   pipe_through :api
-  # end
 
   scope "/", DevWeb do
     pipe_through :browser
