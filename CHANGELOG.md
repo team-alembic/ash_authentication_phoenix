@@ -5,6 +5,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.3.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.3.1...v1.3.2) (2023-01-11)
+
+
+
+
+### Improvements:
+
+* add some dark mode fixes (#51)
+
+* add some dark mode fixes
+
 ## [v1.3.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.3.0...v1.3.1) (2023-01-10)
 
 
