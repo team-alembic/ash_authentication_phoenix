@@ -4,6 +4,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
     href_class: "CSS class for the `a` tag.",
     href_url: "A URL for the banner image to link to. Set to `nil` to disable.",
     image_class: "CSS class for the `img` tag.",
+    dark_image_class: "Css class for the `img` tag in dark mode.",
     image_url: "A URL for the `img` `src` attribute. Set to `nil` to disable.",
     dark_image_url: "A URL for the `img` `src` attribute in dark mode. Set to `nil` to disable.",
     image_class: "CSS class for the `img` tag in dark mode.",
