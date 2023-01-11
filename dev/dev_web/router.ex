@@ -3,6 +3,8 @@ defmodule DevWeb.Router do
 
   use DevWeb, :router
   use AshAuthentication.Phoenix.Router, otp_app: :ash_authentication_phoenix
+  alias AshAuthentication.Phoenix.LiveSession
+  import AshAuthentication.Phoenix.LiveSession, only: :macros
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -21,13 +23,14 @@ defmodule DevWeb.Router do
   scope "/", DevWeb do
     pipe_through(:browser)
 
-    get "/", PageController, :index
-  end
+    # live_session :authenticated, on_mount: LiveSession, session: {LiveSession, :session, []} do
+    #   live "/", HomePageLive
+    # end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", DevWeb do
-  #   pipe_through :api
-  # end
+    authenticated_session user, required: true do
+      live "/", HomePageLive
+    end
+  end
 
   scope "/", DevWeb do
     pipe_through :browser
