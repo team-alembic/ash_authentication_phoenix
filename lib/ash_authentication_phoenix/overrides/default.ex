@@ -27,7 +27,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override Components.Reset.Form do
     set :root_class, nil
-    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :spacer_class, "py-1"
     set :disable_button_text, "Changing password ..."
@@ -46,8 +46,10 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :root_class, "w-full flex justify-center py-2"
     set :href_class, nil
     set :href_url, "/"
-    set :image_class, nil
+    set :image_class, "block dark:hidden"
+    set :dark_image_class, "hidden dark:block"
     set :image_url, "https://ash-hq.org/images/ash-framework-light.png"
+    set :dark_image_url, "https://ash-hq.org/images/ash-framework-dark.png"
     set :text_class, nil
     set :text, nil
   end
@@ -74,7 +76,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override Components.Password.SignInForm do
     set :root_class, nil
-    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :slot_class, "my-4"
     set :disable_button_text, "Signing in ..."
@@ -82,7 +84,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override Components.Password.RegisterForm do
     set :root_class, nil
-    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :slot_class, "my-4"
     set :disable_button_text, "Registering ..."
@@ -90,7 +92,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override Components.Password.ResetForm do
     set :root_class, nil
-    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :slot_class, "my-4"
 
@@ -101,13 +103,13 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   end
 
   override Components.Password.Input do
-    set :field_class, "mt-2 mb-2"
-    set :label_class, "block text-sm font-medium text-gray-700 mb-1"
+    set :field_class, "mt-2 mb-2 dark:text-white"
+    set :label_class, "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
 
     set :input_class, """
     appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md
     shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-pale-500
-    focus:border-blue-pale-500 sm:text-sm
+    focus:border-blue-pale-500 sm:text-sm dark:text-black
     """
 
     set :input_class_with_error, """
