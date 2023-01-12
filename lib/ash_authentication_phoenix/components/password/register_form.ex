@@ -60,7 +60,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
         api: api,
         as: subject_name |> to_string(),
         id: "#{subject_name}-#{strategy.name}-#{strategy.register_action_name}" |> slugify(),
-        context: %{strategy: strategy}
+        context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
     socket =

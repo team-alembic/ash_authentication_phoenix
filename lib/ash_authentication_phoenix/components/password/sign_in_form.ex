@@ -60,7 +60,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         api: api,
         as: subject_name |> to_string(),
         id: "#{subject_name}-#{strategy.name}-#{strategy.sign_in_action_name}" |> slugify(),
-        context: %{strategy: strategy}
+        context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
     socket =
