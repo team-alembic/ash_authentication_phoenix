@@ -179,7 +179,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       id:
         "#{subject_name}-#{strategy.name}-#{resettable.request_password_reset_action_name}"
         |> slugify(),
-      context: %{strategy: strategy}
+      context: %{strategy: strategy, private: %{ash_authentication?: true}}
     )
   end
 end

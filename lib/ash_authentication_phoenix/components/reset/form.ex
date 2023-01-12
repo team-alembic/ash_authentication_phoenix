@@ -67,7 +67,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         as: subject_name |> to_string(),
         id:
           "#{subject_name}-#{strategy.name}-#{resettable.password_reset_action_name}" |> slugify(),
-        context: %{strategy: strategy}
+        context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
     socket =
