@@ -8,6 +8,8 @@ defmodule DevWeb.HomePageLive do
   @impl true
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
+    assigns = assign_new(assigns, :current_user, fn -> nil end)
+
     ~H"""
     <%= if @current_user do %>
       <h2>Current user: <%= @current_user.email %></h2>

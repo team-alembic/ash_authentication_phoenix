@@ -32,6 +32,22 @@ defmodule Example.Accounts.User do
         |> Ash.Changeset.change_attribute(:email, user_info["email"])
       end
     end
+
+    create :register_with_github do
+      argument :user_info, :map, allow_nil?: false
+      argument :oauth_tokens, :map, allow_nil?: false
+      upsert? true
+      upsert_identity :unique_email
+
+      change AshAuthentication.GenerateTokenChange
+
+      change fn changeset, _ ->
+        user_info = Ash.Changeset.get_argument(changeset, :user_info)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:email, user_info["email"])
+      end
+    end
   end
 
   attributes do
@@ -59,7 +75,7 @@ defmodule Example.Accounts.User do
     end
 
     strategies do
-      password :password do
+      password do
         identity_field(:email)
         hashed_password_field(:hashed_password)
 
@@ -70,11 +86,17 @@ defmodule Example.Accounts.User do
         end
       end
 
-      auth0 :auth0 do
+      auth0 do
         client_id(&get_config/2)
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         site(&get_config/2)
+      end
+
+      github do
+        client_id &get_config/2
+        redirect_uri &get_config/2
+        client_secret &get_config/2
       end
     end
 
