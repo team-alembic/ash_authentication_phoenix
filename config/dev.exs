@@ -34,6 +34,11 @@ config :ash_authentication_phoenix, Example.Accounts.User,
         client_secret: System.get_env("OAUTH2_CLIENT_SECRET"),
         redirect_uri: "http://localhost:4000/auth",
         site: System.get_env("OAUTH2_SITE")
+      ],
+      github: [
+        client_id: System.get_env("GITHUB_CLIENT_ID"),
+        client_secret: System.get_env("GITHUB_CLIENT_SECRET"),
+        redirect_uri: "http://localhost:4000/auth"
       ]
     ]
   ]
