@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.4.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.3.1...v1.4.0) (2023-01-12)
+
+
+
+
+### Features:
+
+* LiveSession: Add `ash_authentication_live_session` macro to router. (#54)
+
 ## [v1.3.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.3.0...v1.3.1) (2023-01-10)
 
 
