@@ -12,7 +12,7 @@ locals_without_parens = [
   reset_route: 1,
   set: 2,
   ash_authentication_live_session: 1,
-  ash_authentication_live_session: 2 
+  ash_authentication_live_session: 2
 ]
 
 [
