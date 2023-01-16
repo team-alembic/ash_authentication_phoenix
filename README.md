@@ -1,5 +1,10 @@
 # AshAuthentication.Phoenix
 
+![Logo](https://github.com/ash-project/ash/blob/main/logos/ash-auth-logo.svg?raw=true)
+![Elixir CI](https://github.com/team-alembic/ash_authentication_phoenix/workflows/Elixir%20Library/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hex version badge](https://img.shields.io/hexpm/v/ash_authentication_phoenix.svg)](https://hex.pm/packages/ash_authentication_phoenix)
+
 The `ash_authentication_phoenix` package extends
 [`ash_authentication`](https://github.com/team-alembic/ash_authentication) by
 adding router helpers, plugs and behaviours that makes adding authentication to
