@@ -68,7 +68,7 @@ defmodule Example.Accounts.User do
       confirmation :confirm do
         monitor_fields([:email])
 
-        sender(fn user, token ->
+        sender(fn user, token, _ ->
           Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")
         end)
       end
@@ -80,7 +80,7 @@ defmodule Example.Accounts.User do
         hashed_password_field(:hashed_password)
 
         resettable do
-          sender(fn user, token ->
+          sender(fn user, token, _ ->
             Logger.debug("Password reset request for #{user.email} with token #{inspect(token)}")
           end)
         end
