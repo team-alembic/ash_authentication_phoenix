@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.4.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.2...v1.4.3) (2023-01-18)
+
+
+
+
+### Improvements:
+
+* remove spark doc index (#63)
+
 ## [v1.4.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.1...v1.4.2) (2023-01-13)
 
 
