@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.4.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.3...v1.4.4) (2023-01-19)
+
+
+
+
+### Improvements:
+
+* make `ash_authentication_live_session` support opts (#74)
+
 ## [v1.4.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.2...v1.4.3) (2023-01-18)
 
 
