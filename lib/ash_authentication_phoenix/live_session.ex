@@ -26,13 +26,26 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   Generate a live session wherein all subject assigns are copied from the conn
   into the socket.
   """
-  @spec ash_authentication_live_session(atom, do: Macro.t()) :: Macro.t()
-  defmacro ash_authentication_live_session(session_name \\ :ash_authentication, do: block) do
+  @spec ash_authentication_live_session(atom, opts :: Keyword.t()) :: Macro.t()
+  defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [], block_opts \\ []) do
+    {block, opts} =
+      case opts do
+        [do: opts_block] when block_opts == [] ->
+          {opts_block, Keyword.delete(opts, :do)}
+
+        _ ->
+          {block_opts[:do], opts}
+      end
+
     quote do
-      live_session(unquote(session_name),
-        on_mount: LiveSession,
-        session: {LiveSession, :generate_session, []}
-      ) do
+      on_mount= LiveSession
+      session = {LiveSession, :generate_session, []}
+      opts =
+        unquote(opts)
+        |> Keyword.update(:on_mount, on_mount, &([on_mount | List.wrap(&1)]))
+        |> Keyword.update(:session, session, &([session | List.wrap(&1)]))
+
+      live_session unquote(session_name), opts do
         unquote(block)
       end
     end
