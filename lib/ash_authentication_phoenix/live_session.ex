@@ -27,23 +27,17 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   into the socket.
   """
   @spec ash_authentication_live_session(atom, opts :: Keyword.t()) :: Macro.t()
-  defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [], block_opts \\ []) do
-    {block, opts} =
-      case opts do
-        [do: opts_block] when block_opts == [] ->
-          {opts_block, Keyword.delete(opts, :do)}
-
-        _ ->
-          {block_opts[:do], opts}
-      end
-
+  defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [],
+             do: block
+           ) do
     quote do
-      on_mount= LiveSession
+      on_mount = LiveSession
       session = {LiveSession, :generate_session, []}
+
       opts =
         unquote(opts)
-        |> Keyword.update(:on_mount, on_mount, &([on_mount | List.wrap(&1)]))
-        |> Keyword.update(:session, session, &([session | List.wrap(&1)]))
+        |> Keyword.update(:on_mount, on_mount, &[on_mount | List.wrap(&1)])
+        |> Keyword.update(:session, session, &[session | List.wrap(&1)])
 
       live_session unquote(session_name), opts do
         unquote(block)
