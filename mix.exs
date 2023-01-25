@@ -23,7 +23,11 @@ defmodule AshAuthentication.Phoenix.MixProject do
       ],
       docs: [
         main: "readme",
-        extras: ["README.md"],
+        extras: [
+          "README.md": [
+            ash_hq: false
+          ]
+        ],
         formatters: ["html"],
         filter_modules: ~r/^Elixir.AshAuthentication.Phoenix/,
         source_url_pattern:
