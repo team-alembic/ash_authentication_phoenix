@@ -16,11 +16,11 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
 
   Can show either an image or some text, depending on the provided overrides.
 
+  ## Props
+
+    * `overrides` - A list of override modules.
+
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
-
-   ## Props
-
-      * `overrides` - A list of override modules.
   """
 
   use Phoenix.LiveComponent

@@ -44,12 +44,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
           ],
           Components: [
             AshAuthentication.Phoenix.SignInLive,
-            AshAuthentication.Phoenix.Components.SignIn,
-            AshAuthentication.Phoenix.Components.OAuth2,
-            AshAuthentication.Phoenix.Components.Password,
-            AshAuthentication.Phoenix.Components.Password.SignInForm,
-            AshAuthentication.Phoenix.Components.Password.RegisterForm,
-            AshAuthentication.Phoenix.Components.Password.Input
+            ~r/^AshAuthentication\.Phoenix\.Components/
           ],
           Internals: ~r/.*/
         ]
