@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.4.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.4...v1.4.5) (2023-01-26)
+
+
+
+
+### Improvements:
+
+* remove readme contents, add tutorial (#81)
+
 ## [v1.4.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.3...v1.4.4) (2023-01-19)
 
 
