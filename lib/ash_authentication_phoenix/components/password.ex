@@ -43,6 +43,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         }
 
   @doc false
+  @impl true
   @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
     strategy = assigns.strategy

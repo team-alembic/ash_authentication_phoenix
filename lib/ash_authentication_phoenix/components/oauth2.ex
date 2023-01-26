@@ -34,6 +34,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
         }
 
   @doc false
+  @impl true
   @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
     assigns =

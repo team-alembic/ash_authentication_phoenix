@@ -5,6 +5,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
 
   alias AshAuthentication.Phoenix.Overrides
 
+  @callback __overrides__ :: %{required(atom) => binary}
+
   @doc false
   @spec __using__(keyword) :: Macro.t()
   defmacro __using__(opts) do
@@ -17,11 +19,21 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
       |> Map.new()
       |> Macro.escape()
 
-    quote do
+    quote generated: true do
+      @behaviour unquote(__MODULE__)
       require Overrides
       require Overrides.Overridable
       @overrides unquote(overrides)
       import Overrides.Overridable, only: :macros
+
+      @doc false
+      @impl true
+      @spec __overrides__ :: %{required(atom) => binary}
+      def __overrides__ do
+        unquote(overrides)
+      end
+
+      defoverridable __overrides__: 0
     end
   end
 

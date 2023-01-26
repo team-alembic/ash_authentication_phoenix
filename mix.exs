@@ -39,11 +39,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             AshAuthentication.Phoenix.Router
           ],
           Customisation: [
-            AshAuthentication.Phoenix.Overrides,
-            AshAuthentication.Phoenix.Overrides.Default
-          ],
-          Components: [
-            AshAuthentication.Phoenix.SignInLive,
+            ~r/^AshAuthentication\.Phoenix\..+Live/,
+            ~r/^AshAuthentication\.Phoenix\.Overrides/,
             ~r/^AshAuthentication\.Phoenix\.Components/
           ],
           Internals: ~r/.*/
