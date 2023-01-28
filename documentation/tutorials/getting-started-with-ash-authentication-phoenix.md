@@ -118,7 +118,7 @@ client:
 ```elixir
 # lib/my_app_web/controllers/auth_controller.ex
 
-defmodule MyAppWeb.Controllers.AuthController do
+defmodule MyAppWeb.AuthController do
   use MyAppWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
