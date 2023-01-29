@@ -17,7 +17,7 @@ If you haven't already, read and follow [Getting Started with Ash Authentication
 defp deps()
 [
   # ...
-  {:ash_authentication_phoenix, "~> 1.4.5"}
+  {:ash_authentication_phoenix, "~> 1.4.6"}
 ]
 end
 ```
