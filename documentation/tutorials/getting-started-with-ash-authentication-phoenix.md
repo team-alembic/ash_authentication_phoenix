@@ -13,6 +13,19 @@ $ mix phx.new example --no-ecto
 $ cd example
 ```
 
+## Add to your application's dependencies
+
+```elixir
+# mix.exs
+
+defp deps()
+[
+  # ...
+  {:ash_authentication_phoenix, "~> 1.4.6"}
+]
+end
+```
+
 ## Application Dependencies
 
 We need to add the following dependencies:
