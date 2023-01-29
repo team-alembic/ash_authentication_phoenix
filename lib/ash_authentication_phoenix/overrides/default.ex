@@ -9,11 +9,11 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   alias AshAuthentication.Phoenix.{Components, ResetLive, SignInLive}
 
   override SignInLive do
-    set :root_class, "grid h-screen place-items-center"
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
   end
 
   override ResetLive do
-    set :root_class, "grid h-screen place-items-center"
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
   end
 
   override Components.Reset do
@@ -57,9 +57,12 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   override Components.HorizontalRule do
     set :root_class, "relative my-2"
     set :hr_outer_class, "absolute inset-0 flex items-center"
-    set :hr_inner_class, "w-full border-t border-gray-300"
+    set :hr_inner_class, "w-full border-t border-gray-300 dark:border-gray-700"
     set :text_outer_class, "relative flex justify-center text-sm"
-    set :text_inner_class, "px-2 bg-white text-gray-400 font-medium"
+
+    set :text_inner_class,
+        "px-2 bg-white text-gray-400 font-medium dark:bg-gray-900 dark:text-gray-500"
+
     set :text, "or"
   end
 
