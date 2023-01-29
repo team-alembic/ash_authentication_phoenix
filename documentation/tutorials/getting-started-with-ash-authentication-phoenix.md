@@ -73,7 +73,6 @@ We can make our life easier and the code more consistent by adding formatters to
     # add these lines -->
     :ash,
     :ash_authentication_phoenix,
-    :ash_authentication_phoenix,
     :ash_postgres
     # <-- add these lines
     ],
