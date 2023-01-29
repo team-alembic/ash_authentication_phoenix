@@ -33,6 +33,11 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   """
 
   use Phoenix.LiveComponent
+
+  use AshAuthentication.Phoenix.StrategyComponent,
+    visual_style: :form,
+    strategies: [AshAuthentication.Strategy.Password]
+
   alias AshAuthentication.{Info, Phoenix.Components.Password}
   alias Phoenix.LiveView.{JS, Rendered, Socket}
   import Slug

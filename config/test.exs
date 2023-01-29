@@ -13,3 +13,5 @@ config :ash_authentication, AshAuthentication.Jwt,
   signing_secret: "Marty McFly in the past with the Delorean"
 
 config :phoenix, :json_library, Jason
+
+config :ash_authentication, extra_strategies: [Example.OnlyMartiesAtTheParty]

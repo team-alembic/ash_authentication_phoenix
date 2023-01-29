@@ -31,6 +31,7 @@ defmodule AshAuthentication.Phoenix.Router do
       auth_routes_for MyApp.Accounts.User, to: AuthController
       reset_route
     end
+  end
   ```
   """
 
@@ -143,6 +144,8 @@ defmodule AshAuthentication.Phoenix.Router do
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
 
+    {strategy_components, opts} = Keyword.pop(opts, :strategy_components, nil)
+
     opts =
       opts
       |> Keyword.put_new(:alias, false)
@@ -151,7 +154,11 @@ defmodule AshAuthentication.Phoenix.Router do
       scope unquote(path), unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
-        live_session :sign_in, session: %{"overrides" => unquote(overrides)} do
+        live_session :sign_in,
+          session: %{
+            "overrides" => unquote(overrides),
+            "strategy_components" => unquote(strategy_components)
+          } do
           live("/", unquote(live_view), :sign_in, as: unquote(as))
         end
       end

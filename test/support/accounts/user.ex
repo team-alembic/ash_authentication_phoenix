@@ -98,6 +98,11 @@ defmodule Example.Accounts.User do
         redirect_uri &get_config/2
         client_secret &get_config/2
       end
+
+      # only_marty do
+      #   case_sensitive? true
+      #   name_field :email
+      # end
     end
 
     tokens do

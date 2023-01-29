@@ -12,8 +12,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   For each strategy configured on the resource a component name is inferred
   (e.g. `AshAuthentication.Strategy.Password` becomes
-  `AshAuthentication.Phoenix.Components.Strategy.Passowrd`) and is rendered
-  into the output.
+  `AshAuthentication.Phoenix.Components.Password`) and is rendered into the
+  output.
 
   ## Component hierarchy
 
@@ -21,14 +21,18 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.Strategy.Password`.
-    * `AshAuthentication.Phoenix.Components.Strategy.OAuth2`.
+  * `AshAuthentication.Phoenix.Components.Password`.
+  * `AshAuthentication.Phoenix.Components.OAuth2`.
+  * `AshAuthentication.Phoenix.Components.Banner`.
+  * `AshAuthentication.Phoenix.Components.HorizontalRule`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
 
   ## Props
 
-    * `overrides` - A list of override modules.
+    * `overrides` - A list of override modules. Required.
+    * `strategy_components` - A list of strategy components that can be used.
+      Required.
   """
 
   use Phoenix.LiveComponent
@@ -38,13 +42,21 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   import Slug
 
   @type props :: %{
-          optional(:overrides) => [module]
+          required(:strategy_components) => [module],
+          required(:overrides) => [module]
         }
 
   @doc false
   @impl true
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
+    strategy_components =
+      assigns.strategy_components
+      |> Stream.flat_map(fn component ->
+        Stream.map(component.__strategies__(), &{&1, component})
+      end)
+      |> Map.new()
+
     strategies_by_resource =
       socket
       |> otp_app_from_socket()
@@ -53,7 +65,9 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       |> Enum.map(fn resource ->
         resource
         |> Info.authentication_strategies()
-        |> Enum.group_by(&strategy_style/1)
+        |> Stream.map(&{&1, Map.get(strategy_components, &1.__struct__)})
+        |> Stream.reject(&is_nil(elem(&1, 1)))
+        |> Enum.group_by(&elem(&1, 1).__visual_style__())
         |> Map.update(:form, [], &sort_strategies_by_name/1)
         |> Map.update(:link, [], &sort_strategies_by_name/1)
       end)
@@ -62,7 +76,6 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       socket
       |> assign(assigns)
       |> assign(:strategies_by_resource, strategies_by_resource)
-      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
     {:ok, socket}
   end
@@ -84,9 +97,9 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
       <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
         <%= if Enum.any?(strategies.form) do %>
-          <%= for strategy <- strategies.form do %>
+          <%= for {strategy, component} <- strategies.form do %>
             <.strategy
-              component={component_for_strategy(strategy)}
+              component={component}
               strategy={strategy}
               socket={@socket}
               overrides={@overrides}
@@ -103,9 +116,9 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         <% end %>
 
         <%= if Enum.any?(strategies.link) do %>
-          <%= for strategy <- strategies.link do %>
+          <%= for {strategy, component} <- strategies.link do %>
             <.strategy
-              component={component_for_strategy(strategy)}
+              component={component}
               strategy={strategy}
               socket={@socket}
               overrides={@overrides}
@@ -130,26 +143,17 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     """
   end
 
-  defp sort_strategies_by_name(strategies), do: Enum.sort_by(strategies, & &1.name)
+  defp sort_strategies_by_name(strategies),
+    do: Enum.sort_by(strategies, &Strategy.name(elem(&1, 0)))
 
   defp strategy_id(strategy) do
     subject_name =
       strategy.resource
       |> Info.authentication_subject_name!()
 
-    "sign-in-#{subject_name}-with-#{strategy.name}"
+    strategy_name = Strategy.name(strategy)
+
+    "sign-in-#{subject_name}-with-#{strategy_name}"
     |> slugify()
-  end
-
-  defp strategy_style(%AshAuthentication.AddOn.Confirmation{}), do: nil
-  defp strategy_style(%Strategy.Password{}), do: :form
-  defp strategy_style(_), do: :link
-
-  defp component_for_strategy(strategy) do
-    strategy.__struct__
-    |> Module.split()
-    |> List.replace_at(1, "Components")
-    |> List.insert_at(1, "Phoenix")
-    |> Module.concat()
   end
 end

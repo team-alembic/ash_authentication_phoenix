@@ -45,3 +45,5 @@ config :ash_authentication_phoenix, Example.Accounts.User,
       ]
     ]
   ]
+
+config :ash_authentication, extra_strategies: [Example.OnlyMartiesAtTheParty]

@@ -22,11 +22,16 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   """
 
   use Phoenix.LiveComponent
+
+  use AshAuthentication.Phoenix.StrategyComponent,
+    visual_style: :link,
+    strategies: [AshAuthentication.Strategy.OAuth2]
+
   alias AshAuthentication.Info
   alias Phoenix.LiveView.Rendered
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
   import Phoenix.HTML
-  import Phoenix.HTML.Form
+  import Phoenix.HTML.Form, only: [humanize: 1]
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),

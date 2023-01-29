@@ -22,16 +22,22 @@ defmodule AshAuthentication.Phoenix.SignInLive do
   alias AshAuthentication.Phoenix.Components
   alias Phoenix.LiveView.{Rendered, Socket}
 
+  @default_strategy_components [
+    AshAuthentication.Phoenix.Components.Password,
+    AshAuthentication.Phoenix.Components.OAuth2
+  ]
+
+  @default_overrides [AshAuthentication.Phoenix.Overrides.Default]
+
   @doc false
   @impl true
   def mount(_params, session, socket) do
-    overrides =
-      session
-      |> Map.get("overrides", [AshAuthentication.Phoenix.Overrides.Default])
+    overrides = Map.get(session, "overrides") || @default_overrides
+    strategy_components = Map.get(session, "strategy_components") || @default_strategy_components
 
     socket =
       socket
-      |> assign(overrides: overrides)
+      |> assign(overrides: overrides, strategy_components: strategy_components)
 
     {:ok, socket}
   end
@@ -46,6 +52,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
         module={Components.SignIn}
         id={override_for(@overrides, :sign_in_id, "sign-in")}
         overrides={@overrides}
+        strategy_components={@strategy_components}
       />
     </div>
     """
