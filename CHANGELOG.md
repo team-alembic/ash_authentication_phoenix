@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.4.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.6...v1.4.7) (2023-01-30)
+
+
+
+
+### Improvements:
+
+* ensure horizontal rules get a unique id (#99)
+
 ## [v1.4.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.5...v1.4.6) (2023-01-29)
 
 
