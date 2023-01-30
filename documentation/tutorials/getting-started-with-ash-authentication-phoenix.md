@@ -13,19 +13,6 @@ $ mix phx.new example --no-ecto
 $ cd example
 ```
 
-## Add to your application's dependencies
-
-```elixir
-# mix.exs
-
-defp deps()
-[
-  # ...
-  {:ash_authentication_phoenix, "~> 1.4.6"}
-]
-end
-```
-
 ## Application Dependencies
 
 We need to add the following dependencies:
@@ -51,8 +38,6 @@ defmodule Example.MixProject do
   end
   # ...
 ```
-
-> The `elixir_sense` line is optional but recommended for Visual Studio Code users. It provides code completion functionality.
 
 Let's fetch everything:
 
@@ -286,7 +271,7 @@ defmodule Example.Accounts.User do
 end
 ```
 
-** `lib/example/token.ex` **
+** `lib/example/accounts/token.ex` **
 
 ```elixir
 defmodule Example.Accounts.Token do
