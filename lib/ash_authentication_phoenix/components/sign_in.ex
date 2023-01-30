@@ -82,7 +82,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         />
       <% end %>
 
-      <%= for strategies <- @strategies_by_resource do %>
+      <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
         <%= if Enum.any?(strategies.form) do %>
           <%= for strategy <- strategies.form do %>
             <.strategy
@@ -95,7 +95,11 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         <% end %>
 
         <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>
-          <.live_component module={Components.HorizontalRule} id="sign-in-hr" overrides={@overrides} />
+          <.live_component
+            module={Components.HorizontalRule}
+            id={"sign-in-hr-#{i}"}
+            overrides={@overrides}
+          />
         <% end %>
 
         <%= if Enum.any?(strategies.link) do %>
@@ -137,6 +141,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     |> slugify()
   end
 
+  defp strategy_style(%AshAuthentication.AddOn.Confirmation{}), do: nil
   defp strategy_style(%Strategy.Password{}), do: :form
   defp strategy_style(_), do: :link
 
