@@ -87,7 +87,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       <%= text_input(@form, @identity_field,
         type: to_string(@input_type),
         class: @input_class,
-        phx_debounce: override_for(@overrides, :input_debounce)
+        phx_debounce: override_for(@overrides, :input_debounce),
+        autofocus: "true"
       ) %>
       <.error socket={@socket} form={@form} field={@identity_field} overrides={@overrides} />
     </div>
