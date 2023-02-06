@@ -533,3 +533,101 @@ The sign in page shows a link to register a new account.
 ### Sign Out
 
 Visit [`localhost:4000/sign-out`](http://localhost:4000/sign-out) from your browser.
+
+## Reset Password
+
+In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/user.ex` with the following code: 
+
+**lib/example/accounts/user.ex**
+
+```elixir
+# [...]
+strategies do
+  password :password do
+    identity_field(:email)
+    hashed_password_field(:hashed_password)
+
+    resettable do
+      sender(Example.Accounts.User.Senders.SendPasswordResetEmail)
+    end
+  end
+end
+# [...]
+```
+
+Do make this work we need to create a new module `Example.Accounts.User.Senders.SendPasswordResetEmail`:
+
+**lib/example/accounts/user/senders/send_password_reset_email.ex**
+
+```elixir
+defmodule Example.Accounts.User.Senders.SendPasswordResetEmail do
+  @moduledoc """
+  Sends a password reset email
+  """
+  use AshAuthentication.Sender
+  use ExampleWeb, :verified_routes
+
+  def send(user, token, _) do
+    Example.Accounts.Emails.deliver_reset_password_instructions(
+      user,
+      url(~p"/password-reset/#{token}")
+    )
+  end
+end
+```
+
+We also need to create a new email template:
+
+**lib/example/accounts/emails.ex**
+  
+```elixir
+defmodule Example.Accounts.Emails do
+  @moduledoc """
+  Delivers emails.
+  """
+
+  import Swoosh.Email
+
+  def deliver_reset_password_instructions(user, url) do
+    if !url do
+      raise "Cannot deliver reset instructions without a url"
+    end
+
+    deliver(user.email, "Reset Your Password", """
+    <html>
+      <p>
+        Hi #{user.email},
+      </p>
+
+      <p>
+        <a href="#{url}">Click here</a> to reset your password.
+      </p>
+
+      <p>
+        If you didn't request this change, please ignore this.
+      </p>
+    <html>
+    """)
+  end
+
+  # For simplicity, this module simply logs messages to the terminal.
+  # You should replace it by a proper email or notification tool, such as:
+  #
+  #   * Swoosh - https://hexdocs.pm/swoosh
+  #   * Bamboo - https://hexdocs.pm/bamboo
+  #
+  defp deliver(to, subject, body) do
+    IO.puts("Sending email to #{to} with subject #{subject} and body #{body}")
+
+    new()
+    |> from({"Zach", "zach@ash-hq.org"}) # TODO: Replace with your email
+    |> to(to_string(to))
+    |> subject(subject)
+    |> put_provider_option(:track_links, "None")
+    |> html_body(body)
+    |> Example.Mailer.deliver!()
+  end
+end
+```
+
+Your new reset password functionality is active. Visit [`localhost:4000/sign-in`](http://localhost:4000/sign-in) with your browser and click on the `Forgot your password?` link to trigger the reset password workflow.
