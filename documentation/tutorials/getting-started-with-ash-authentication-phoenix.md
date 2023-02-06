@@ -1,6 +1,6 @@
 # Getting Started Ash Authentication Phoenix
 
-In this 10 minute tutorial we create a new empty `Example` Phoenix application which provides the functionality to register users with their email address and a password. Registered users can sign in and out.
+In this step-by-step tutorial we create a new empty `Example` Phoenix application which provides the functionality to register users with their email address and a password. Registered users can sign in and out. Afterwards we will add the functionality to reset the password.
 
 We assumes that you have [Elixir](https://elixir-lang.org) version 1.14.x (check with `elixir -v`) and Phoenix 1.7 (check with `mix phx.new --version`) installed. We also assume that you have a [PostgreSQL](https://www.postgresql.org) database running which we use to persist the user data.
 
@@ -17,7 +17,7 @@ $ cd example
 
 We need to add the following dependencies:
 
-** `mix.exs` **
+**mix.exs**
 
 ```elixir
 defmodule Example.MixProject do
@@ -31,7 +31,8 @@ defmodule Example.MixProject do
       {:ash, "~> 2.5.11"},
       {:ash_authentication, "~> 3.7.3"},
       {:ash_authentication_phoenix, "~> 1.4.7"},
-      {:ash_postgres, "~> 1.3.2"}
+      {:ash_postgres, "~> 1.3.2"},
+      {:elixir_sense, github: "elixir-lsp/elixir_sense", only: [:dev, :test]} 
       # <-- add these lines
     ]
   end
@@ -48,7 +49,7 @@ $ mix deps.get
 
 We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/master/Mix.Tasks.Format.html) for this.
 
-** `.formatter.exs` **
+**.formatter.exs**
 
 ```elixir
 [
@@ -69,7 +70,7 @@ We can make our life easier and the code more consistent by adding formatters to
 
 For Phoenix 1.7 we need to change `helpers: false` to `helpers: true` in the router section:
 
-** `lib/example_web.ex` **
+**lib/example_web.ex**
 
 ```elixir
 defmodule ExampleWeb do
@@ -84,7 +85,7 @@ defmodule ExampleWeb do
 
 We use [AshPostgres](https://hexdocs.pm/ash_postgres/AshPostgres.html) to handle the database tables for our application. We need to create a new `Repo` module for that:
 
-** `lib/example/repo.ex` **
+**lib/example/repo.ex**
 
 ```elixir
 defmodule Example.Repo do
@@ -98,7 +99,7 @@ end
 
 We have to configure the Repo in `config/config.exs`. While doing that we also configure other stuff which we need later.
 
-** `config/config.exs` **
+**config/config.exs**
 
 ```elixir
 # ...
@@ -143,7 +144,7 @@ defmodule Example.Application do
 
 In case you have other `usernames` and `passwords` for your database you need to change the following values. We use the default `postgres` user and password.
 
-** `config/dev.exs` **
+**config/dev.exs**
 
 ```elixir
 import Config
@@ -162,7 +163,7 @@ config :example, Example.Repo,
 # ...
 ```
 
-** `config/test.exs` **
+**config/test.exs**
 
 ```elixir
 import Config
@@ -178,7 +179,7 @@ config :example, Example.Repo,
 # <-- add these lines
 ```
 
-** `config/runtime.exs` **
+**config/runtime.exs**
 
 ```elixir
 import Config
@@ -204,7 +205,9 @@ if config_env() == :prod do
 
 ## Create an Accounts API
 
-We need to create an `Accounts` API in our application to provide a `User` and a `Token` resource. For that we create a couple of new files and one new directory. At the end we should have the following directory structure:
+We need to create an `Accounts` API in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
+
+At the end we should have the following directory structure:
 
 ```bash
 lib/example
@@ -216,7 +219,7 @@ lib/example
 ...
 ```
 
-** `lib/example/accounts.ex` **
+**lib/example/accounts.ex**
 
 ```elixir
 defmodule Example.Accounts do
@@ -228,7 +231,7 @@ defmodule Example.Accounts do
 end
 ```
 
-** `lib/example/accounts/user.ex` **
+**lib/example/accounts/user.ex**
 
 ```elixir
 defmodule Example.Accounts.User do
@@ -255,7 +258,7 @@ defmodule Example.Accounts.User do
       enabled?(true)
       token_resource(Example.Accounts.Token)
 
-      signing_secret(Application.get_env(:example, ExampleWeb.Endpoint)[:secret_key_base])
+      signing_secret(Application.compile_env(:example, ExampleWeb.Endpoint)[:secret_key_base])
     end
   end
 
@@ -270,7 +273,7 @@ defmodule Example.Accounts.User do
 end
 ```
 
-** `lib/example/accounts/token.ex` **
+**lib/example/accounts/token.ex**
 
 ```elixir
 defmodule Example.Accounts.Token do
@@ -291,7 +294,7 @@ end
 
 Next, let's define our registry:
 
-** `lib/example/accounts/registry.ex` **
+**lib/example/accounts/registry.ex**
 
 ```elixir
 defmodule Example.Accounts.Registry do
@@ -321,7 +324,7 @@ $ mix ash_postgres.migrate
 `ash_authentication_phoenix` includes several helper macros which can generate
 Phoenix routes for you. For that you need to add 6 lines in the router module:
 
-** `lib/example_web/router.ex` **
+**lib/example_web/router.ex**
 
 ```elixir
 defmodule ExampleWeb.Router do
@@ -346,13 +349,15 @@ defmodule ExampleWeb.Router do
   scope "/", ExampleWeb do
     pipe_through :browser
 
+    get "/", PageController, :home
+
     # add these lines -->
     sign_in_route()
     sign_out_route AuthController
     auth_routes_for Example.Accounts.User, to: AuthController 
+    reset_route []
     # <-- add these lines
 
-    get "/", PageController, :home
   end
 # ...
 ```
@@ -377,7 +382,7 @@ Generated example app
 
 While running `mix phx.routes` you probably saw the warning message that the `ExampleWeb.AuthController.init/1 is undefined`. Let's fix that by creating a new controller:
 
-** `lib/my_app_web/controllers/auth_controller.ex` **
+**lib/my_app_web/controllers/auth_controller.ex**
 
 ```elixir
 defmodule ExampleWeb.AuthController do
@@ -410,7 +415,7 @@ defmodule ExampleWeb.AuthController do
 end
 ```
 
-** `lib/example_web/controller/auth_html.ex` **
+**lib/example_web/controllers/auth_html.ex**
 
 ```elixir
 defmodule ExampleWeb.AuthHTML do
@@ -420,7 +425,7 @@ defmodule ExampleWeb.AuthHTML do
 end
 ```
 
-** `lib/example_web/controllers/auth_html/failure.html.heex` **
+**lib/example_web/controllers/auth_html/failure.html.heex**
 
 ```html
 <h1 class="text-2xl">Authentication Error</h1>
@@ -433,7 +438,7 @@ components without overriding them you will need to modify your
 `assets/tailwind.config.js` to include the `ash_authentication_phoenix`
 dependency:
 
-** `assets/tailwind.config.js` **
+**assets/tailwind.config.js**
 
 ```javascript
 // See the Tailwind configuration guide for advanced usage
@@ -455,7 +460,7 @@ module.exports = {
 
 To see how the authentication works we replace the default Phoenix `home.html.eex` with a minimal example which has a top navbar. On the right side it shows the `@current_user` and a sign out button. If you are not signed in you will see a sign in button.
 
-** `lib/example_web/controllers/page_html/home.html.heex` **
+**lib/example_web/controllers/page_html/home.html.heex**
 
 ```html
 <nav class="bg-gray-800">
