@@ -2,15 +2,6 @@
 
 In this step-by-step tutorial we create a new empty `Example` Phoenix + Ash application which provides the functionality for authentication. For beginners it is the best to follow the tutorial in the given order. For more advanced users it is a good reference to pick and choose from.
 
-- [Green Field Phoenix Application](#green-field-phoenix-application) (1 minute)
-- [Basic Ash Setup](#basic-ash-setup)
-- [AshPostgres.Repo Setup](#ashpostgresrepo-setup)
-- [Accounts Api and Resources](#accounts-api-and-resources)
-- [Router Setup](#router-setup)
-- [AuthController](#authcontroller)
-- [Example home.html.heex](#example-homehtmlheex)
-- [Reset Password](#reset-password)
-
 We assumes that you have [Elixir](https://elixir-lang.org) version 1.14.x (check with `elixir -v`) and Phoenix 1.7 (check with `mix phx.new --version`) installed. We also assume that you have a [PostgreSQL](https://www.postgresql.org) database running which we use to persist the user data.
 
 ## Green Field Phoenix Application
