@@ -1,19 +1,21 @@
 # Getting Started Ash Authentication Phoenix
 
-In this step-by-step tutorial we create a new empty `Example` Phoenix application which provides the functionality to register users with their email address and a password. Registered users can sign in and out. Afterwards we will add the functionality to reset the password.
+In this step-by-step tutorial we create a new empty `Example` Phoenix + Ash application which provides the functionality for authentication. For beginners it is the best to follow the tutorial in the given order. For more advanced users it is a good reference to pick and choose from.
 
 We assumes that you have [Elixir](https://elixir-lang.org) version 1.14.x (check with `elixir -v`) and Phoenix 1.7 (check with `mix phx.new --version`) installed. We also assume that you have a [PostgreSQL](https://www.postgresql.org) database running which we use to persist the user data.
 
-## Green Field
+## Green Field Phoenix Application
 
 We start with a new Phoenix application and use the `--no-ecto` flag to skip the [Ecto](https://hexdocs.pm/ecto/Ecto.html) setup.
 
 ```bash
-$ mix phx.new example --no-ecto
+$ mix phx.new example
 $ cd example
 ```
 
-## Application Dependencies
+## Basic Ash Setup
+
+### Application Dependencies
 
 We need to add the following dependencies:
 
@@ -45,7 +47,7 @@ Let's fetch everything:
 $ mix deps.get
 ```
 
-## Formatter
+### Formatter
 
 We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/master/Mix.Tasks.Format.html) for this.
 
@@ -66,7 +68,7 @@ We can make our life easier and the code more consistent by adding formatters to
 ]
 ```
 
-## Phoenix 1.7 compatibility
+### Phoenix 1.7 compatibility
 
 For Phoenix 1.7 we need to change `helpers: false` to `helpers: true` in the router section:
 
@@ -81,9 +83,48 @@ defmodule ExampleWeb do
     # ...
 ```
 
-## Create and configure the Repo
+### Tailwind
 
-We use [AshPostgres](https://hexdocs.pm/ash_postgres/AshPostgres.html) to handle the database tables for our application. We need to create a new `Repo` module for that:
+If you plan on using our default [Tailwind](https://tailwindcss.com/)-based
+components without overriding them you will need to modify your
+`assets/tailwind.config.js` to include the `ash_authentication_phoenix`
+dependency:
+
+**assets/tailwind.config.js**
+
+```javascript
+// See the Tailwind configuration guide for advanced usage
+// https://tailwindcss.com/docs/configuration
+
+const plugin = require("tailwindcss/plugin")
+
+module.exports = {
+  content: [
+    "./js/**/*.js",
+    "../lib/*_web.ex",
+    "../lib/*_web/**/*.*ex",
+    "../deps/ash_authentication_phoenix/**/*.ex" // <-- Add this line
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: "#FD4F00",
+      }
+    },
+  },
+  plugins: [
+    require("@tailwindcss/forms"),
+    plugin(({ addVariant }) => addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])),
+    plugin(({ addVariant }) => addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"])),
+    plugin(({ addVariant }) => addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"])),
+    plugin(({ addVariant }) => addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"]))
+  ]
+}
+```
+
+## AshPostgres.Repo Setup
+
+We use [AshPostgres](https://hexdocs.pm/ash_postgres/AshPostgres.html) to handle the database tables for our application. We need to replace the content of the `Repo` module with the following code:
 
 **lib/example/repo.ex**
 
@@ -110,9 +151,6 @@ import Config
 config :example, 
   ash_apis: [Example.Accounts]
 
-config :example, 
-  ecto_repos: [Example.Repo]
-
 config :ash, 
   :use_all_identities_in_manage_relationship?, false
 # <-- add these lines
@@ -120,7 +158,7 @@ config :ash,
 # ...
 ```
 
-We need to add the `Repo` to the supervision tree in `lib/example/application.ex`:
+We need to add `AshAuthentication.Supervisor` to the supervision tree in `lib/example/application.ex`:
 
 `** lib/example/application.ex **`
 
@@ -132,80 +170,16 @@ defmodule Example.Application do
   def start(_type, _args) do
     children = [
       # ...
-      # add these lines -->
-      Example.Repo,
+      # add this line -->
       {AshAuthentication.Supervisor, otp_app: :example}
-      # <-- add these lines
+      # <-- add this line
     ]
   # ...
 ```
 
-### Database Configuration
+## Accounts Api and Resources
 
-In case you have other `usernames` and `passwords` for your database you need to change the following values. We use the default `postgres` user and password.
-
-**config/dev.exs**
-
-```elixir
-import Config
-
-# add these lines -->
-config :example, Example.Repo, 
-  username: "postgres", 
-  password: "postgres", 
-  hostname: "localhost", 
-  database: "example_dev", 
-  port: 5432, 
-  show_sensitive_data_on_connection_error: true, 
-  pool_size: 10
-# <-- add these lines
-
-# ...
-```
-
-**config/test.exs**
-
-```elixir
-import Config
-
-# add these lines -->
-config :example, Example.Repo, 
-  username: "postgres", 
-  password: "postgres", 
-  hostname: "localhost", 
-  database: "example_test#{System.get_env("MIX_TEST_PARTITION")}", 
-  pool: Ecto.Adapters.SQL.Sandbox, 
-  pool_size: 10
-# <-- add these lines
-```
-
-**config/runtime.exs**
-
-```elixir
-import Config
-
-# ...
-
-if config_env() == :prod do
-  # add these lines -->
-  database_url = 
-    System.get_env("DATABASE_URL") || 
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """ 
-
-  config :example, Example.Repo, 
-    url: database_url, 
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
-  # <-- add these lines
-
-# ...
-```
-
-## Create an Accounts API
-
-We need to create an `Accounts` API in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
+We need to create an `Accounts` Api in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for just the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
 
 At the end we should have the following directory structure:
 
@@ -307,9 +281,9 @@ defmodule Example.Accounts.Registry do
 end
 ```
 
-### Migration and Create
+### Create and Migration
 
-Now is a good time to create the database and run the migrations:
+Now is a good time to create the database and run the migrations. You have to use specific `ash_postgres` mix tasks for that:
 
 ```bash
 $ mix ash_postgres.create
@@ -319,17 +293,18 @@ $ mix ash_postgres.migrate
 
 > In case you want to drop the database and start over again during development you can use `mix ash_postgres.drop` followed by `mix ash_postgres.create` and `mix ash_postgres.migrate`.
 
-## `AshAuthentication.Phoenix.Router`
+## Router Setup
 
 `ash_authentication_phoenix` includes several helper macros which can generate
-Phoenix routes for you. For that you need to add 6 lines in the router module:
+Phoenix routes for you. For that you need to add 6 lines in the router module or just replace the whole file with the following code:
 
 **lib/example_web/router.ex**
 
 ```elixir
 defmodule ExampleWeb.Router do
   use ExampleWeb, :router
-  use AshAuthentication.Phoenix.Router # <--- Add this line
+  # Add this line
+  use AshAuthentication.Phoenix.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -338,12 +313,14 @@ defmodule ExampleWeb.Router do
     plug :put_root_layout, {ExampleWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :load_from_session           # <--- Add this line
+    # Add the next line
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :load_from_bearer            # <--- Add this line
+    # Add the next line
+    plug :load_from_bearer
   end
 
   scope "/", ExampleWeb do
@@ -354,12 +331,33 @@ defmodule ExampleWeb.Router do
     # add these lines -->
     sign_in_route()
     sign_out_route AuthController
-    auth_routes_for Example.Accounts.User, to: AuthController 
+    auth_routes_for Example.Accounts.User, to: AuthController
     reset_route []
     # <-- add these lines
-
   end
-# ...
+
+  # Other scopes may use custom stacks.
+  # scope "/api", ExampleWeb do
+  #   pipe_through :api
+  # end
+
+  # Enable LiveDashboard and Swoosh mailbox preview in development
+  if Application.compile_env(:example, :dev_routes) do
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
+    import Phoenix.LiveDashboard.Router
+
+    scope "/dev" do
+      pipe_through :browser
+
+      live_dashboard "/dashboard", metrics: ExampleWeb.Telemetry
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+end
 ```
 
 ### Generated routes
@@ -378,7 +376,7 @@ Generated example app
 ...
 ```
 
-## `AshAuthentication.Phoenix.Controller`
+## AuthController
 
 While running `mix phx.routes` you probably saw the warning message that the `ExampleWeb.AuthController.init/1 is undefined`. Let's fix that by creating a new controller:
 
@@ -431,32 +429,7 @@ end
 <h1 class="text-2xl">Authentication Error</h1>
 ```
 
-### Tailwind
-
-If you plan on using our default [Tailwind](https://tailwindcss.com/)-based
-components without overriding them you will need to modify your
-`assets/tailwind.config.js` to include the `ash_authentication_phoenix`
-dependency:
-
-**assets/tailwind.config.js**
-
-```javascript
-// See the Tailwind configuration guide for advanced usage
-// https://tailwindcss.com/docs/configuration
-
-const plugin = require("tailwindcss/plugin")
-
-module.exports = {
-  content: [
-    "./js/**/*.js",
-    "../lib/*_web.ex",
-    "../lib/*_web/**/*.*ex",
-    "../deps/ash_authentication_phoenix/**/*.ex"  // <-- Add this line
-  ],
-  // ...
-```
-
-## Minimal Example
+## Example home.html.heex
 
 To see how the authentication works we replace the default Phoenix `home.html.eex` with a minimal example which has a top navbar. On the right side it shows the `@current_user` and a sign out button. If you are not signed in you will see a sign in button.
 
@@ -515,7 +488,7 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
 </div>
 ```
 
-## Start Phoenix
+### Start Phoenix
 
 You can now start Phoenix and visit
 [`localhost:4000`](http://localhost:4000) from your browser.
@@ -545,7 +518,6 @@ In this section we add a reset password functionality. Which is triggered by add
 strategies do
   password :password do
     identity_field(:email)
-    hashed_password_field(:hashed_password)
 
     resettable do
       sender(Example.Accounts.User.Senders.SendPasswordResetEmail)
