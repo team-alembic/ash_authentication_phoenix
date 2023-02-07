@@ -197,9 +197,12 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   end
 
   defp toggle_js(show, hides, %JS{} = js \\ %JS{}) do
+    show_wrapper = "##{show}-wrapper"
+
     js =
       js
-      |> JS.show(to: "##{show}-wrapper")
+      |> JS.show(to: show_wrapper)
+      |> JS.focus_first(to: show_wrapper)
 
     hides
     |> Enum.reject(&is_nil/1)
