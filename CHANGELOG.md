@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.4.8](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.7...v1.4.8) (2023-02-07)
+
+
+
+
+### Improvements:
+
+* Autofocus identity field in password component (#105)
+
 ## [v1.4.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.6...v1.4.7) (2023-01-30)
 
 
