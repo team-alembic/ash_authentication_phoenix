@@ -32,7 +32,7 @@ defmodule Example.MixProject do
       # add these lines -->
       {:ash, "~> 2.5.11"},
       {:ash_authentication, "~> 3.7.3"},
-      {:ash_authentication_phoenix, "~> 1.4.8"},
+      {:ash_authentication_phoenix, "~> 1.5.0"},
       {:ash_postgres, "~> 1.3.2"},
       {:elixir_sense, github: "elixir-lsp/elixir_sense", only: [:dev, :test]} 
       # <-- add these lines
