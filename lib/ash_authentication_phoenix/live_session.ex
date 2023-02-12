@@ -10,7 +10,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   scope "/", ExampleWeb do
     pipe_through(:browser)
 
-    live_session :authenticated, on_mount: LiveSession, session: {LiveSession, :session, []} do
+    live_session :authenticated, on_mount: LiveSession, session: {LiveSession, :generate_session, []} do
       live "/", ExampleLive
     end
   end

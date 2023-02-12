@@ -36,7 +36,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
           "Routing and Controller": [
             AshAuthentication.Phoenix.Controller,
             AshAuthentication.Phoenix.Plug,
-            AshAuthentication.Phoenix.Router
+            AshAuthentication.Phoenix.Router,
+            AshAuthentication.Phoenix.LiveSession
           ],
           Customisation: [
             ~r/^AshAuthentication\.Phoenix\..+Live/,
