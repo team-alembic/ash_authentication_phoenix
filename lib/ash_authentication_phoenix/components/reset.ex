@@ -7,7 +7,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
   @moduledoc """
   Renders a password-reset form.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
   Children:
 

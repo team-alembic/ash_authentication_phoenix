@@ -1,19 +1,19 @@
-defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
+defmodule AshAuthentication.Phoenix.Components.MagicLink do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
-    slot_class: "CSS class for the `div` surrounding the slot.",
-    reset_flash_text:
+    request_flash_text:
       "Text for the flash message when a request is received.  Set to `nil` to disable.",
     disable_button_text: "Text for the submit button when the request is happening."
 
   @moduledoc """
-  Generates a default password reset form.
+  Generates a sign-in for for a resource using the "Magic link" strategy.
 
   ## Component hierarchy
 
-  This is a child of `AshAuthentication.Phoenix.Components.Password`.
+  This is the top-most strategy-specific component, nested below
+  `AshAuthentication.Phoenix.Components.SignIn`.
 
   Children:
 
@@ -22,28 +22,22 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
   ## Props
 
-    * `strategy` - The configuration map as per
-      `AshAuthentication.Info.strategy/2`. Required.
-    * `label` - The text to show in the submit label.  Generated from the
-      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
-      supplied.  Set to `false` to disable.
+    * `strategy` - the strategy configuration as per
+      `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use Phoenix.LiveComponent
-
   alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
-
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
-  import AshAuthentication.Phoenix.Components.Helpers
+  import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
   import Slug
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:label) => String.t() | false,
           optional(:overrides) => [module]
         }
 
@@ -52,41 +46,41 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
+    subject_name = Info.authentication_subject_name!(strategy.resource)
+
     form = blank_form(strategy)
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(form: form, subject_name: Info.authentication_subject_name!(strategy.resource))
-      |> assign_new(:label, fn -> strategy.request_password_reset_action_name end)
-      |> assign_new(:inner_block, fn -> nil end)
+      |> assign(form: form, trigger_action: false, subject_name: subject_name)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:label, fn -> nil end)
 
     {:ok, socket}
   end
 
   @doc false
   @impl true
-  @spec render(Socket.assigns()) :: Rendered.t() | no_return
+  @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@overrides, :label_class)}>
-          <%= @label %>
-        </h2>
+        <h2 class={override_for(@overrides, :label_class)}><%= @label %></h2>
       <% end %>
 
       <.form
         :let={form}
         for={@form}
-        phx-submit="submit"
         phx-change="change"
+        phx-submit="submit"
+        phx-trigger-action={@trigger_action}
         phx-target={@myself}
         action={
           route_helpers(@socket).auth_path(
             @socket.endpoint,
-            {@subject_name, Strategy.name(@strategy), :reset_request}
+            {@subject_name, Strategy.name(@strategy), :request}
           )
         }
         method="POST"
@@ -99,17 +93,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
           overrides={@overrides}
         />
 
-        <%= if @inner_block do %>
-          <div class={override_for(@overrides, :slot_class)}>
-            <%= render_slot(@inner_block) %>
-          </div>
-        <% end %>
-
         <Input.submit
           socket={@socket}
           strategy={@strategy}
           form={form}
-          action={:request_reset}
+          action={@strategy.request_action_name}
           disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
         />
@@ -122,7 +110,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @impl true
   @spec handle_event(String.t(), %{required(String.t()) => String.t()}, Socket.t()) ::
           {:noreply, Socket.t()}
-
   def handle_event("change", params, socket) do
     params = get_params(params, socket.assigns.strategy)
 
@@ -141,7 +128,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     |> Form.validate(params)
     |> Form.submit()
 
-    flash = override_for(socket.assigns.overrides, :reset_flash_text)
+    flash = override_for(socket.assigns.overrides, :request_flash_text)
 
     socket =
       socket
@@ -168,17 +155,16 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     Map.get(params, param_key, %{})
   end
 
-  defp blank_form(%{resettable: [resettable]} = strategy) do
+  defp blank_form(strategy) do
     api = Info.authentication_api!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     strategy.resource
-    |> Form.for_action(resettable.request_password_reset_action_name,
+    |> Form.for_action(strategy.request_action_name,
       api: api,
       as: subject_name |> to_string(),
       id:
-        "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.request_password_reset_action_name}"
-        |> slugify(),
+        "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}" |> slugify(),
       context: %{strategy: strategy, private: %{ash_authentication?: true}}
     )
   end

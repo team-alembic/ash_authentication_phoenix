@@ -98,6 +98,14 @@ defmodule Example.Accounts.User do
         redirect_uri &get_config/2
         client_secret &get_config/2
       end
+
+      magic_link do
+        identity_field :email
+
+        sender(fn user, token, _ ->
+          Logger.debug("Magic link request for #{user.email} with token #{inspect(token)}")
+        end)
+      end
     end
 
     tokens do
