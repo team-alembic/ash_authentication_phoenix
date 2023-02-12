@@ -14,7 +14,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
   ## Component hierarchy
 
-  This is the top-most provider-specific component, nested below
+  This is the top-most strategy-specific component, nested below
   `AshAuthentication.Phoenix.Components.SignIn`.
 
   Children:
@@ -33,7 +33,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.{Info, Phoenix.Components.Password}
+  alias AshAuthentication.{Info, Phoenix.Components.Password, Strategy}
   alias Phoenix.LiveView.{JS, Rendered, Socket}
   import Slug
 
@@ -55,7 +55,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> slugify()
 
     strategy_name =
-      assigns.strategy.name
+      assigns.strategy
+      |> Strategy.name()
       |> to_string()
       |> slugify()
 

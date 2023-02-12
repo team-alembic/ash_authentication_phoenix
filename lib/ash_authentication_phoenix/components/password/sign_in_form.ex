@@ -32,8 +32,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.Info
-  alias AshAuthentication.Phoenix.Components.Password
+  alias AshAuthentication.{Info, Phoenix.Components.Password, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
@@ -59,7 +58,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> Form.for_action(strategy.sign_in_action_name,
         api: api,
         as: subject_name |> to_string(),
-        id: "#{subject_name}-#{strategy.name}-#{strategy.sign_in_action_name}" |> slugify(),
+        id:
+          "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
+          |> slugify(),
         context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
@@ -94,7 +95,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         action={
           route_helpers(@socket).auth_path(
             @socket.endpoint,
-            {@subject_name, @strategy.name, :sign_in}
+            {@subject_name, Strategy.name(@strategy), :sign_in}
           )
         }
         method="POST"

@@ -66,6 +66,17 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :text, "or"
   end
 
+  override Components.MagicLink do
+    set :root_class, "mt-4 mb-4"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :form_class, nil
+
+    set :request_flash_text,
+        "If this user exists in our database you will contacted with a sign-in link shortly."
+
+    set :disable_button_text, "Requesting ..."
+  end
+
   override Components.Password do
     set :root_class, "mt-4 mb-4"
     set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"

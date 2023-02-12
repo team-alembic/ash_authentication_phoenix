@@ -7,9 +7,9 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   @moduledoc """
   Generates a sign-in button for OAuth2.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
-  This is the top-most provider specific component, nested below
+  This is the top-most strategy-specific component, nested below
   `AshAuthentication.Phoenix.Components.SignIn`.
 
   ## Props
@@ -22,7 +22,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.Info
+  alias AshAuthentication.{Info, Strategy}
   alias Phoenix.LiveView.Rendered
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
   import Phoenix.HTML
@@ -48,7 +48,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
         href={
           route_helpers(@socket).auth_path(
             @socket.endpoint,
-            {@subject_name, @strategy.name, :request}
+            {@subject_name, Strategy.name(@strategy), :request}
           )
         }
         class={override_for(@overrides, :link_class)}
@@ -93,7 +93,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
     """
 
   defp strategy_name(strategy) do
-    case strategy.name do
+    case Strategy.name(strategy) do
       :oauth2 -> "OAuth"
       other -> humanize(other)
     end

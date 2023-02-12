@@ -244,6 +244,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
             assigns.strategy.register_action_name
             |> to_string()
             |> String.trim_trailing("_with_password")
+
+          other ->
+            other
         end
         |> humanize()
       end)

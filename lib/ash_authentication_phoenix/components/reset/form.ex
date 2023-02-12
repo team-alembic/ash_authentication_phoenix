@@ -9,7 +9,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
   @moduledoc """
   Generates a default password reset form.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
   This is a child of `AshAuthentication.Phoenix.Components.Reset`.
 
@@ -35,7 +35,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
   """
 
   use Phoenix.LiveComponent
-  alias AshAuthentication.{Info, Phoenix.Components.Password.Input}
+  alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
@@ -66,7 +66,8 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         api: api,
         as: subject_name |> to_string(),
         id:
-          "#{subject_name}-#{strategy.name}-#{resettable.password_reset_action_name}" |> slugify(),
+          "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.password_reset_action_name}"
+          |> slugify(),
         context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
@@ -103,7 +104,10 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         phx-trigger-action={@trigger_action}
         phx-target={@myself}
         action={
-          route_helpers(@socket).auth_path(@socket.endpoint, {@subject_name, @strategy.name, :reset})
+          route_helpers(@socket).auth_path(
+            @socket.endpoint,
+            {@subject_name, Strategy.name(@strategy), :reset}
+          )
         }
         method="POST"
         class={override_for(@overrides, :form_class)}

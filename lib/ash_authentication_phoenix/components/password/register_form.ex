@@ -32,7 +32,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
 
   use Phoenix.LiveComponent
 
-  alias AshAuthentication.{Info, Phoenix.Components.Password.Input}
+  alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
 
@@ -59,7 +59,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> Form.for_action(strategy.register_action_name,
         api: api,
         as: subject_name |> to_string(),
-        id: "#{subject_name}-#{strategy.name}-#{strategy.register_action_name}" |> slugify(),
+        id:
+          "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.register_action_name}"
+          |> slugify(),
         context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
@@ -100,7 +102,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
         action={
           route_helpers(@socket).auth_path(
             @socket.endpoint,
-            {@subject_name, @strategy.name, :register}
+            {@subject_name, Strategy.name(@strategy), :register}
           )
         }
         method="POST"
