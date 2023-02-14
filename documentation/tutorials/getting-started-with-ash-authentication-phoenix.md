@@ -6,7 +6,7 @@ We assumes that you have [Elixir](https://elixir-lang.org) version 1.14.x (check
 
 ## Green Field Phoenix Application
 
-We start with a new Phoenix application and use the `--no-ecto` flag to skip the [Ecto](https://hexdocs.pm/ecto/Ecto.html) setup.
+We start with a new Phoenix application:
 
 ```bash
 $ mix phx.new example
