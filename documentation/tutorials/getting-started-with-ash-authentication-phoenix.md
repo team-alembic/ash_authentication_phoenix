@@ -526,7 +526,7 @@ end
 # [...]
 ```
 
-Do make this work we need to create a new module `Example.Accounts.User.Senders.SendPasswordResetEmail`:
+To make this work we need to create a new module `Example.Accounts.User.Senders.SendPasswordResetEmail`:
 
 **lib/example/accounts/user/senders/send_password_reset_email.ex**
 
