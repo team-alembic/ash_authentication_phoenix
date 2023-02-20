@@ -97,6 +97,15 @@ jobs:
       - uses: team-alembic/staple-actions/actions/mix-dialyzer@main
         with:
           mix-env: test
+  conventional_commit:
+    name: mix git_ops.check_message
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v3
+      - uses: team-alembic/staple-actions/actions/conventional-commit@main
+        with:
+          mix-env: test
 
   build-dev:
     name: MIX_ENV=dev mix.compile
