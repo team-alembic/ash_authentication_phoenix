@@ -30,7 +30,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     * `:otp_app` - Set the otp app in which to search for authenticated resources.
 
   All other options are passed through to `live_session`, but with session and on_mount hooks
-  added
+  added to set assigns for authenticated resources.
   """
   @spec ash_authentication_live_session(atom, opts :: Keyword.t()) :: Macro.t()
   defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [],
