@@ -124,6 +124,7 @@ defmodule AshAuthentication.Phoenix.Router do
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
   * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `otp_app` the otp app or apps to find authentication resources in. Pulls from the socket by default.
   * `overrides` specify any override modules for customisation.  See
     `AshAuthentication.Phoenix.Overrides` for more information.
 
@@ -142,6 +143,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {path, opts} = Keyword.pop(opts, :path, "/sign-in")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignInLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -154,7 +156,9 @@ defmodule AshAuthentication.Phoenix.Router do
       scope unquote(path), unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
-        live_session :sign_in, session: %{"overrides" => unquote(overrides)} do
+        live_session :sign_in,
+          session: %{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)},
+          on_mount: AshAuthenticationPhoenix.Router.OnLiveViewMount do
           live("/", unquote(live_view), :sign_in, as: unquote(as))
         end
       end
