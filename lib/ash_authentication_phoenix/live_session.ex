@@ -79,8 +79,6 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     {:cont, assign(socket, :otp_app, otp_app)}
   end
 
-  @spec on_mount(atom, %{required(String.t()) => any}, %{required(String.t()) => any}, Socket.t()) ::
-          {:cont | :halt, Socket.t()}
   def on_mount(:default, _params, session, socket) do
     otp_app = otp_app_from_socket(socket)
 
