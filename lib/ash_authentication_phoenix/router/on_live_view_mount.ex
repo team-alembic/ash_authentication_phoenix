@@ -2,8 +2,7 @@ defmodule AshAuthenticationPhoenix.Router.OnLiveViewMount do
   @moduledoc false
   import Phoenix.Component
 
-  @spec on_mount(atom, %{required(String.t()) => any}, %{required(String.t()) => any}, Socket.t()) ::
-          {:cont | :halt, Socket.t()}
+  @doc false
   def on_mount(:default, _params, %{"otp_app" => otp_app}, socket) when not is_nil(otp_app) do
     {:cont, assign(socket, :otp_app, otp_app)}
   end
