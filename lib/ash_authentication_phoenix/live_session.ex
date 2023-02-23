@@ -38,10 +38,13 @@ defmodule AshAuthentication.Phoenix.LiveSession do
            ) do
     quote do
       on_mount = [LiveSession]
-      session = {LiveSession, :generate_session, []}
+
+      opts = unquote(opts)
+
+      session = {LiveSession, :generate_session, [opts[:otp_app]]}
 
       opts =
-        unquote(opts)
+        opts
         |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
         |> Keyword.update(:session, session, &[session | List.wrap(&1)])
 
@@ -91,9 +94,11 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     socket =
       session
       |> Enum.reduce(socket, fn {key, value}, socket ->
-        with {:ok, resource} <- Map.fetch(resources, key),
-             {:ok, user} <- AshAuthentication.subject_to_user(value, resource),
-             {:ok, subject_name} <- Info.authentication_subject_name(resource) do
+        with {:ok, resource} <- Map.fetch(resources, key) |> IO.inspect(label: "res"),
+             {:ok, user} <-
+               AshAuthentication.subject_to_user(value, resource) |> IO.inspect(label: "usr"),
+             {:ok, subject_name} <-
+               Info.authentication_subject_name(resource) |> IO.inspect(label: "subj") do
           assign(socket, String.to_existing_atom("current_#{subject_name}"), user)
         else
           _ -> socket
@@ -109,15 +114,18 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   Supplements the session with any `current_X` assigns which are authenticated
   resource records from the conn.
   """
-  @spec generate_session(Plug.Conn.t()) :: %{required(String.t()) => String.t()}
-  def generate_session(conn) do
-    otp_app = conn.private.phoenix_endpoint.config(:otp_app)
+  @spec generate_session(Plug.Conn.t(), atom | [atom]) :: %{required(String.t()) => String.t()}
+  def generate_session(conn, otp_app \\ nil) do
+    otp_app = otp_app || conn.assigns[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
 
     otp_app
     |> AshAuthentication.authenticated_resources()
     |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
     |> Enum.reduce(%{}, fn {subject_name, resource}, session ->
-      case Map.fetch(conn.assigns, String.to_existing_atom("current_#{subject_name}")) do
+      case Map.fetch(
+             conn.assigns,
+             String.to_existing_atom("current_#{subject_name}")
+           ) do
         {:ok, user} when is_struct(user, resource) ->
           Map.put(session, subject_name, AshAuthentication.user_to_subject(user))
 

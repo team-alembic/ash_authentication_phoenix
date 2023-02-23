@@ -145,6 +145,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {as, opts} = Keyword.pop(opts, :as, :auth)
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
     {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -159,7 +160,7 @@ defmodule AshAuthentication.Phoenix.Router do
 
         live_session_opts = [
           session: %{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)},
-          on_mount: AshAuthenticationPhoenix.Router.OnLiveViewMount
+          on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
         ]
 
         live_session_opts =
