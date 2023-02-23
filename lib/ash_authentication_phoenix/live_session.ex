@@ -25,19 +25,34 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   @doc """
   Generate a live session wherein all subject assigns are copied from the conn
   into the socket.
+
+  Options:
+    * `:otp_app` - Set the otp app in which to search for authenticated resources.
+
+  All other options are passed through to `live_session`, but with session and on_mount hooks
+  added
   """
   @spec ash_authentication_live_session(atom, opts :: Keyword.t()) :: Macro.t()
   defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [],
              do: block
            ) do
     quote do
-      on_mount = LiveSession
+      on_mount = [LiveSession]
       session = {LiveSession, :generate_session, []}
 
       opts =
         unquote(opts)
-        |> Keyword.update(:on_mount, on_mount, &[on_mount | List.wrap(&1)])
+        |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
         |> Keyword.update(:session, session, &[session | List.wrap(&1)])
+
+      {otp_app, opts} = Keyword.pop(opts, :otp_app)
+
+      opts =
+        if otp_app do
+          Keyword.update!(opts, :on_mount, &[{LiveSession, {:set_otp_app, otp_app}} | &1])
+        else
+          opts
+        end
 
       live_session unquote(session_name), opts do
         unquote(block)
@@ -53,6 +68,17 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   "user?id=aa6c179c-ee75-4d49-8796-528c2981b396"}` becomes an assign called
   `current_user` with the loaded user as the value.
   """
+  @spec on_mount(
+          atom | {:set_otp_app, atom},
+          %{required(String.t()) => any},
+          %{required(String.t()) => any},
+          Socket.t()
+        ) ::
+          {:cont | :halt, Socket.t()}
+  def on_mount({:set_otp_app, otp_app}, _params, _, socket) do
+    {:cont, assign(socket, :otp_app, otp_app)}
+  end
+
   @spec on_mount(atom, %{required(String.t()) => any}, %{required(String.t()) => any}, Socket.t()) ::
           {:cont | :halt, Socket.t()}
   def on_mount(:default, _params, session, socket) do
