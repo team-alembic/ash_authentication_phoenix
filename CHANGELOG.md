@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.5.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.5.0...v1.5.1) (2023-02-24)
+
+
+
+
+### Improvements:
+
+* configurable otp app (#135)
+
 ## [v1.5.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.4.8...v1.5.0) (2023-02-12)
 
 
