@@ -29,6 +29,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   ## Props
 
     * `overrides` - A list of override modules.
+    * `otp_app` - The otp app to look for authenticated resources in
   """
 
   use Phoenix.LiveComponent
@@ -45,6 +46,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   @impl true
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
+    socket = assign(socket, assigns)
+
     strategies_by_resource =
       socket
       |> otp_app_from_socket()
@@ -60,7 +63,6 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
     socket =
       socket
-      |> assign(assigns)
       |> assign(:strategies_by_resource, strategies_by_resource)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 

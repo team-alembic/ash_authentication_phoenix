@@ -16,10 +16,10 @@ defmodule AshAuthentication.Phoenix.Plug do
   with the `otp_app` as extracted from the endpoint.
   """
   @spec load_from_session(Conn.t(), any) :: Conn.t()
-  def load_from_session(conn, _opts) do
-    :otp_app
-    |> conn.private.phoenix_endpoint.config()
-    |> then(&Helpers.retrieve_from_session(conn, &1))
+  def load_from_session(conn, opts) do
+    otp_app = opts[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
+
+    Helpers.retrieve_from_session(conn, otp_app)
   end
 
   @doc """

@@ -30,6 +30,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
     socket =
       socket
       |> assign(overrides: overrides)
+      |> assign_new(:otp_app, fn -> nil end)
 
     {:ok, socket}
   end
@@ -49,6 +50,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
     <div class={override_for(@overrides, :root_class)}>
       <.live_component
         module={Components.Reset}
+        otp_app={@otp_app}
         id={override_for(@overrides, :reset_id, "reset")}
         token={@token}
         overrides={@overrides}

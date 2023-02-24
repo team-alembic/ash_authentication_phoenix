@@ -19,6 +19,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
 
     * `token` - The reset token.
     * `overrides` - A list of override modules.
+    * `otp_app` - The otp app to look for authenticated resources in
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -37,6 +38,8 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
   @impl true
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
+    socket = assign(socket, assigns)
+
     strategies =
       socket
       |> otp_app_from_socket()
@@ -48,7 +51,6 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
 
     socket =
       socket
-      |> assign(assigns)
       |> assign(strategies: strategies)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 

@@ -7,11 +7,15 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   @doc """
   The LiveView `Socket` contains a reference to the Phoenix endpoint, and from
   there we can extract the `otp_app` of the current request.
+
+  This is pulled from `assigns[:otp_app]`, or inferred
+  from the socket if that is not set.
   """
   @spec otp_app_from_socket(Socket.t()) :: atom
   def otp_app_from_socket(socket) do
-    :otp_app
-    |> socket.endpoint.config()
+    socket.assigns[:otp_app] ||
+      :otp_app
+      |> socket.endpoint.config()
   end
 
   @doc """

@@ -32,6 +32,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
     socket =
       socket
       |> assign(overrides: overrides)
+      |> assign_new(:otp_app, fn -> nil end)
 
     {:ok, socket}
   end
@@ -44,6 +45,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
     <div class={override_for(@overrides, :root_class)}>
       <.live_component
         module={Components.SignIn}
+        otp_app={@otp_app}
         id={override_for(@overrides, :sign_in_id, "sign-in")}
         overrides={@overrides}
       />
