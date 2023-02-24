@@ -142,7 +142,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
         "dialyzer",
         "hex.audit",
         "test"
-      ]
+      ],
+      docs: ["docs", "ash.replace_doc_links"]
     ]
   end
 
