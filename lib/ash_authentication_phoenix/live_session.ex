@@ -94,11 +94,11 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     socket =
       session
       |> Enum.reduce(socket, fn {key, value}, socket ->
-        with {:ok, resource} <- Map.fetch(resources, key) |> IO.inspect(label: "res"),
+        with {:ok, resource} <- Map.fetch(resources, key),
              {:ok, user} <-
-               AshAuthentication.subject_to_user(value, resource) |> IO.inspect(label: "usr"),
+               AshAuthentication.subject_to_user(value, resource),
              {:ok, subject_name} <-
-               Info.authentication_subject_name(resource) |> IO.inspect(label: "subj") do
+               Info.authentication_subject_name(resource) do
           assign(socket, String.to_existing_atom("current_#{subject_name}"), user)
         else
           _ -> socket
