@@ -136,6 +136,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:live_view, module}
             | {:as, atom}
             | {:overrides, [module]}
+            | {:on_mount, [module]}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -221,6 +222,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:live_view, module}
             | {:as, atom}
             | {:overrides, [module]}
+            | {:on_mount, [module]}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -228,6 +230,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {path, opts} = Keyword.pop(opts, :path, "/password-reset")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.ResetLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount, [])
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -236,11 +239,15 @@ defmodule AshAuthentication.Phoenix.Router do
       opts
       |> Keyword.put_new(:alias, false)
 
+      live_session_opts = [
+        on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | on_mount]
+      ]
+
     quote do
       scope unquote(path), unquote(opts) do
-        import Phoenix.LiveView.Router, only: [live: 4, live_session: 2]
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
-        live_session :reset do
+        live_session :reset, unquote(live_session_opts) do
           live("/:token", unquote(live_view), :reset,
             as: unquote(as),
             private: %{overrides: unquote(overrides)}
