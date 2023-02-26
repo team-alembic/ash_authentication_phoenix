@@ -147,10 +147,10 @@ We have to configure the Repo in `config/config.exs`. While doing that we also c
 import Config
 
 # add these lines -->
-config :example, 
+config :example,
   ash_apis: [Example.Accounts]
 
-config :ash, 
+config :ash,
   :use_all_identities_in_manage_relationship?, false
 # <-- add these lines
 
@@ -185,14 +185,15 @@ At the end we should have the following directory structure:
 ```bash
 lib/example
 ├── accounts
-│   ├── registry.ex
-│   ├── token.ex
-│   └── user.ex
-├── accounts.ex
+|   ├── accounts.ex
+|   └── resources
+│       ├── registry.ex
+│       ├── token.ex
+|       └── user.ex
 ...
 ```
 
-**lib/example/accounts.ex**
+**lib/example/accounts/accounts.ex**
 
 ```elixir
 defmodule Example.Accounts do
@@ -204,7 +205,7 @@ defmodule Example.Accounts do
 end
 ```
 
-**lib/example/accounts/user.ex**
+**lib/example/accounts/resources/user.ex**
 
 ```elixir
 defmodule Example.Accounts.User do
@@ -241,12 +242,12 @@ defmodule Example.Accounts.User do
   end
 
   identities do
-    identity :unique_email, [:email]
+    identity :email, [:email]
   end
 end
 ```
 
-**lib/example/accounts/token.ex**
+**lib/example/accounts/resources/token.ex**
 
 ```elixir
 defmodule Example.Accounts.Token do
@@ -508,9 +509,9 @@ Visit [`localhost:4000/sign-out`](http://localhost:4000/sign-out) from your brow
 
 ## Reset Password
 
-In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/user.ex` with the following code: 
+In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/resources/user.ex` with the following code:
 
-**lib/example/accounts/user.ex**
+**lib/example/accounts/resources/user.ex**
 
 ```elixir
 # [...]
@@ -538,6 +539,7 @@ defmodule Example.Accounts.User.Senders.SendPasswordResetEmail do
   use AshAuthentication.Sender
   use ExampleWeb, :verified_routes
 
+  @impl AshAuthentication.Sender
   def send(user, token, _) do
     Example.Accounts.Emails.deliver_reset_password_instructions(
       user,
@@ -550,7 +552,7 @@ end
 We also need to create a new email template:
 
 **lib/example/accounts/emails.ex**
-  
+
 ```elixir
 defmodule Example.Accounts.Emails do
   @moduledoc """
