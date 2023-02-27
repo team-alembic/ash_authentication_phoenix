@@ -239,9 +239,9 @@ defmodule AshAuthentication.Phoenix.Router do
       opts
       |> Keyword.put_new(:alias, false)
 
-      live_session_opts = [
-        on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | on_mount]
-      ]
+    live_session_opts = [
+      on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | on_mount]
+    ]
 
     quote do
       scope unquote(path), unquote(opts) do
