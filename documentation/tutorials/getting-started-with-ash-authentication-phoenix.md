@@ -224,7 +224,7 @@ defmodule Example.Accounts.User do
 
     strategies do
       password :password do
-        identity_field(:email)
+        identity_field(:unique_email)
       end
     end
 
@@ -242,7 +242,7 @@ defmodule Example.Accounts.User do
   end
 
   identities do
-    identity :email, [:email]
+    identity :unique_email, [:email]
   end
 end
 ```
@@ -517,7 +517,7 @@ In this section we add a reset password functionality. Which is triggered by add
 # [...]
 strategies do
   password :password do
-    identity_field(:email)
+    identity_field(:unique_email)
 
     resettable do
       sender(Example.Accounts.User.Senders.SendPasswordResetEmail)
