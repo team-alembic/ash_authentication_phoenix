@@ -4,9 +4,12 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     hide_class: "CSS class to apply to hide an element.",
     show_first: "The form to show on first load.  Either `:sign_in` or `:register`.",
     interstitial_class: "CSS class for the `div` element between the form and the button.",
-    sign_in_toggle_text: "Toggle text to display when the sign in form is not showing.",
-    register_toggle_text: "Toggle text to display when the register form is not showing.",
-    reset_toggle_text: "Toggle text to display when the reset form is not showing.",
+    sign_in_toggle_text:
+      "Toggle text to display when the sign in form is not showing (or `nil` to disable).",
+    register_toggle_text:
+      "Toggle text to display when the register form is not showing (or `nil` to disable).",
+    reset_toggle_text:
+      "Toggle text to display when the reset form is not showing (or `nil` to disable).",
     toggler_class: "CSS class for the toggler `a` element."
 
   @moduledoc """
@@ -60,7 +63,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> to_string()
       |> slugify()
 
-    reset_enabled? = Enum.any?(strategy.resettable)
+    reset_enabled? =
+      Enum.any?(strategy.resettable) && override_for(assigns.overrides, :reset_toggle_text)
 
     reset_id =
       strategy.resettable
@@ -82,6 +86,11 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> assign(:show_first, override_for(assigns.overrides, :show_first, :sign_in))
       |> assign(:hide_class, override_for(assigns.overrides, :hide_class))
       |> assign(:reset_enabled?, reset_enabled?)
+      |> assign(
+        :register_enabled?,
+        !is_nil(override_for(assigns.overrides, :register_toggle_text))
+      )
+      |> assign(:sign_in_enabled?, !is_nil(override_for(assigns.overrides, :sign_in_toggle_text)))
       |> assign(:reset_id, reset_id)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 
@@ -106,13 +115,15 @@ defmodule AshAuthentication.Phoenix.Components.Password do
               />
             <% end %>
 
-            <.toggler
-              socket={@socket}
-              show={@register_id}
-              hide={[@sign_in_id, @reset_id]}
-              message={override_for(@overrides, :register_toggle_text)}
-              overrides={@overrides}
-            />
+            <%= if @register_enabled? do %>
+              <.toggler
+                socket={@socket}
+                show={@register_id}
+                hide={[@sign_in_id, @reset_id]}
+                message={override_for(@overrides, :register_toggle_text)}
+                overrides={@overrides}
+              />
+            <% end %>
           </div>
         </.live_component>
       </div>
@@ -135,13 +146,15 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                 overrides={@overrides}
               />
             <% end %>
-            <.toggler
-              socket={@socket}
-              show={@sign_in_id}
-              hide={[@register_id, @reset_id]}
-              message={override_for(@overrides, :sign_in_toggle_text)}
-              overrides={@overrides}
-            />
+            <%= if @sign_in_enabled? do %>
+              <.toggler
+                socket={@socket}
+                show={@sign_in_id}
+                hide={[@register_id, @reset_id]}
+                message={override_for(@overrides, :sign_in_toggle_text)}
+                overrides={@overrides}
+              />
+            <% end %>
           </div>
         </.live_component>
       </div>
@@ -156,20 +169,24 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             overrides={@overrides}
           >
             <div class={override_for(@overrides, :interstitial_class)}>
-              <.toggler
-                socket={@socket}
-                show={@register_id}
-                hide={[@sign_in_id, @reset_id]}
-                message={override_for(@overrides, :register_toggle_text)}
-                overrides={@overrides}
-              />
-              <.toggler
-                socket={@socket}
-                show={@sign_in_id}
-                hide={[@register_id, @reset_id]}
-                message={override_for(@overrides, :sign_in_toggle_text)}
-                overrides={@overrides}
-              />
+              <%= if @register_enabled? do %>
+                <.toggler
+                  socket={@socket}
+                  show={@register_id}
+                  hide={[@sign_in_id, @reset_id]}
+                  message={override_for(@overrides, :register_toggle_text)}
+                  overrides={@overrides}
+                />
+              <% end %>
+              <%= if @sign_in_enabled? do %>
+                <.toggler
+                  socket={@socket}
+                  show={@sign_in_id}
+                  hide={[@register_id, @reset_id]}
+                  message={override_for(@overrides, :sign_in_toggle_text)}
+                  overrides={@overrides}
+                />
+              <% end %>
             </div>
           </.live_component>
         </div>
