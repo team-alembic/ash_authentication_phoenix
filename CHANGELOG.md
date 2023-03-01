@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.6.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.0...v1.6.1) (2023-03-01)
+
+
+
+
+### Improvements:
+
+* allow folks to disable togglers by setting their text to `nil`.
+
 ## [v1.6.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.5.1...v1.6.0) (2023-02-27)
 
 
