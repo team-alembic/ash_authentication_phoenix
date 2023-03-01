@@ -12,8 +12,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   For each strategy configured on the resource a component name is inferred
   (e.g. `AshAuthentication.Strategy.Password` becomes
-  `AshAuthentication.Phoenix.Components.Strategy.Passowrd`) and is rendered
-  into the output.
+  `AshAuthentication.Phoenix.Components.Password`) and is rendered into the
+  output.
 
   ## Component hierarchy
 
@@ -21,8 +21,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.Strategy.Password`.
-    * `AshAuthentication.Phoenix.Components.Strategy.OAuth2`.
+    * `AshAuthentication.Phoenix.Components.Password`.
+    * `AshAuthentication.Phoenix.Components.OAuth2`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
 
