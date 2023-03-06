@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.6.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.1...v1.6.2) (2023-03-06)
+
+
+
+
+### Bug Fixes:
+
+* add `phoenix_view` to dependencies. (#153)
+
 ## [v1.6.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.0...v1.6.1) (2023-03-01)
 
 
