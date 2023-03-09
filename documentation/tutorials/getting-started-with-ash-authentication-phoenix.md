@@ -224,7 +224,7 @@ defmodule Example.Accounts.User do
 
     strategies do
       password :password do
-        identity_field(:unique_email)
+        identity_field(:email)
       end
     end
 
