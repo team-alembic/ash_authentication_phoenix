@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.6.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.2...v1.6.3) (2023-03-12)
+
+
+
+
+### Improvements:
+
+* use tenant in ash_authentication_live_session (#160)
+
 ## [v1.6.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.1...v1.6.2) (2023-03-06)
 
 
