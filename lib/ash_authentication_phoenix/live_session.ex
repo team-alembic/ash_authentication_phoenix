@@ -96,7 +96,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       |> Enum.reduce(socket, fn {key, value}, socket ->
         with {:ok, resource} <- Map.fetch(resources, key),
              {:ok, user} <-
-               AshAuthentication.subject_to_user(value, resource),
+               AshAuthentication.subject_to_user(value, resource, tenant: session["tenant"]),
              {:ok, subject_name} <-
                Info.authentication_subject_name(resource) do
           assign(socket, String.to_existing_atom("current_#{subject_name}"), user)
@@ -127,7 +127,9 @@ defmodule AshAuthentication.Phoenix.LiveSession do
              String.to_existing_atom("current_#{subject_name}")
            ) do
         {:ok, user} when is_struct(user, resource) ->
-          Map.put(session, subject_name, AshAuthentication.user_to_subject(user))
+          session
+          |> Map.put(subject_name, AshAuthentication.user_to_subject(user))
+          |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
 
         _ ->
           session
