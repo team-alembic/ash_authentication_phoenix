@@ -133,6 +133,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
         _ ->
           session
+          |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
       end
     end)
   end
