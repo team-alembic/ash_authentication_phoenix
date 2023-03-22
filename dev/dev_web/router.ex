@@ -23,6 +23,7 @@ defmodule DevWeb.Router do
 
     ash_authentication_live_session do
       live "/", HomePageLive
+      live "/custom-sign-in", CustomSignInLive
     end
   end
 

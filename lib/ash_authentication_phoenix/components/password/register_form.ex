@@ -132,7 +132,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
 
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
-            <%= render_slot(@inner_block) %>
+            <%= render_slot(@inner_block, form) %>
           </div>
         <% end %>
 

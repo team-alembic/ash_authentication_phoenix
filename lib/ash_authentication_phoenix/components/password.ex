@@ -10,7 +10,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       "Toggle text to display when the register form is not showing (or `nil` to disable).",
     reset_toggle_text:
       "Toggle text to display when the reset form is not showing (or `nil` to disable).",
-    toggler_class: "CSS class for the toggler `a` element."
+    toggler_class: "CSS class for the toggler `a` element.",
+    slot_class: "CSS class for the `div` surrounding the slot."
 
   @moduledoc """
   Generates sign in, registration and reset forms for a resource.
@@ -31,6 +32,40 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
+    * `show_first` - either `:sign_in`, `:register` or `:reset` which controls
+      which form is visible on first load.
+
+  ## Slots
+
+    * `sign_in_extra` - rendered inside the sign-in form with the form passed as
+      a slot argument.
+    * `register_extra` - rendered inside the registration form with the form
+      passed as a slot argument.
+    * `reset_extra` - rendered inside the reset form with the form passed as a
+      slot argument.
+
+  ```heex
+  <.live_component
+    module={#{inspect(__MODULE__)}}
+    strategy={AshAuthentication.Info.strategy!(Example.User, :password)}
+    id="user-with-password"
+    socket={@socket}
+    overrides={[AshAuthentication.Phoenix.Overrides.Default]}>
+
+    <:sign_in_extra :let={form}>
+      <.input field={form[:capcha]} />
+    </:sign_in_extra>
+
+    <:register_extra :let={form}>
+      <.input field={form[:name]} />
+    </:register_extra>
+
+    <:reset_extra :let={form}>
+      <.input field={form[:capcha]} />
+    </:reset_extra>
+  </.live_component>
+  ```
+
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -44,6 +79,10 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:overrides) => [module]
         }
+
+  slot :sign_in_extra
+  slot :register_extra
+  slot :reset_extra
 
   @doc false
   @impl true
@@ -83,7 +122,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         :register_id,
         generate_id(subject_name, strategy_name, strategy.register_action_name)
       )
-      |> assign(:show_first, override_for(assigns.overrides, :show_first, :sign_in))
+      |> assign_new(:show_first, fn -> override_for(assigns.overrides, :show_first, :sign_in) end)
       |> assign(:hide_class, override_for(assigns.overrides, :hide_class))
       |> assign(:reset_enabled?, reset_enabled?)
       |> assign(
@@ -98,12 +137,19 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     <div class={override_for(@overrides, :root_class)}>
       <div id={"#{@sign_in_id}-wrapper"} class={unless @show_first == :sign_in, do: @hide_class}>
         <.live_component
+          :let={form}
           module={Password.SignInForm}
           id={@sign_in_id}
           strategy={@strategy}
           label={false}
           overrides={@overrides}
         >
+          <%= if @sign_in_extra do %>
+            <div class={override_for(@overrides, :slot_class)}>
+              <%= render_slot(@sign_in_extra, form) %>
+            </div>
+          <% end %>
+
           <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
@@ -130,12 +176,19 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
       <div id={"#{@register_id}-wrapper"} class={unless @show_first == :register, do: @hide_class}>
         <.live_component
+          :let={form}
           module={Password.RegisterForm}
           id={@register_id}
           strategy={@strategy}
           label={false}
           overrides={@overrides}
         >
+          <%= if @register_extra do %>
+            <div class={override_for(@overrides, :slot_class)}>
+              <%= render_slot(@register_extra, form) %>
+            </div>
+          <% end %>
+
           <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
@@ -162,12 +215,19 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       <%= if @reset_enabled? do %>
         <div id={"#{@reset_id}-wrapper"} class={unless @show_first == :reset, do: @hide_class}>
           <.live_component
+            :let={form}
             module={Password.ResetForm}
             id={@reset_id}
             strategy={@strategy}
             label={false}
             overrides={@overrides}
           >
+            <%= if @reset_extra do %>
+              <div class={override_for(@overrides, :slot_class)}>
+                <%= render_slot(@reset_extra, form) %>
+              </div>
+            <% end %>
+
             <div class={override_for(@overrides, :interstitial_class)}>
               <%= if @register_enabled? do %>
                 <.toggler
