@@ -244,6 +244,13 @@ defmodule Example.Accounts.User do
   identities do
     identity :unique_email, [:email]
   end
+  
+  # If using policies, add the following bypass:
+  # policies do
+  #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
+  #     authorize_if always()
+  #   end
+  # end
 end
 ```
 
@@ -263,6 +270,13 @@ defmodule Example.Accounts.Token do
     table "tokens"
     repo Example.Repo
   end
+  
+  # If using policies, add the following bypass:
+  # policies do
+  #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
+  #     authorize_if always()
+  #   end
+  # end
 end
 ```
 
