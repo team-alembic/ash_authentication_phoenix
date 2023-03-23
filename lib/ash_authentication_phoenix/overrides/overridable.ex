@@ -68,6 +68,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
           |> Enum.reduce_while(nil, fn module, _ ->
             module.overrides()
             |> Map.fetch({unquote(component), unquote(selector)})
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
             |> case do
               {:ok, value} -> {:halt, value}
               :error -> {:cont, nil}
