@@ -172,41 +172,43 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         </.live_component>
       </div>
 
-      <div id={"#{@register_id}-wrapper"} class={unless @show_first == :register, do: @hide_class}>
-        <.live_component
-          :let={form}
-          module={Password.RegisterForm}
-          id={@register_id}
-          strategy={@strategy}
-          label={false}
-          overrides={@overrides}
-        >
-          <%= if @register_extra do %>
-            <div class={override_for(@overrides, :slot_class)}>
-              <%= render_slot(@register_extra, form) %>
-            </div>
-          <% end %>
+      <%= if @register_enabled? do %>
+        <div id={"#{@register_id}-wrapper"} class={unless @show_first == :register, do: @hide_class}>
+          <.live_component
+            :let={form}
+            module={Password.RegisterForm}
+            id={@register_id}
+            strategy={@strategy}
+            label={false}
+            overrides={@overrides}
+          >
+            <%= if @register_extra do %>
+              <div class={override_for(@overrides, :slot_class)}>
+                <%= render_slot(@register_extra, form) %>
+              </div>
+            <% end %>
 
-          <div class={override_for(@overrides, :interstitial_class)}>
-            <%= if @reset_enabled? do %>
-              <.toggler
-                show={@reset_id}
-                hide={[@sign_in_id, @register_id]}
-                message={override_for(@overrides, :reset_toggle_text)}
-                overrides={@overrides}
-              />
-            <% end %>
-            <%= if @sign_in_enabled? do %>
-              <.toggler
-                show={@sign_in_id}
-                hide={[@register_id, @reset_id]}
-                message={override_for(@overrides, :sign_in_toggle_text)}
-                overrides={@overrides}
-              />
-            <% end %>
-          </div>
-        </.live_component>
-      </div>
+            <div class={override_for(@overrides, :interstitial_class)}>
+              <%= if @reset_enabled? do %>
+                <.toggler
+                  show={@reset_id}
+                  hide={[@sign_in_id, @register_id]}
+                  message={override_for(@overrides, :reset_toggle_text)}
+                  overrides={@overrides}
+                />
+              <% end %>
+              <%= if @sign_in_enabled? do %>
+                <.toggler
+                  show={@sign_in_id}
+                  hide={[@register_id, @reset_id]}
+                  message={override_for(@overrides, :sign_in_toggle_text)}
+                  overrides={@overrides}
+                />
+              <% end %>
+            </div>
+          </.live_component>
+        </div>
+      <% end %>
 
       <%= if @reset_enabled? do %>
         <div id={"#{@reset_id}-wrapper"} class={unless @show_first == :reset, do: @hide_class}>
