@@ -86,15 +86,9 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
+        <Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
 
         <Input.submit
-          socket={@socket}
           strategy={@strategy}
           form={form}
           action={@strategy.request_action_name}

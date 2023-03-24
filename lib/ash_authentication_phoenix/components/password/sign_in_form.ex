@@ -101,18 +101,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Password.Input.identity_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
-        <Password.Input.password_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
+        <Password.Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
+        <Password.Input.password_field strategy={@strategy} form={form} overrides={@overrides} />
 
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
@@ -121,7 +111,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         <% end %>
 
         <Password.Input.submit
-          socket={@socket}
           strategy={@strategy}
           form={form}
           action={:sign_in}

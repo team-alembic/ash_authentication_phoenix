@@ -108,26 +108,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
-        <Input.password_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
+        <Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
+        <Input.password_field strategy={@strategy} form={form} overrides={@overrides} />
 
         <%= if @strategy.confirmation_required? do %>
-          <Input.password_confirmation_field
-            socket={@socket}
-            strategy={@strategy}
-            form={form}
-            overrides={@overrides}
-          />
+          <Input.password_confirmation_field strategy={@strategy} form={form} overrides={@overrides} />
         <% end %>
 
         <%= if @inner_block do %>
@@ -137,7 +122,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
         <% end %>
 
         <Input.submit
-          socket={@socket}
           strategy={@strategy}
           form={form}
           action={:register}

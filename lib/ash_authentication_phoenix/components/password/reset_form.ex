@@ -92,12 +92,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
+        <Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
 
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
@@ -106,7 +101,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
         <% end %>
 
         <Input.submit
-          socket={@socket}
           strategy={@strategy}
           form={form}
           action={:request_reset}

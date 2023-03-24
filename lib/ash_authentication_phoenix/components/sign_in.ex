@@ -76,12 +76,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= if override_for(@overrides, :show_banner, true) do %>
-        <.live_component
-          module={Components.Banner}
-          socket={@socket}
-          id="sign-in-banner"
-          overrides={@overrides}
-        />
+        <.live_component module={Components.Banner} id="sign-in-banner" overrides={@overrides} />
       <% end %>
 
       <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
@@ -90,7 +85,6 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
             <.strategy
               component={component_for_strategy(strategy)}
               strategy={strategy}
-              socket={@socket}
               overrides={@overrides}
             />
           <% end %>
@@ -109,7 +103,6 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
             <.strategy
               component={component_for_strategy(strategy)}
               strategy={strategy}
-              socket={@socket}
               overrides={@overrides}
             />
           <% end %>

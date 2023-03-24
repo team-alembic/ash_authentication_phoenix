@@ -90,7 +90,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         phx_debounce: override_for(@overrides, :input_debounce),
         autofocus: "true"
       ) %>
-      <.error socket={@socket} form={@form} field={@identity_field} overrides={@overrides} />
+      <.error form={@form} field={@identity_field} overrides={@overrides} />
     </div>
     """
   end
@@ -139,7 +139,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         value: input_value(@form, @password_field),
         phx_debounce: override_for(@overrides, :input_debounce)
       ) %>
-      <.error socket={@socket} form={@form} field={@password_field} overrides={@overrides} />
+      <.error form={@form} field={@password_field} overrides={@overrides} />
     </div>
     """
   end
@@ -188,12 +188,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         value: input_value(@form, @password_confirmation_field),
         phx_debounce: override_for(@overrides, :input_debounce)
       ) %>
-      <.error
-        socket={@socket}
-        form={@form}
-        field={@password_confirmation_field}
-        overrides={@overrides}
-      />
+      <.error form={@form} field={@password_confirmation_field} overrides={@overrides} />
     </div>
     """
   end

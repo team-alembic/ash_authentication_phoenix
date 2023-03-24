@@ -113,28 +113,17 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         class={override_for(@overrides, :form_class)}
       >
         <%= hidden_input(form, :reset_token, value: @token) %>
-        <Input.error socket={@socket} field={:reset_token} form={@form} overrides={@overrides} />
+        <Input.error field={:reset_token} form={@form} overrides={@overrides} />
 
-        <Input.password_field
-          socket={@socket}
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-        />
+        <Input.password_field strategy={@strategy} form={form} overrides={@overrides} />
 
         <%= if @strategy.confirmation_required? do %>
-          <Input.password_confirmation_field
-            socket={@socket}
-            strategy={@strategy}
-            form={form}
-            overrides={@overrides}
-          />
+          <Input.password_confirmation_field strategy={@strategy} form={form} overrides={@overrides} />
         <% end %>
 
         <div class={override_for(@overrides, :spacer_class)}></div>
 
         <Input.submit
-          socket={@socket}
           strategy={@strategy}
           form={form}
           action={:reset}
