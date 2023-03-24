@@ -78,6 +78,7 @@ defmodule Example.Accounts.User do
       password do
         identity_field(:email)
         hashed_password_field(:hashed_password)
+        registration_enabled? false
 
         resettable do
           sender(fn user, token, _ ->
