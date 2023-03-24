@@ -153,7 +153,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
-                socket={@socket}
                 show={@reset_id}
                 hide={[@sign_in_id, @register_id]}
                 message={override_for(@overrides, :reset_toggle_text)}
@@ -163,7 +162,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
             <%= if @register_enabled? do %>
               <.toggler
-                socket={@socket}
                 show={@register_id}
                 hide={[@sign_in_id, @reset_id]}
                 message={override_for(@overrides, :register_toggle_text)}
@@ -192,7 +190,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
-                socket={@socket}
                 show={@reset_id}
                 hide={[@sign_in_id, @register_id]}
                 message={override_for(@overrides, :reset_toggle_text)}
@@ -201,7 +198,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             <% end %>
             <%= if @sign_in_enabled? do %>
               <.toggler
-                socket={@socket}
                 show={@sign_in_id}
                 hide={[@register_id, @reset_id]}
                 message={override_for(@overrides, :sign_in_toggle_text)}
@@ -231,7 +227,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             <div class={override_for(@overrides, :interstitial_class)}>
               <%= if @register_enabled? do %>
                 <.toggler
-                  socket={@socket}
                   show={@register_id}
                   hide={[@sign_in_id, @reset_id]}
                   message={override_for(@overrides, :register_toggle_text)}
@@ -240,7 +235,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
               <% end %>
               <%= if @sign_in_enabled? do %>
                 <.toggler
-                  socket={@socket}
                   show={@sign_in_id}
                   hide={[@register_id, @reset_id]}
                   message={override_for(@overrides, :sign_in_toggle_text)}

@@ -64,7 +64,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= if override_for(@overrides, :show_banner, true) do %>
-        <.live_component module={Components.Banner} socket={@socket} id="sign-in-banner" />
+        <.live_component module={Components.Banner} id="sign-in-banner" />
       <% end %>
 
       <%= for strategy <- @strategies do %>
@@ -73,7 +73,6 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
             module={Components.Reset.Form}
             strategy={strategy}
             token={@token}
-            socket={@socket}
             id="reset-form"
             label={false}
             overrides={@overrides}
