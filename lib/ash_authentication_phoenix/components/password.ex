@@ -102,6 +102,9 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> to_string()
       |> slugify()
 
+    register_enabled? =
+      strategy.registration_enabled? && override_for(assigns.overrides, :register_toggle_text)
+
     reset_enabled? =
       Enum.any?(strategy.resettable) && override_for(assigns.overrides, :reset_toggle_text)
 
@@ -125,10 +128,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> assign_new(:show_first, fn -> override_for(assigns.overrides, :show_first, :sign_in) end)
       |> assign(:hide_class, override_for(assigns.overrides, :hide_class))
       |> assign(:reset_enabled?, reset_enabled?)
-      |> assign(
-        :register_enabled?,
-        !is_nil(override_for(assigns.overrides, :register_toggle_text))
-      )
+      |> assign(:register_enabled?, register_enabled?)
       |> assign(:sign_in_enabled?, !is_nil(override_for(assigns.overrides, :sign_in_toggle_text)))
       |> assign(:reset_id, reset_id)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
