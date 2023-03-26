@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.6.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.4...v1.6.5) (2023-03-26)
+
+
+
+
+### Bug Fixes:
+
+* better behavior when password registration disabled
+
+* only show register page if register is enabled
+
+* resolve issues w/ assigning socket & test helper flash
+
 ## [v1.6.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.3...v1.6.4) (2023-03-14)
 
 
