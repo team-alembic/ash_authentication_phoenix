@@ -47,7 +47,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
           required(:strategy) => AshAuthentication.Strategy.t(),
           required(:token) => String.t(),
           optional(:label) => String.t() | false,
-          optional(:overrices) => [module]
+          optional(:overrides) => [module]
         }
 
   @doc false

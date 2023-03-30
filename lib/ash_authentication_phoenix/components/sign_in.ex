@@ -2,7 +2,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     strategy_class: "CSS class for a `div` surrounding each strategy component.",
-    show_banner: "Whether or not to show the banner."
+    show_banner: "Whether or not to show the banner.",
+    authentication_error_container_class:
+      "CSS class for the container for the text of the authentication error.",
+    authentication_error_text_class: "CSS class for the authentication error text."
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
@@ -30,6 +33,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
     * `overrides` - A list of override modules.
     * `otp_app` - The otp app to look for authenticated resources in
+    * `authentication_error` - An error message from the previous authentication attempt, or nil.
   """
 
   use Phoenix.LiveComponent
@@ -39,7 +43,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   import Slug
 
   @type props :: %{
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:authentication_error) => String.t() | nil
         }
 
   @doc false
@@ -65,6 +70,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       socket
       |> assign(:strategies_by_resource, strategies_by_resource)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:authentication_error, fn -> nil end)
 
     {:ok, socket}
   end
@@ -86,8 +92,17 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               component={component_for_strategy(strategy)}
               strategy={strategy}
               overrides={@overrides}
+              authentication_error={@authentication_error}
             />
           <% end %>
+        <% end %>
+
+        <%= if @authentication_error do %>
+          <div class={override_for(@overrides, :authentication_error_container_class)}>
+            <div class={override_for(@overrides, :authentication_error_text_class)}>
+              <%= @authentication_error %>
+            </div>
+          </div>
         <% end %>
 
         <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>

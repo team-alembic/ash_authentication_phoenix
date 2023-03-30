@@ -19,8 +19,8 @@ defmodule DevWeb.AuthController do
   def failure(conn, _activity, reason) do
     conn
     |> assign(:failure_reason, reason)
-    |> put_status(401)
-    |> render("failure.html")
+    |> put_authentication_error("Could not sign in")
+    |> redirect(to: "/sign-in")
   end
 
   @doc false

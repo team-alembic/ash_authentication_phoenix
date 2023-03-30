@@ -31,7 +31,10 @@ defmodule AshAuthentication.Phoenix.SignInLive do
 
     socket =
       socket
-      |> assign(overrides: overrides)
+      |> assign(
+        overrides: overrides,
+        authentication_error: socket.assigns[:flash]["authentication_error"]
+      )
       |> assign_new(:otp_app, fn -> nil end)
 
     {:ok, socket}
@@ -48,6 +51,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
         otp_app={@otp_app}
         id={override_for(@overrides, :sign_in_id, "sign-in")}
         overrides={@overrides}
+        authentication_error={@authentication_error}
       />
     </div>
     """

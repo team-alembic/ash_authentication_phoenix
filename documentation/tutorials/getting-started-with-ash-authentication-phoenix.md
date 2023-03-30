@@ -224,15 +224,16 @@ defmodule Example.Accounts.User do
 
     strategies do
       password :password do
-        identity_field(:email)
+        identity_field :email
+        sign_in_tokens_enabled? true
       end
     end
 
     tokens do
-      enabled?(true)
-      token_resource(Example.Accounts.Token)
+      enabled? true
+      token_resource Example.Accounts.Token
 
-      signing_secret(Application.compile_env(:example, ExampleWeb.Endpoint)[:secret_key_base])
+      signing_secret Application.compile_env(:example, ExampleWeb.Endpoint)[:secret_key_base]
     end
   end
 

@@ -109,6 +109,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       import Phoenix.Controller
       import Plug.Conn
       import AshAuthentication.Phoenix.Plug
+      import AshAuthentication.Phoenix.Controller
 
       @doc false
       @impl true
@@ -204,5 +205,15 @@ defmodule AshAuthentication.Phoenix.Controller do
 
       defoverridable success: 4, failure: 3, sign_out: 2
     end
+  end
+
+  @doc """
+  Puts an authentication error into a flash message.
+
+  This is used to render certain kinds of errors in the form
+  """
+  @spec put_authentication_error(Plug.Conn.t(), String.t()) :: Plug.Conn.t()
+  def put_authentication_error(conn, message) do
+    Phoenix.Controller.put_flash(conn, :authentication_error, message)
   end
 end
