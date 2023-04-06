@@ -156,7 +156,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
             route_helpers(socket).auth_path(
               socket.endpoint,
               {socket.assigns.subject_name, Strategy.name(socket.assigns.strategy),
-               :validate_sign_in_token},
+               :sign_in_with_token},
               token: user.__metadata__.token
             )
 

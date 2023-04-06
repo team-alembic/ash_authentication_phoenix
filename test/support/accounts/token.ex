@@ -7,4 +7,8 @@ defmodule Example.Accounts.Token do
   token do
     api Example.Accounts
   end
+
+  actions do
+    defaults [:read]
+  end
 end
