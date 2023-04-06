@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.7.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.6...v1.7.0) (2023-04-06)
+
+
+
+
+### Features:
+
+* support new sign in tokens feature on password strategy (#176)
+
 ## [v1.6.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.5...v1.6.6) (2023-03-31)
 
 
