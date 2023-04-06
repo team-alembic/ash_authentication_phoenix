@@ -40,6 +40,9 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     """
 
     set :strategy_class, "mx-auth w-full max-w-sm lg:w-96"
+
+    set :authentication_error_container_class, "text-black dark:text-white text-center"
+    set :authentication_error_text_class, ""
   end
 
   override Components.Banner do
@@ -129,6 +132,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :input_class_with_error, """
     appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md
     shadow-sm placeholder-gray-400 focus:outline-none border-red-400 sm:text-sm
+    dark:text-black
     """
 
     set :submit_class, """

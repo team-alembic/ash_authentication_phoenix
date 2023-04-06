@@ -67,6 +67,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   ```
 
 
+
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 

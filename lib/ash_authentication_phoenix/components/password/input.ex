@@ -286,7 +286,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       <ul class={override_for(@overrides, :error_ul)}>
         <%= for error <- @errors do %>
           <li class={override_for(@overrides, :error_li)} phx-feedback-for={input_name(@form, @field)}>
-            <%= @field_label %> <%= error %>
+            <%= error %>
           </li>
         <% end %>
       </ul>

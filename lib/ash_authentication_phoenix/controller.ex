@@ -109,6 +109,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       import Phoenix.Controller
       import Plug.Conn
       import AshAuthentication.Phoenix.Plug
+      import AshAuthentication.Phoenix.Controller
 
       @doc false
       @impl true
