@@ -30,7 +30,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     * `:otp_app` - Set the otp app in which to search for authenticated resources.
 
   All other options are passed through to `live_session`, but with session and on_mount hooks
-  added to set assigns for authenticated resources.
+  added to set assigns for authenticated resources. Unlike `live_session`, this supports
+  multiple MFAs provided for the `session` option. The produced sessions will be merged.
   """
   @spec ash_authentication_live_session(atom, opts :: Keyword.t()) :: Macro.t()
   defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [],
@@ -41,12 +42,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
       opts = unquote(opts)
 
-      session = {LiveSession, :generate_session, [opts[:otp_app]]}
+      session = {LiveSession, :generate_session, [opts[:otp_app], List.wrap(opts[:session])]}
 
       opts =
         opts
         |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
-        |> Keyword.update(:session, session, &[session | List.wrap(&1)])
+        |> Keyword.put(:session, session)
 
       {otp_app, opts} = Keyword.pop(opts, :otp_app)
 
@@ -114,14 +115,21 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   Supplements the session with any `current_X` assigns which are authenticated
   resource records from the conn.
   """
-  @spec generate_session(Plug.Conn.t(), atom | [atom]) :: %{required(String.t()) => String.t()}
-  def generate_session(conn, otp_app \\ nil) do
+  @spec generate_session(Plug.Conn.t(), atom | [atom], additional_hooks :: [mfa]) :: %{
+          required(String.t()) => String.t()
+        }
+  def generate_session(conn, otp_app \\ nil, additional_hooks \\ []) do
     otp_app = otp_app || conn.assigns[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
+
+    acc =
+      Enum.reduce(additional_hooks, %{}, fn {m, f, a}, acc ->
+        Map.merge(acc, apply(m, f, [conn | a]) || %{})
+      end)
 
     otp_app
     |> AshAuthentication.authenticated_resources()
     |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
-    |> Enum.reduce(%{}, fn {subject_name, resource}, session ->
+    |> Enum.reduce(acc, fn {subject_name, resource}, session ->
       case Map.fetch(
              conn.assigns,
              String.to_existing_atom("current_#{subject_name}")

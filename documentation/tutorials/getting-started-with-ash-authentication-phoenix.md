@@ -619,3 +619,7 @@ end
 ```
 
 Your new reset password functionality is active. Visit [`localhost:4000/sign-in`](http://localhost:4000/sign-in) with your browser and click on the `Forgot your password?` link to trigger the reset password workflow.
+
+# Next up
+
+- [Use AshAuthentication with LiveView](/documentation/tutorials/use-ash-authentication-with-liveview.md)
