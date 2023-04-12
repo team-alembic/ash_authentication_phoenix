@@ -143,7 +143,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   def handle_event("submit", params, socket) do
     params = get_params(params, socket.assigns.strategy)
 
-    if socket.assigns.strategy.sign_in_tokens_enabled? do
+    if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
       case Form.submit(socket.assigns.form,
              params: params,
              read_one?: true,
