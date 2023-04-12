@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.7.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.7.0...v1.7.1) (2023-04-12)
+
+
+
+
+### Bug Fixes:
+
+* backwards compat with sign_in_tokens_enabled?
+
 ## [v1.7.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.6.6...v1.7.0) (2023-04-06)
 
 
