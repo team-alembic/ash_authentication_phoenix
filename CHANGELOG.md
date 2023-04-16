@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.7.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.7.1...v1.7.2) (2023-04-16)
+
+
+
+
+### Improvements:
+
+* Add OIDC and generic "lock" icons.
+
 ## [v1.7.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.7.0...v1.7.1) (2023-04-12)
 
 
