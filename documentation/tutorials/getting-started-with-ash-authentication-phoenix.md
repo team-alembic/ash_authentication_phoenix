@@ -233,7 +233,7 @@ defmodule Example.Accounts.User do
       enabled? true
       token_resource Example.Accounts.Token
 
-      signing_secret Application.compile_env(:example, ExampleWeb.Endpoint)[:secret_key_base]
+      signing_secret Example.Accounts.Secrets
     end
   end
 
@@ -252,6 +252,23 @@ defmodule Example.Accounts.User do
   #     authorize_if always()
   #   end
   # end
+end
+```
+
+**lib/example/accounts/secrets.ex**
+```elixir
+defmodule Example.Accounts.Secrets do
+  use AshAuthentication.Secret
+
+
+  def secret_for([:authentication, :tokens, :signing_secret], Example.Accounts.User, _) do
+    case Application.fetch_env(:example, ExampleWeb.Endpoint) do
+      {:ok, endpoint_config} ->
+        Keyword.fetch(endpoint_config, :secret_key_base)
+      :error ->
+        :error
+    end
+  end
 end
 ```
 
