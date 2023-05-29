@@ -95,30 +95,47 @@ dependency:
 // See the Tailwind configuration guide for advanced usage
 // https://tailwindcss.com/docs/configuration
 
-const plugin = require("tailwindcss/plugin")
+const plugin = require("tailwindcss/plugin");
 
 module.exports = {
   content: [
     "./js/**/*.js",
     "../lib/*_web.ex",
     "../lib/*_web/**/*.*ex",
-    "../deps/ash_authentication_phoenix/**/*.ex" // <-- Add this line
+    "../deps/ash_authentication_phoenix/**/*.ex", // <-- Add this line
   ],
   theme: {
     extend: {
       colors: {
         brand: "#FD4F00",
-      }
+      },
     },
   },
   plugins: [
     require("@tailwindcss/forms"),
-    plugin(({ addVariant }) => addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])),
-    plugin(({ addVariant }) => addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"])),
-    plugin(({ addVariant }) => addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"])),
-    plugin(({ addVariant }) => addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"]))
-  ]
-}
+    plugin(({ addVariant }) =>
+      addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])
+    ),
+    plugin(({ addVariant }) =>
+      addVariant("phx-click-loading", [
+        ".phx-click-loading&",
+        ".phx-click-loading &",
+      ])
+    ),
+    plugin(({ addVariant }) =>
+      addVariant("phx-submit-loading", [
+        ".phx-submit-loading&",
+        ".phx-submit-loading &",
+      ])
+    ),
+    plugin(({ addVariant }) =>
+      addVariant("phx-change-loading", [
+        ".phx-change-loading&",
+        ".phx-change-loading &",
+      ])
+    ),
+  ],
+};
 ```
 
 ## AshPostgres.Repo Setup
@@ -245,7 +262,7 @@ defmodule Example.Accounts.User do
   identities do
     identity :unique_email, [:email]
   end
-  
+
   # If using policies, add the following bypass:
   # policies do
   #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
@@ -256,6 +273,7 @@ end
 ```
 
 **lib/example/accounts/secrets.ex**
+
 ```elixir
 defmodule Example.Accounts.Secrets do
   use AshAuthentication.Secret
@@ -288,7 +306,7 @@ defmodule Example.Accounts.Token do
     table "tokens"
     repo Example.Repo
   end
-  
+
   # If using policies, add the following bypass:
   # policies do
   #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
@@ -471,7 +489,9 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
 <nav class="bg-gray-800">
   <div class="px-2 mx-auto max-w-7xl sm:px-6 lg:px-8">
     <div class="relative flex items-center justify-between h-16">
-      <div class="flex items-center justify-center flex-1 sm:items-stretch sm:justify-start">
+      <div
+        class="flex items-center justify-center flex-1 sm:items-stretch sm:justify-start"
+      >
         <div class="block ml-6">
           <div class="flex space-x-4">
             <div class="px-3 py-2 text-xl font-medium text-white ">
@@ -480,24 +500,26 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
           </div>
         </div>
       </div>
-      <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+      <div
+        class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0"
+      >
         <%= if @current_user do %>
-          <span class="px-3 py-2 text-sm font-medium text-white rounded-md">
-            <%= @current_user.email %>
-          </span>
-          <a
-            href="/sign-out"
-            class="rounded-lg bg-zinc-100 px-2 py-1 text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:bg-zinc-200/80 active:text-zinc-900/70"
-          >
-            Sign out
-          </a>
+        <span class="px-3 py-2 text-sm font-medium text-white rounded-md">
+          <%= @current_user.email %>
+        </span>
+        <a
+          href="/sign-out"
+          class="rounded-lg bg-zinc-100 px-2 py-1 text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:bg-zinc-200/80 active:text-zinc-900/70"
+        >
+          Sign out
+        </a>
         <% else %>
-          <a
-            href="/sign-in"
-            class="rounded-lg bg-zinc-100 px-2 py-1 text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:bg-zinc-200/80 active:text-zinc-900/70"
-          >
-            Sign In
-          </a>
+        <a
+          href="/sign-in"
+          class="rounded-lg bg-zinc-100 px-2 py-1 text-[0.8125rem] font-semibold leading-6 text-zinc-900 hover:bg-zinc-200/80 active:text-zinc-900/70"
+        >
+          Sign In
+        </a>
         <% end %>
       </div>
     </div>
@@ -507,13 +529,17 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
 <div class="py-10">
   <header>
     <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-      <h1 class="text-3xl font-bold leading-tight tracking-tight text-gray-900">Demo</h1>
+      <h1 class="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+        Demo
+      </h1>
     </div>
   </header>
   <main>
     <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div class="px-4 py-8 sm:px-0">
-        <div class="border-4 border-gray-200 border-dashed rounded-lg h-96"></div>
+        <div
+          class="border-4 border-gray-200 border-dashed rounded-lg h-96"
+        ></div>
       </div>
     </div>
   </main>
@@ -549,10 +575,10 @@ In this section we add a reset password functionality. Which is triggered by add
 # [...]
 strategies do
   password :password do
-    identity_field(:unique_email)
+    identity_field :email
 
     resettable do
-      sender(Example.Accounts.User.Senders.SendPasswordResetEmail)
+      sender Example.Accounts.User.Senders.SendPasswordResetEmail
     end
   end
 end
