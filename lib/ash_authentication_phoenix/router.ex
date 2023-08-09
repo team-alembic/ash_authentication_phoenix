@@ -230,7 +230,9 @@ defmodule AshAuthentication.Phoenix.Router do
     {path, opts} = Keyword.pop(opts, :path, "/password-reset")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.ResetLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
-    {on_mount, opts} = Keyword.pop(opts, :on_mount, [])
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -239,19 +241,26 @@ defmodule AshAuthentication.Phoenix.Router do
       opts
       |> Keyword.put_new(:alias, false)
 
-    live_session_opts = [
-      on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | on_mount]
-    ]
-
     quote do
       scope unquote(path), unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
-        live_session :reset, unquote(live_session_opts) do
-          live("/:token", unquote(live_view), :reset,
-            as: unquote(as),
-            private: %{overrides: unquote(overrides)}
-          )
+        live_session_opts = [
+          session: %{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)},
+          on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :reset, live_session_opts do
+          live("/:token", unquote(live_view), :reset, as: unquote(as))
         end
       end
     end
