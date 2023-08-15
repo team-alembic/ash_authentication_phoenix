@@ -204,22 +204,9 @@ lib/example
 ├── accounts
 |   ├── accounts.ex
 |   └── resources
-│       ├── registry.ex
 │       ├── token.ex
 |       └── user.ex
 ...
-```
-
-**lib/example/accounts/accounts.ex**
-
-```elixir
-defmodule Example.Accounts do
-  use Ash.Api
-
-  resources do
-    registry Example.Accounts.Registry
-  end
-end
 ```
 
 **lib/example/accounts/resources/user.ex**
@@ -316,18 +303,16 @@ defmodule Example.Accounts.Token do
 end
 ```
 
-Next, let's define our registry:
-
-**lib/example/accounts/registry.ex**
+**lib/example/accounts/accounts.ex**
 
 ```elixir
-defmodule Example.Accounts.Registry do
-  use Ash.Registry, extensions: [Ash.Registry.ResourceValidations]
+defmodule Example.Accounts do
+    use Ash.Api
 
-  entries do
-    entry Example.Accounts.User
-    entry Example.Accounts.Token
-  end
+    resources do
+      resource Example.Accounts.User
+      resource Example.Accounts.Token
+    end
 end
 ```
 

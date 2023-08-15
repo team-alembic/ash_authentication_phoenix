@@ -3,6 +3,7 @@ defmodule Example.Accounts do
   use Ash.Api, otp_app: :ash_authentication_phoenix
 
   resources do
-    registry Example.Accounts.Registry
+    resource Example.Accounts.User
+    resource Example.Accounts.Token
   end
 end
