@@ -307,13 +307,22 @@ end
 
 ```elixir
 defmodule Example.Accounts do
-    use Ash.Api
+  use Ash.Api
 
-    resources do
-      resource Example.Accounts.User
-      resource Example.Accounts.Token
-    end
+  resources do
+    resource Example.Accounts.User
+    resource Example.Accounts.Token
+  end
 end
+```
+
+### Add to config
+
+Although mentioned in a step at the top, a common mistake here is not to add the new api into your `ash_apis` config in `config/config.exs`. It should look like this:
+
+```elixir
+config :example,
+  ash_apis: [..., Example.Accounts]
 ```
 
 ### Create and Migration
