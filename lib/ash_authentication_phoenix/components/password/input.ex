@@ -194,6 +194,50 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   end
 
   @doc """
+  Generate a generic input field so that custom slots can reuse the same styles easily.
+
+  ## Props
+
+    * `attribute` - The attribute to add a form input for.
+    * `input_type` - Set the input type - defaults to `text`.
+    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
+      the correct CSS configuration.  Required.
+    * `strategy` - The configuration map as per
+      `AshAuthentication.authenticated_resources/1`.  Required.
+    * `form` - An `AshPhoenix.Form`.  Required.
+    * `overrides` - A list of override modules.
+  """
+  @spec generic_field(%{required(:attribute) => atom, optional(:input_type) => atom, required(:socket) => Socket.t, required(:strategy) => Strategy.t, required(:form) => Form.t, optional(:overrides) => [module]}) :: Rendered.t | no_return
+  def generic_field(assigns) do
+     assigns =
+      assigns
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:input_type, fn -> :text end)
+
+    assigns = assigns
+      |> assign_new(:input_class, fn ->
+        if has_error?(assigns.form, assigns.attribute) do
+          override_for(assigns.overrides, :input_class_with_error)
+        else
+          override_for(assigns.overrides, :input_class)
+        end
+      end)
+
+    ~H"""
+    <div class={override_for(@overrides, :field_class)}>
+      <%= label(@form, @attribute, class: override_for(@overrides, :label_class)) %>
+      <%= text_input(@form, @attribute,
+        class: @input_class,
+        value: input_value(@form, @attribute),
+        phx_debounce: override_for(@overrides, :input_debounce),
+        type: @input_type
+      ) %>
+      <.error form={@form} field={@attribute} overrides={@overrides} />
+    </div>
+    """
+  end
+
+  @doc """
   Generate an form submit button.
 
   ## Props
