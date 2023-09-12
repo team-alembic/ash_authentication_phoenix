@@ -17,7 +17,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   ```
   """
 
-  import Phoenix.Component, only: [assign: 3]
+  import Phoenix.Component, only: [assign: 3, assign_new: 3]
   import AshAuthentication.Phoenix.Components.Helpers
   alias AshAuthentication.{Info, Phoenix.LiveSession}
   alias Phoenix.LiveView.Socket
@@ -84,25 +84,26 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   end
 
   def on_mount(:default, _params, session, socket) do
-    otp_app = otp_app_from_socket(socket)
-
-    resources =
-      otp_app
+    socket =
+      socket
+      |> otp_app_from_socket()
       |> AshAuthentication.authenticated_resources()
       |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
-      |> Map.new()
+      |> Enum.reduce(socket, fn {subject_name, resource}, socket ->
+        current_subject_name = String.to_existing_atom("current_#{subject_name}")
 
-    socket =
-      session
-      |> Enum.reduce(socket, fn {key, value}, socket ->
-        with {:ok, resource} <- Map.fetch(resources, key),
-             {:ok, user} <-
-               AshAuthentication.subject_to_user(value, resource, tenant: session["tenant"]),
-             {:ok, subject_name} <- Info.authentication_subject_name(resource) do
-          assign(socket, String.to_existing_atom("current_#{subject_name}"), user)
-        else
-          _ -> socket
+        if Map.has_key?(socket.assigns, current_subject_name) do
+          raise "Cannot set assign `#{current_subject_name}` before default `AshAuthentication.Phoenix.LiveSession.on_mount/4` has run."
         end
+
+        assign_new(socket, current_subject_name, fn ->
+          if value = session[subject_name] do
+            case AshAuthentication.subject_to_user(value, resource, tenant: session["tenant"]) do
+              {:ok, user} -> user
+              _ -> nil
+            end
+          end
+        end)
       end)
 
     {:cont, socket}
