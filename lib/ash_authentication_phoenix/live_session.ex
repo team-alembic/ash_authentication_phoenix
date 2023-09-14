@@ -98,6 +98,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
         assign_new(socket, current_subject_name, fn ->
           if value = session[subject_name] do
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
             case AshAuthentication.subject_to_user(value, resource, tenant: session["tenant"]) do
               {:ok, user} -> user
               _ -> nil
