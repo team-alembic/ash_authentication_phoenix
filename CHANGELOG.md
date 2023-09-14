@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.8.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.7.3...v1.8.0) (2023-09-14)
+
+
+
+
+### Features:
+
+* change `ash_authentication_live_session` to use `assign_new` (#270)
+
 ## [v1.7.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.7.2...v1.7.3) (2023-08-09)
 
 
