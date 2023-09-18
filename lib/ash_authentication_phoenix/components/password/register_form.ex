@@ -151,14 +151,39 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   def handle_event("submit", params, socket) do
     params = get_params(params, socket.assigns.strategy)
 
-    form = Form.validate(socket.assigns.form, params)
+    if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
+      case Form.submit(socket.assigns.form,
+             params: params,
+             read_one?: true,
+             before_submit: fn changeset ->
+               Ash.Changeset.set_context(changeset, %{token_type: :sign_in})
+             end
+           ) do
+        {:ok, user} ->
+          validate_sign_in_token_path =
+            route_helpers(socket).auth_path(
+              socket.endpoint,
+              {socket.assigns.subject_name, Strategy.name(socket.assigns.strategy),
+               :sign_in_with_token},
+              token: user.__metadata__.token
+            )
 
-    socket =
-      socket
-      |> assign(:form, form)
-      |> assign(:trigger_action, form.valid?)
+          {:noreply, redirect(socket, to: validate_sign_in_token_path)}
 
-    {:noreply, socket}
+        {:error, form} ->
+          {:noreply,
+           assign(socket, :form, Form.clear_value(form, socket.assigns.strategy.password_field))}
+      end
+    else
+      form = Form.validate(socket.assigns.form, params)
+
+      socket =
+        socket
+        |> assign(:form, form)
+        |> assign(:trigger_action, form.valid?)
+
+      {:noreply, socket}
+    end
   end
 
   defp get_params(params, strategy) do
