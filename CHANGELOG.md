@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.8.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.1...v1.8.2) (2023-09-22)
+
+
+
+
+### Bug Fixes:
+
+* handle change from ash_authentication where resettable is no lonâ¦ (#279)
+
 ## [v1.8.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.0...v1.8.1) (2023-09-18)
 
 
