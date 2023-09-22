@@ -248,7 +248,10 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       |> assign_new(:disable_text, fn -> nil end)
 
     ~H"""
-    <%= submit(@label, class: override_for(@overrides, :submit_class), phx_disable_with: @disable_text) %>
+    <%= submit(@label,
+      class: override_for(@overrides, :submit_class),
+      phx_disable_with: @disable_text
+    ) %>
     """
   end
 

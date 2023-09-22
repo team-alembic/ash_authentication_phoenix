@@ -110,7 +110,12 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       strategy.resettable && override_for(assigns.overrides, :reset_toggle_text)
 
     reset_id =
-      strategy.resettable && generate_id(subject_name, strategy_name, strategy.resettable.request_password_reset_action_name)
+      strategy.resettable &&
+        generate_id(
+          subject_name,
+          strategy_name,
+          strategy.resettable.request_password_reset_action_name
+        )
 
     assigns =
       assigns
