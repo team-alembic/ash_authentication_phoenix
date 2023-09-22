@@ -162,7 +162,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     Map.get(params, param_key, %{})
   end
 
-  defp blank_form(%{resettable: [resettable]} = strategy) do
+  defp blank_form(%{resettable: resettable} = strategy) when not is_nil(resettable) do
     api = Info.authentication_api!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 

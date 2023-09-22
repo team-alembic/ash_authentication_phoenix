@@ -58,11 +58,11 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
     api = Info.authentication_api!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
-    [resettable] = strategy.resettable
+    resettable = strategy.resettable
 
     form =
       strategy.resource
-      |> Form.for_action(resettable.password_reset_action_name,
+      |> Form.for_action(strategy.resettable.password_reset_action_name,
         api: api,
         as: subject_name |> to_string(),
         id:

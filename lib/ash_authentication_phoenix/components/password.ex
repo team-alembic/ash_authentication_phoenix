@@ -107,14 +107,10 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       strategy.registration_enabled? && override_for(assigns.overrides, :register_toggle_text)
 
     reset_enabled? =
-      Enum.any?(strategy.resettable) && override_for(assigns.overrides, :reset_toggle_text)
+      strategy.resettable && override_for(assigns.overrides, :reset_toggle_text)
 
     reset_id =
-      strategy.resettable
-      |> Enum.map(
-        &generate_id(subject_name, strategy_name, &1.request_password_reset_action_name)
-      )
-      |> List.first()
+      strategy.resettable && generate_id(subject_name, strategy_name, strategy.resettable.request_password_reset_action_name)
 
     assigns =
       assigns

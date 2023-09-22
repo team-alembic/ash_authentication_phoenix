@@ -225,8 +225,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         case assigns.action do
           :request_reset ->
             assigns.strategy.resettable
-            |> Enum.map(& &1.request_password_reset_action_name)
-            |> List.first(:request_reset)
+            |> Kernel.||(%{})
+            |> Map.get(:request_password_reset_action_name, :reset_request)
             |> to_string()
             |> String.trim_trailing("_with_password")
 
