@@ -204,6 +204,7 @@ At the end we should have the following directory structure:
 lib/example
 ├── accounts
 |   ├── accounts.ex
+|   ├── secrets.ex
 |   └── resources
 │       ├── token.ex
 |       └── user.ex
