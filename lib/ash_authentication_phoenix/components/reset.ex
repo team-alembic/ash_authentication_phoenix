@@ -47,7 +47,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
       |> Enum.sort_by(&Info.authentication_subject_name!/1)
       |> Stream.flat_map(&Info.authentication_strategies/1)
       |> Stream.filter(&is_struct(&1, Password))
-      |> Enum.filter(&(&1.resettable))
+      |> Enum.filter(& &1.resettable)
 
     socket =
       socket
