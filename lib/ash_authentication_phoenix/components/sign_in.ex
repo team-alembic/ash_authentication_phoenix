@@ -33,6 +33,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
     * `overrides` - A list of override modules.
     * `otp_app` - The otp app to look for authenticated resources in
+    * `live_action` - The live_action being routed to
+    * `path` - The path to use as the base for links
+    * `reset_path` - The path to use for reset links
+    * `register_path` - The path to use for register links
   """
 
   use Phoenix.LiveComponent
@@ -42,7 +46,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   import Slug
 
   @type props :: %{
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:path) => String.t(),
+          optional(:reset_path) => String.t(),
+          optional(:register_path) => String.t()
         }
 
   @doc false
@@ -68,6 +75,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       socket
       |> assign(:strategies_by_resource, strategies_by_resource)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:live_action, fn -> :sign_in end)
+      |> assign_new(:path, fn -> "/" end)
+      |> assign_new(:reset_path, fn -> nil end)
+      |> assign_new(:register_path, fn -> nil end)
 
     {:ok, socket}
   end
@@ -87,7 +98,11 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           <%= for strategy <- strategies.form do %>
             <.strategy
               component={component_for_strategy(strategy)}
+              live_action={@live_action}
               strategy={strategy}
+              path={@path}
+              reset_path={@reset_path}
+              register_path={@register_path}
               overrides={@overrides}
             />
           <% end %>
@@ -105,7 +120,11 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           <%= for strategy <- strategies.link do %>
             <.strategy
               component={component_for_strategy(strategy)}
+              live_action={@live_action}
               strategy={strategy}
+              path={@path}
+              reset_path={@reset_path}
+              register_path={@register_path}
               overrides={@overrides}
             />
           <% end %>
@@ -122,6 +141,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         module={@component}
         id={strategy_id(@strategy)}
         strategy={@strategy}
+        path={@path}
+        reset_path={@reset_path}
+        register_path={@register_path}
+        live_action={@live_action}
         overrides={@overrides}
       />
     </div>

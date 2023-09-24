@@ -375,7 +375,9 @@ defmodule ExampleWeb.Router do
     get "/", PageController, :home
 
     # add these lines -->
-    sign_in_route()
+    # Leave out `register_path` and `reset_path` if you don't want to support
+    # user registration and/or password resets respectively.
+    sign_in_route(register_path: "/register", reset_path: "/reset")
     sign_out_route AuthController
     auth_routes_for Example.Accounts.User, to: AuthController
     reset_route []

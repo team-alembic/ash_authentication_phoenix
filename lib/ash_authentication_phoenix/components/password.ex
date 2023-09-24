@@ -2,7 +2,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     hide_class: "CSS class to apply to hide an element.",
-    show_first: "The form to show on first load.  Either `:sign_in` or `:register`.",
+    show_first:
+      "The form to show on first load.  Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.",
     interstitial_class: "CSS class for the `div` element between the form and the button.",
     sign_in_toggle_text:
       "Toggle text to display when the sign in form is not showing (or `nil` to disable).",
@@ -32,8 +33,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
-    * `show_first` - either `:sign_in`, `:register` or `:reset` which controls
-      which form is visible on first load.
 
   ## Slots
 
@@ -43,6 +42,9 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       passed as a slot argument.
     * `reset_extra` - rendered inside the reset form with the form passed as a
       slot argument.
+    * `path` - used as the base for links to other pages.
+    * `reset_path` - the path to use for reset links.
+    * `register_path` - the path to use for register links.
 
   ```heex
   <.live_component
@@ -78,7 +80,9 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:live_action) => :sign_in | :register,
+          optional(:path) => String.t()
         }
 
   slot :sign_in_extra
@@ -127,17 +131,30 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         :register_id,
         generate_id(subject_name, strategy_name, strategy.register_action_name)
       )
-      |> assign_new(:show_first, fn -> override_for(assigns.overrides, :show_first, :sign_in) end)
       |> assign(:hide_class, override_for(assigns.overrides, :hide_class))
       |> assign(:reset_enabled?, reset_enabled?)
       |> assign(:register_enabled?, register_enabled?)
       |> assign(:sign_in_enabled?, !is_nil(override_for(assigns.overrides, :sign_in_toggle_text)))
       |> assign(:reset_id, reset_id)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:live_action, fn -> :sign_in end)
+      |> assign_new(:path, fn -> "/" end)
+      |> assign_new(:reset_path, fn -> nil end)
+      |> assign_new(:register_path, fn -> nil end)
+
+    show =
+      if assigns[:live_action] == :sign_in && is_nil(assigns[:reset_path]) &&
+           is_nil(assigns[:register_path]) do
+        assigns[:show_first] || :sign_in
+      else
+        assigns[:live_action]
+      end
+
+    assigns = assign(assigns, :show, show)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <div id={"#{@sign_in_id}-wrapper"} class={unless @show_first == :sign_in, do: @hide_class}>
+      <div id={"#{@sign_in_id}-wrapper"} class={if @show == :sign_in, do: nil, else: @hide_class}>
         <.live_component
           :let={form}
           module={Password.SignInForm}
@@ -155,18 +172,20 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           <div class={override_for(@overrides, :interstitial_class)}>
             <%= if @reset_enabled? do %>
               <.toggler
+                message={override_for(@overrides, :reset_toggle_text)}
                 show={@reset_id}
                 hide={[@sign_in_id, @register_id]}
-                message={override_for(@overrides, :reset_toggle_text)}
+                to={@reset_path}
                 overrides={@overrides}
               />
             <% end %>
 
             <%= if @register_enabled? do %>
               <.toggler
+                message={override_for(@overrides, :register_toggle_text)}
                 show={@register_id}
                 hide={[@sign_in_id, @reset_id]}
-                message={override_for(@overrides, :register_toggle_text)}
+                to={@register_path}
                 overrides={@overrides}
               />
             <% end %>
@@ -175,7 +194,10 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       </div>
 
       <%= if @register_enabled? do %>
-        <div id={"#{@register_id}-wrapper"} class={unless @show_first == :register, do: @hide_class}>
+        <div
+          id={"#{@register_id}-wrapper"}
+          class={if @live_action == :register, do: nil, else: @hide_class}
+        >
           <.live_component
             :let={form}
             module={Password.RegisterForm}
@@ -193,17 +215,19 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             <div class={override_for(@overrides, :interstitial_class)}>
               <%= if @reset_enabled? do %>
                 <.toggler
+                  message={override_for(@overrides, :reset_toggle_text)}
                   show={@reset_id}
                   hide={[@sign_in_id, @register_id]}
-                  message={override_for(@overrides, :reset_toggle_text)}
+                  to={@reset_path}
                   overrides={@overrides}
                 />
               <% end %>
               <%= if @sign_in_enabled? do %>
                 <.toggler
+                  message={override_for(@overrides, :sign_in_toggle_text)}
                   show={@sign_in_id}
                   hide={[@register_id, @reset_id]}
-                  message={override_for(@overrides, :sign_in_toggle_text)}
+                  to={@path}
                   overrides={@overrides}
                 />
               <% end %>
@@ -213,7 +237,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       <% end %>
 
       <%= if @reset_enabled? do %>
-        <div id={"#{@reset_id}-wrapper"} class={unless @show_first == :reset, do: @hide_class}>
+        <div id={"#{@reset_id}-wrapper"} class={if @show == :reset, do: nil, else: @hide_class}>
           <.live_component
             :let={form}
             module={Password.ResetForm}
@@ -231,6 +255,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             <div class={override_for(@overrides, :interstitial_class)}>
               <%= if @register_enabled? do %>
                 <.toggler
+                  to={@register_path}
                   show={@register_id}
                   hide={[@sign_in_id, @reset_id]}
                   message={override_for(@overrides, :register_toggle_text)}
@@ -239,6 +264,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
               <% end %>
               <%= if @sign_in_enabled? do %>
                 <.toggler
+                  to={@path}
                   show={@sign_in_id}
                   hide={[@register_id, @reset_id]}
                   message={override_for(@overrides, :sign_in_toggle_text)}
@@ -265,11 +291,19 @@ defmodule AshAuthentication.Phoenix.Components.Password do
   @doc false
   @spec toggler(Socket.assigns()) :: Rendered.t() | no_return
   def toggler(assigns) do
-    ~H"""
-    <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@overrides, :toggler_class)}>
-      <%= @message %>
-    </a>
-    """
+    if assigns[:to] do
+      ~H"""
+      <.link patch={@to} class={override_for(@overrides, :toggler_class)}>
+        <%= @message %>
+      </.link>
+      """
+    else
+      ~H"""
+      <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@overrides, :toggler_class)}>
+        <%= @message %>
+      </a>
+      """
+    end
   end
 
   defp toggle_js(show, hides, %JS{} = js \\ %JS{}) do
