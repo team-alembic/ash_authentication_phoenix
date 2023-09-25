@@ -167,11 +167,6 @@ import Config
 # add these lines -->
 config :example,
   ash_apis: [Example.Accounts]
-
-config :ash,
-  :use_all_identities_in_manage_relationship?, false
-# <-- add these lines
-
 # ...
 ```
 
