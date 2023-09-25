@@ -33,8 +33,16 @@ defmodule AshAuthentication.Phoenix.SignInLive do
       socket
       |> assign(overrides: overrides)
       |> assign_new(:otp_app, fn -> nil end)
+      |> assign(:path, session["path"] || "/")
+      |> assign(:reset_path, session["reset_path"])
+      |> assign(:register_path, session["register_path"])
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(_, _uri, socket) do
+    {:noreply, socket}
   end
 
   @doc false
@@ -46,6 +54,10 @@ defmodule AshAuthentication.Phoenix.SignInLive do
       <.live_component
         module={Components.SignIn}
         otp_app={@otp_app}
+        live_action={@live_action}
+        path={@path}
+        reset_path={@reset_path}
+        register_path={@register_path}
         id={override_for(@overrides, :sign_in_id, "sign-in")}
         overrides={@overrides}
       />

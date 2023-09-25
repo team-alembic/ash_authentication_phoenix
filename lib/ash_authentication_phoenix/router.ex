@@ -90,6 +90,14 @@ defmodule AshAuthentication.Phoenix.Router do
       subject_name = AshAuthentication.Info.authentication_subject_name!(unquote(resource))
       controller = Keyword.fetch!(unquote(opts), :to)
       path = Keyword.get(unquote(opts), :path, "/auth")
+
+      path =
+        if String.starts_with?(path, "/") do
+          path
+        else
+          "/" <> path
+        end
+
       scope_opts = Keyword.get(unquote(opts), :scope_opts, [])
 
       strategies =
@@ -119,8 +127,11 @@ defmodule AshAuthentication.Phoenix.Router do
 
   Available options are:
 
-  * `path` the path under which to mount the live-view. Defaults to
-    `"/sign-in"`.
+  * `path` the path under which to mount the sign-in live-view. Defaults to `"/sign-in"`.
+  * `register_path` - the path under which to mount the password strategy's registration live-view.
+     If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
+  * `register_path` - the path under which to mount the password strategy's password reset live-view.
+    If not set, and password reset is supported, password reset will use a dynamic toggle and will not be routeable to.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
   * `as` which is passed to the generated `live` route. Defaults to `:auth`.
@@ -147,6 +158,8 @@ defmodule AshAuthentication.Phoenix.Router do
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {reset_path, opts} = Keyword.pop(opts, :reset_path)
+    {register_path, opts} = Keyword.pop(opts, :register_path)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -156,11 +169,17 @@ defmodule AshAuthentication.Phoenix.Router do
       |> Keyword.put_new(:alias, false)
 
     quote do
-      scope unquote(path), unquote(opts) do
+      scope "/", unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
         live_session_opts = [
-          session: %{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)},
+          session: %{
+            "overrides" => unquote(overrides),
+            "otp_app" => unquote(otp_app),
+            "path" => unquote(path),
+            "reset_path" => unquote(reset_path),
+            "register_path" => unquote(register_path)
+          },
           on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
         ]
 
@@ -174,7 +193,17 @@ defmodule AshAuthentication.Phoenix.Router do
           end
 
         live_session :sign_in, live_session_opts do
-          live("/", unquote(live_view), :sign_in, as: unquote(as))
+          live(unquote(path), unquote(live_view), :sign_in, as: unquote(as))
+
+          if unquote(reset_path) do
+            live(unquote(reset_path), unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
+          end
+
+          if unquote(register_path) do
+            live(unquote(register_path), unquote(live_view), :register,
+              as: :"#{unquote(as)}_register"
+            )
+          end
         end
       end
     end

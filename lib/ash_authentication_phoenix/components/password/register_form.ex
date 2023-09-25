@@ -42,7 +42,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:live_action) => :sign_in | :register
         }
 
   @doc false
