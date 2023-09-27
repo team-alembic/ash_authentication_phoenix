@@ -126,7 +126,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},
-      {:ex_doc, "~> 0.23", only: :dev, runtime: false},
+      {:ex_doc, github: "elixir-lang/ex_doc", only: [:dev, :test], runtime: false},
       {:faker, "~> 0.17", only: [:dev, :test]},
       {:git_ops, "~> 2.4", only: [:dev, :test], runtime: false},
       {:mimic, "~> 1.7", only: [:dev, :test]},
@@ -144,7 +144,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
         "hex.audit",
         "test"
       ],
-      docs: ["docs", "ash.replace_doc_links"]
+      docs: ["docs", "spark.replace_doc_links"]
     ]
   end
 
