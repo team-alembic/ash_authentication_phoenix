@@ -539,6 +539,11 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
 </div>
 ```
 
+### If you are using LiveView
+
+If you are using LiveView, jump over to the [Use AshAuthentication with LiveView](/documentation/tutorials/use-ash-authentication-with-liveview.md)
+section and set up your LiveView routes for `AshAuthentication`. Once that is done, you can proceed with the following steps.
+
 ### Start Phoenix
 
 You can now start Phoenix and visit
@@ -655,7 +660,3 @@ end
 ```
 
 Your new reset password functionality is active. Visit [`localhost:4000/sign-in`](http://localhost:4000/sign-in) with your browser and click on the `Forgot your password?` link to trigger the reset password workflow.
-
-# Next up
-
-- [Use AshAuthentication with LiveView](/documentation/tutorials/use-ash-authentication-with-liveview.md)
