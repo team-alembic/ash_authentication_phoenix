@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.8.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.3...v1.8.4) (2023-10-01)
+
+
+
+
+### Improvements:
+
+* optional support for routing to register & reset links (#281)
+
 ## [v1.8.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.2...v1.8.3) (2023-09-23)
 
 
