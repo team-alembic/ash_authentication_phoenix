@@ -130,7 +130,7 @@ defmodule AshAuthentication.Phoenix.Router do
   * `path` the path under which to mount the sign-in live-view. Defaults to `"/sign-in"`.
   * `register_path` - the path under which to mount the password strategy's registration live-view.
      If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
-  * `register_path` - the path under which to mount the password strategy's password reset live-view.
+  * `reset_path` - the path under which to mount the password strategy's password reset live-view.
     If not set, and password reset is supported, password reset will use a dynamic toggle and will not be routeable to.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
