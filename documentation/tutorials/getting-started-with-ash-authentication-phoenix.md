@@ -423,7 +423,7 @@ Generated example app
 
 While running `mix phx.routes` you probably saw the warning message that the `ExampleWeb.AuthController.init/1 is undefined`. Let's fix that by creating a new controller:
 
-**lib/my_app_web/controllers/auth_controller.ex**
+**lib/example_web/controllers/auth_controller.ex**
 
 ```elixir
 defmodule ExampleWeb.AuthController do
