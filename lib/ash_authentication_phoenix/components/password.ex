@@ -216,7 +216,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
               <%= if @reset_enabled? do %>
                 <.toggler
                   message={override_for(@overrides, :reset_toggle_text)}
-                  show={@reset_id}
+                  show={[@reset_id]}
                   hide={[@sign_in_id, @register_id]}
                   to={@reset_path}
                   overrides={@overrides}
@@ -227,7 +227,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   message={override_for(@overrides, :sign_in_toggle_text)}
                   show={@sign_in_id}
                   hide={[@register_id, @reset_id]}
-                  to={@path}
+                  to={if @register_path, do: @path}
                   overrides={@overrides}
                 />
               <% end %>
@@ -264,10 +264,10 @@ defmodule AshAuthentication.Phoenix.Components.Password do
               <% end %>
               <%= if @sign_in_enabled? do %>
                 <.toggler
-                  to={@path}
+                  message={override_for(@overrides, :sign_in_toggle_text)}
                   show={@sign_in_id}
                   hide={[@register_id, @reset_id]}
-                  message={override_for(@overrides, :sign_in_toggle_text)}
+                  to={if @reset_path, do: @path}
                   overrides={@overrides}
                 />
               <% end %>
