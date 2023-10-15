@@ -133,7 +133,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
     socket.assigns.form
     |> Form.validate(params)
-    |> Form.submit()
+    |> Form.submit(
+      before_submit: fn changeset ->
+        changeset
+        |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
+      end
+    )
 
     flash = override_for(socket.assigns.overrides, :reset_flash_text)
 

@@ -157,7 +157,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
              params: params,
              read_one?: true,
              before_submit: fn changeset ->
-               Ash.Changeset.set_context(changeset, %{token_type: :sign_in})
+               changeset
+               |> Ash.Changeset.set_context(%{token_type: :sign_in})
+               |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
              end
            ) do
         {:ok, user} ->

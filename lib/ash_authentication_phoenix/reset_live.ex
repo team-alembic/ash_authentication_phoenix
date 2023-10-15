@@ -31,6 +31,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
       socket
       |> assign(overrides: overrides)
       |> assign_new(:otp_app, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> Map.get(session, "tenant") end)
 
     {:ok, socket}
   end
@@ -54,6 +55,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
         id={override_for(@overrides, :reset_id, "reset")}
         token={@token}
         overrides={@overrides}
+        current_tenant={@current_tenant}
       />
     </div>
     """

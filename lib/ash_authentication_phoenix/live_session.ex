@@ -84,9 +84,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   end
 
   def on_mount(:default, _params, session, socket) do
+    tenant = session["tenant"]
+
     socket =
       socket
       |> otp_app_from_socket()
+      |> assign(:current_tenant, tenant)
       |> AshAuthentication.authenticated_resources()
       |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
       |> Enum.reduce(socket, fn {subject_name, resource}, socket ->
@@ -99,7 +102,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         assign_new(socket, current_subject_name, fn ->
           if value = session[subject_name] do
             # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-            case AshAuthentication.subject_to_user(value, resource, tenant: session["tenant"]) do
+            case AshAuthentication.subject_to_user(value, resource, tenant: tenant) do
               {:ok, user} -> user
               _ -> nil
             end
