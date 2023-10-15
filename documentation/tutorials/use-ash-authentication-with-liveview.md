@@ -19,8 +19,8 @@ To accomplish this, we use standard Phoenix [`on_mount` hooks](https://hexdocs.p
 
 
 ```elixir
-# lib/my_app_web/user_auth_live.ex
-defmodule MyAppWeb.UserAuthLive do
+# lib/my_app_web/live_user_auth.ex
+defmodule MyAppWeb.LiveUserAuth do
   @moduledoc """
   Helpers for authenticating users in LiveViews.
   """
@@ -62,12 +62,12 @@ And we can use this as follows:
   scope "/", MyAppWeb do
     # ...
     ash_authentication_live_session :authentication_required,
-      on_mount: {MyAppWeb.UserAuthLive, :live_user_required} do
+      on_mount: {MyAppWeb.LiveUserAuth, :live_user_required} do
       live "/protected_route", ProjectLive.Index, :index
     end
 
     ash_authentication_live_session :authentication_optional,
-      on_mount: {MyAppWeb.UserAuthLive, :live_user_optional} do
+      on_mount: {MyAppWeb.LiveUserAuth, :live_user_optional} do
       live "/", ProjectLive.Index, :index
     end
   end
@@ -77,5 +77,5 @@ And we can use this as follows:
 You can also use this to prevent users from visiting the auto generated `sign_in` route:
 
 ```elixir
-sign_in_route(on_mount: [{MyAppWeb.UserAuthLive, :live_no_user}])
+sign_in_route(on_mount: [{MyAppWeb.LiveUserAuth, :live_no_user}])
 ```
