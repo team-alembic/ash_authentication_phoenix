@@ -36,7 +36,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
       |> assign(:path, session["path"] || "/")
       |> assign(:reset_path, session["reset_path"])
       |> assign(:register_path, session["register_path"])
-      |> assign_new(:current_tenant, fn -> Map.get(session, "tenant") end)
+      |> assign(:current_tenant, session["tenant"])
 
     {:ok, socket}
   end

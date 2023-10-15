@@ -13,7 +13,7 @@ defmodule DevWeb.CustomSignInLive do
       socket
       |> assign_new(:strategy, fn -> Info.strategy!(Example.Accounts.User, :password) end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
-      |> assign_new(:current_tenant, fn -> Map.get(session, "tenant") end)
+      |> assign(:current_tenant, session["tenant"])
 
     {:ok, socket}
   end
