@@ -44,7 +44,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:label) => String.t() | false,
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:current_tenant) => String.t()
         }
 
   @doc false
