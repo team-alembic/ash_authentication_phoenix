@@ -107,12 +107,14 @@ defmodule AshAuthentication.Phoenix.Router do
       scope path, scope_opts do
         for strategy <- strategies do
           for {path, phase} <- AshAuthentication.Strategy.routes(strategy) do
-            match :*,
-                  path,
-                  controller,
-                  {subject_name, AshAuthentication.Strategy.name(strategy), phase},
-                  as: :auth,
-                  private: %{strategy: strategy}
+            match(
+              :*,
+              path,
+              controller,
+              {subject_name, AshAuthentication.Strategy.name(strategy), phase},
+              as: :auth,
+              private: %{strategy: strategy}
+            )
           end
         end
       end
@@ -148,6 +150,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:as, atom}
             | {:overrides, [module]}
             | {:on_mount, [module]}
+            | {:tenant, String.t()}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -164,6 +167,8 @@ defmodule AshAuthentication.Phoenix.Router do
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
 
+    {tenant, opts} = Keyword.pop(opts, :tenant)
+
     opts =
       opts
       |> Keyword.put_new(:alias, false)
@@ -178,7 +183,8 @@ defmodule AshAuthentication.Phoenix.Router do
             "otp_app" => unquote(otp_app),
             "path" => unquote(path),
             "reset_path" => unquote(reset_path),
-            "register_path" => unquote(register_path)
+            "register_path" => unquote(register_path),
+            "tenant" => unquote(tenant)
           },
           on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
         ]
