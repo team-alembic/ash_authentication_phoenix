@@ -29,9 +29,6 @@ defmodule AshAuthentication.Phoenix.SignInLive do
       session
       |> Map.get("overrides", [AshAuthentication.Phoenix.Overrides.Default])
 
-    IO.puts("YOLO!")
-    IO.inspect(session, label: "Session")
-
     socket =
       socket
       |> assign(overrides: overrides)
