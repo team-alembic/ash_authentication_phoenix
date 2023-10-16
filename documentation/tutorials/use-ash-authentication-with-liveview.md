@@ -8,19 +8,21 @@ ash_authentication_live_session :session_name do
 end
 ```
 
-# LiveUserAuth
-
 There are two problems with the above, however.
 
 1. If there is no user present, it will not set `current_user: nil`.
 2. You may want a way to require that a user is present for some routes, and not for others.
 
+## Authentication helper
+
 To accomplish this, we use standard Phoenix [`on_mount` hooks](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#on_mount/1-examples). Lets define a hook that gives us three potential behaviors, one for optionally having a user signed in, one for requiring a signed in user, and one for requiring that there is no signed in user.
 
+
 ```elixir
+# lib/my_app_web/live_user_auth.ex
 defmodule MyAppWeb.LiveUserAuth do
   @moduledoc """
-  Helpers for authenticating users in liveviews
+  Helpers for authenticating users in LiveViews.
   """
 
   import Phoenix.Component
@@ -55,15 +57,21 @@ end
 And we can use this as follows:
 
 ```elixir
-ash_authentication_live_session :authentication_required,
-  on_mount: {MyAppWeb.LiveUserAuth, :live_user_required} do
-  live "/protected_route", ProjectLive.Index, :index
-end
+# lib/my_app_web/router.ex
+  # ...
+  scope "/", MyAppWeb do
+    # ...
+    ash_authentication_live_session :authentication_required,
+      on_mount: {MyAppWeb.LiveUserAuth, :live_user_required} do
+      live "/protected_route", ProjectLive.Index, :index
+    end
 
-ash_authentication_live_session :authentication_optional,
-  on_mount: {MyAppWeb.LiveUserAuth, :live_user_optional} do
-  live "/", ProjectLive.Index, :index
-end
+    ash_authentication_live_session :authentication_optional,
+      on_mount: {MyAppWeb.LiveUserAuth, :live_user_optional} do
+      live "/", ProjectLive.Index, :index
+    end
+  end
+  # ...
 ```
 
 You can also use this to prevent users from visiting the auto generated `sign_in` route:
