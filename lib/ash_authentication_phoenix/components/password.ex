@@ -111,7 +111,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     register_enabled? =
       strategy.registration_enabled? && override_for(assigns.overrides, :register_toggle_text)
 
-    reset_enabled? = strategy.resettable && override_for(assigns.overrides, :reset_toggle_text)
+    reset_enabled? =
+      strategy.resettable && override_for(assigns.overrides, :reset_toggle_text)
 
     reset_id =
       strategy.resettable &&
