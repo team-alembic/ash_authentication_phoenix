@@ -107,14 +107,12 @@ defmodule AshAuthentication.Phoenix.Router do
       scope path, scope_opts do
         for strategy <- strategies do
           for {path, phase} <- AshAuthentication.Strategy.routes(strategy) do
-            match(
-              :*,
-              path,
-              controller,
-              {subject_name, AshAuthentication.Strategy.name(strategy), phase},
-              as: :auth,
-              private: %{strategy: strategy}
-            )
+            match :*,
+                  path,
+                  controller,
+                  {subject_name, AshAuthentication.Strategy.name(strategy), phase},
+                  as: :auth,
+                  private: %{strategy: strategy}
           end
         end
       end
