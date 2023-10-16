@@ -8,7 +8,7 @@ defmodule DevWeb.CustomSignInLive do
 
   @doc false
   @impl true
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     socket =
       socket
       |> assign_new(:strategy, fn -> Info.strategy!(Example.Accounts.User, :password) end)
@@ -29,7 +29,6 @@ defmodule DevWeb.CustomSignInLive do
         id="custom-password"
         socket={@socket}
         overrides={@overrides}
-        current_tenant={@current_tenant}
         class="mx-auth w-full max-w-sm lg:w-96"
       >
         <:sign_in_extra :let={form}>
