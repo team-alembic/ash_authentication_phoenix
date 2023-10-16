@@ -82,7 +82,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:overrides) => [module],
           optional(:live_action) => :sign_in | :register,
-          optional(:path) => String.t()
+          optional(:path) => String.t(),
+          optional(:current_tenant) => String.t()
         }
 
   slot :sign_in_extra
@@ -110,8 +111,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     register_enabled? =
       strategy.registration_enabled? && override_for(assigns.overrides, :register_toggle_text)
 
-    reset_enabled? =
-      strategy.resettable && override_for(assigns.overrides, :reset_toggle_text)
+    reset_enabled? = strategy.resettable && override_for(assigns.overrides, :reset_toggle_text)
 
     reset_id =
       strategy.resettable &&
@@ -162,6 +162,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           strategy={@strategy}
           label={false}
           overrides={@overrides}
+          current_tenant={@current_tenant}
         >
           <%= if @sign_in_extra do %>
             <div class={override_for(@overrides, :slot_class)}>
@@ -205,6 +206,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             strategy={@strategy}
             label={false}
             overrides={@overrides}
+            current_tenant={@current_tenant}
           >
             <%= if @register_extra do %>
               <div class={override_for(@overrides, :slot_class)}>
@@ -245,6 +247,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             strategy={@strategy}
             label={false}
             overrides={@overrides}
+            current_tenant={@current_tenant}
           >
             <%= if @reset_extra do %>
               <div class={override_for(@overrides, :slot_class)}>

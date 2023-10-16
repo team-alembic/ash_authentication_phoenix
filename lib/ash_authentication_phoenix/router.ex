@@ -144,7 +144,6 @@ defmodule AshAuthentication.Phoenix.Router do
     all other options are passed to the generated `scope`.
   """
   @spec sign_in_route(
-          conn :: Plug.Conn.t(),
           opts :: [
             {:path, String.t()}
             | {:live_view, module}
@@ -154,7 +153,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {atom, any}
           ]
         ) :: Macro.t()
-  defmacro sign_in_route(conn, opts \\ []) do
+  defmacro sign_in_route(opts \\ []) do
     {path, opts} = Keyword.pop(opts, :path, "/sign-in")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignInLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -181,8 +180,7 @@ defmodule AshAuthentication.Phoenix.Router do
             "otp_app" => unquote(otp_app),
             "path" => unquote(path),
             "reset_path" => unquote(reset_path),
-            "register_path" => unquote(register_path),
-            "tenant" => unquote(Ash.PlugHelpers.get_tenant(conn))
+            "register_path" => unquote(register_path)
           },
           on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
         ]

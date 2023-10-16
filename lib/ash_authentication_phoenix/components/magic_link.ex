@@ -38,7 +38,8 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:current_tenant) => String.t()
         }
 
   @doc false
@@ -120,7 +121,12 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
     socket.assigns.form
     |> Form.validate(params)
-    |> Form.submit()
+    |> Form.submit(
+      before_submit: fn changeset ->
+        changeset
+        |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
+      end
+    )
 
     flash = override_for(socket.assigns.overrides, :request_flash_text)
 

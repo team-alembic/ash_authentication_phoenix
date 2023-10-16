@@ -49,7 +49,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           optional(:overrides) => [module],
           optional(:path) => String.t(),
           optional(:reset_path) => String.t(),
-          optional(:register_path) => String.t()
+          optional(:register_path) => String.t(),
+          optional(:current_tenant) => String.t()
         }
 
   @doc false
@@ -104,6 +105,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               reset_path={@reset_path}
               register_path={@register_path}
               overrides={@overrides}
+              current_tenant={@current_tenant}
             />
           <% end %>
         <% end %>
@@ -126,6 +128,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               reset_path={@reset_path}
               register_path={@register_path}
               overrides={@overrides}
+              current_tenant={@current_tenant}
             />
           <% end %>
         <% end %>
@@ -146,6 +149,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         register_path={@register_path}
         live_action={@live_action}
         overrides={@overrides}
+        current_tenant={@current_tenant}
       />
     </div>
     """
