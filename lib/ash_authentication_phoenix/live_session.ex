@@ -17,7 +17,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   ```
   """
 
-  import Phoenix.Component, only: [assign: 3, assign_new: 3]
+  import Phoenix.Component, only: [assign: 2, assign: 3, assign_new: 3]
   import AshAuthentication.Phoenix.Components.Helpers
   alias AshAuthentication.{Info, Phoenix.LiveSession}
   alias Phoenix.LiveView.Socket
@@ -86,10 +86,11 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   def on_mount(:default, _params, session, socket) do
     tenant = session["tenant"]
 
+    socket = assign(socket, current_tenant: tenant)
+
     socket =
       socket
       |> otp_app_from_socket()
-      |> assign(:current_tenant, tenant)
       |> AshAuthentication.authenticated_resources()
       |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
       |> Enum.reduce(socket, fn {subject_name, resource}, socket ->
