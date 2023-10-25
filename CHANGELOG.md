@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.8.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.5...v1.8.6) (2023-10-25)
+
+
+
+
+### Bug Fixes:
+
+* incorrect introspection target in password strategy. (#317)
+
 ## [v1.8.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.4...v1.8.5) (2023-10-06)
 
 
