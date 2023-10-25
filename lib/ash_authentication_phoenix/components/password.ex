@@ -97,7 +97,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
     subject_name =
       assigns.strategy.resource
-      |> Info.authentication_get_by_subject_action_name!()
+      |> Info.authentication_subject_name!()
       |> to_string()
       |> slugify()
 
