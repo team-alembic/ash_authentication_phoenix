@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.8.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.6...v1.8.7) (2023-10-26)
+
+
+
+
+### Bug Fixes:
+
+* Pass tenant to generated Live View forms (#310)
+
+* pull assign out of other flow
+
+* sets a nil value in assigns for :current_tenant in subcomponents if not already set
+
 ## [v1.8.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.5...v1.8.6) (2023-10-25)
 
 
