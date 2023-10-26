@@ -80,6 +80,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       |> assign_new(:path, fn -> "/" end)
       |> assign_new(:reset_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     {:ok, socket}
   end

@@ -75,6 +75,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     {:ok, socket}
   end

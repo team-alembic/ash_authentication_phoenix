@@ -142,6 +142,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> assign_new(:path, fn -> "/" end)
       |> assign_new(:reset_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     show =
       if assigns[:live_action] == :sign_in && is_nil(assigns[:reset_path]) &&

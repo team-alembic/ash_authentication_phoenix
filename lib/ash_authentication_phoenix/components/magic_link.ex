@@ -57,6 +57,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
       |> assign(form: form, trigger_action: false, subject_name: subject_name)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:label, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     {:ok, socket}
   end
