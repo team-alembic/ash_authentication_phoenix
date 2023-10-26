@@ -43,7 +43,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:overrides) => [module],
-          optional(:live_action) => :sign_in | :register
+          optional(:live_action) => :sign_in | :register,
+          optional(:current_tenant) => String.t()
         }
 
   @doc false
@@ -77,6 +78,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> assign_new(:label, fn -> humanize(strategy.register_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     {:ok, socket}
   end
@@ -157,7 +159,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
              params: params,
              read_one?: true,
              before_submit: fn changeset ->
-               Ash.Changeset.set_context(changeset, %{token_type: :sign_in})
+               changeset
+               |> Ash.Changeset.set_context(%{token_type: :sign_in})
+               |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
              end
            ) do
         {:ok, user} ->

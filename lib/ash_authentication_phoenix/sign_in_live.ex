@@ -36,6 +36,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
       |> assign(:path, session["path"] || "/")
       |> assign(:reset_path, session["reset_path"])
       |> assign(:register_path, session["register_path"])
+      |> assign(:current_tenant, session["tenant"])
 
     {:ok, socket}
   end
@@ -60,6 +61,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
         register_path={@register_path}
         id={override_for(@overrides, :sign_in_id, "sign-in")}
         overrides={@overrides}
+        current_tenant={@current_tenant}
       />
     </div>
     """

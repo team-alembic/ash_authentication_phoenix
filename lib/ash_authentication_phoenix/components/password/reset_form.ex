@@ -44,7 +44,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:label) => String.t() | false,
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:current_tenant) => String.t()
         }
 
   @doc false
@@ -61,6 +62,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       |> assign_new(:label, fn -> strategy.request_password_reset_action_name end)
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     {:ok, socket}
   end
@@ -133,7 +135,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
     socket.assigns.form
     |> Form.validate(params)
-    |> Form.submit()
+    |> Form.submit(
+      before_submit: fn changeset ->
+        changeset
+        |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
+      end
+    )
 
     flash = override_for(socket.assigns.overrides, :reset_flash_text)
 

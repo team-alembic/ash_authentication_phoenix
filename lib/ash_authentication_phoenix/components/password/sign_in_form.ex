@@ -45,7 +45,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:label) => String.t() | false,
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:current_tenant) => String.t()
         }
 
   @doc false
@@ -74,6 +75,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:current_tenant, fn -> nil end)
 
     {:ok, socket}
   end
@@ -148,7 +150,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
              params: params,
              read_one?: true,
              before_submit: fn changeset ->
-               Ash.Changeset.set_context(changeset, %{token_type: :sign_in})
+               changeset
+               |> Ash.Changeset.set_context(%{token_type: :sign_in})
+               |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
              end
            ) do
         {:ok, user} ->
