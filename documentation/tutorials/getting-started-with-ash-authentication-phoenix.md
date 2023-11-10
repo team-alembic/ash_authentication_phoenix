@@ -563,6 +563,37 @@ The sign in page shows a link to register a new account.
 
 Visit [`localhost:4000/sign-out`](http://localhost:4000/sign-out) from your browser.
 
+
+### Debugging the Authentication flow
+
+The default authentication view shows a generic error message to users if their sign-in fails, like "Email or password was incorrect". This is for security purposes - you don't want potentially malicious people to know if an email address definitively exists in your system.
+
+However, if you're having issues setting up AshAuthentication, or trying to debug issues with your implementation, that error message isn't super useful to figure out what's going wrong. 
+
+To that end, AshAuthentication comes with debug functionality that can be enabled in dev:
+
+**config/dev.exs**
+
+```elixir
+config :ash_authentication, debug_authentication_failures?: true
+```
+
+> #### Don't enable debugging outside `dev` environments! {: .warning}
+>
+> This could leak users' personally-identifiable information (PII) into your logs on failed sign-in attempts - a security issue!
+
+Once the config is added, you can restart your dev server and test what happens when you visit the sign-in page and submit invalid credentials. You should see log messages like - 
+
+```text
+[timestamp] [warning] Authentication failed: Query returned no users
+
+Details: %AshAuthentication.Errors.AuthenticationFailed{
+  field: nil,
+  strategy: %AshAuthentication.Strategy.Password{
+    confirmation_required?: true,
+    ...
+```
+
 ## Reset Password
 
 In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/resources/user.ex` with the following code:
