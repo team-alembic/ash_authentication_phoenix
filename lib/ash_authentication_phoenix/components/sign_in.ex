@@ -39,7 +39,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     * `register_path` - The path to use for register links
   """
 
-  use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.Web, :live_component
   alias AshAuthentication.{Info, Phoenix.Components, Strategy}
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers

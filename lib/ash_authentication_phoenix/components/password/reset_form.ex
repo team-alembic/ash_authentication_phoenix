@@ -32,7 +32,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
-  use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.Web, :live_component
 
   alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
 
@@ -151,7 +151,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     socket =
       if flash do
         socket
-        |> put_flash(:info, flash)
+        |> put_flash!(:info, flash)
       else
         socket
       end

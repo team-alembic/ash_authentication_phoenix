@@ -20,7 +20,7 @@ defmodule AshAuthentication.Phoenix.Components.HorizontalRule do
       * `overrides` - A list of override modules.
   """
 
-  use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.Web, :live_component
   alias Phoenix.LiveView.Rendered
 
   @type props :: %{

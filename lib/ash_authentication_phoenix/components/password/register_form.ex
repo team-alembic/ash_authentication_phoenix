@@ -30,7 +30,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
-  use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.Web, :live_component
 
   alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
   alias AshPhoenix.Form
