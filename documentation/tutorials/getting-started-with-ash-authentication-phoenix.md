@@ -103,7 +103,7 @@ module.exports = {
     "./js/**/*.js",
     "../lib/*_web.ex",
     "../lib/*_web/**/*.*ex",
-    "../deps/ash_authentication_phoenix/**/*.ex", // <-- Add this line
+    "../deps/ash_authentication_phoenix/**/*.*ex", // <-- Add this line
   ],
   theme: {
     extend: {
@@ -419,6 +419,18 @@ Generated example app
 ...
 ```
 
+### Customizing the generated routes
+
+If you're integrating AshAuthentication into an existing app, you probably already have existing HTML layouts you want to use, to wrap the provided sign in/forgot password/etc. forms.
+
+Liveviews provided by AshAuthentication.Phoenix will use the same root layout configured in your router's `:browser` pipeline, but it includes its own layout file primarily for rendering flash messages.
+
+If you would like to use your own layout file instead, you can specify this as an option to the route helpers, eg.
+
+```elixir
+reset_route(layout: {MyAppWeb, :live})
+```
+
 ## AuthController
 
 While running `mix phx.routes` you probably saw the warning message that the `ExampleWeb.AuthController.init/1 is undefined`. Let's fix that by creating a new controller:
@@ -563,12 +575,11 @@ The sign in page shows a link to register a new account.
 
 Visit [`localhost:4000/sign-out`](http://localhost:4000/sign-out) from your browser.
 
-
 ### Debugging the Authentication flow
 
 The default authentication view shows a generic error message to users if their sign-in fails, like "Email or password was incorrect". This is for security purposes - you don't want potentially malicious people to know if an email address definitively exists in your system.
 
-However, if you're having issues setting up AshAuthentication, or trying to debug issues with your implementation, that error message isn't super useful to figure out what's going wrong. 
+However, if you're having issues setting up AshAuthentication, or trying to debug issues with your implementation, that error message isn't super useful to figure out what's going wrong.
 
 To that end, AshAuthentication comes with debug functionality that can be enabled in dev:
 
@@ -582,7 +593,7 @@ config :ash_authentication, debug_authentication_failures?: true
 >
 > This could leak users' personally-identifiable information (PII) into your logs on failed sign-in attempts - a security issue!
 
-Once the config is added, you can restart your dev server and test what happens when you visit the sign-in page and submit invalid credentials. You should see log messages like - 
+Once the config is added, you can restart your dev server and test what happens when you visit the sign-in page and submit invalid credentials. You should see log messages like -
 
 ```text
 [timestamp] [warning] Authentication failed: Query returned no users
