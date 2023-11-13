@@ -21,7 +21,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
-  use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.Web, :live_component
   alias AshAuthentication.{Info, Strategy}
   alias Phoenix.LiveView.Rendered
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]

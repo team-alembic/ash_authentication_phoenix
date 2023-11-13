@@ -18,7 +18,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
-  use Phoenix.LiveView
+  use AshAuthentication.Phoenix.Web, :live_view
   alias AshAuthentication.Phoenix.Components
   alias Phoenix.LiveView.{Rendered, Socket}
 

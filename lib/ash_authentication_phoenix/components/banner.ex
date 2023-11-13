@@ -23,7 +23,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
-  use Phoenix.LiveComponent
+  use AshAuthentication.Phoenix.Web, :live_component
   alias Phoenix.LiveView.Rendered
 
   @type props :: %{

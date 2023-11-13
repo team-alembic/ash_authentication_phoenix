@@ -24,7 +24,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
-  use Phoenix.Component
+  use AshAuthentication.Phoenix.Web, :component
   alias AshAuthentication.Strategy
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
