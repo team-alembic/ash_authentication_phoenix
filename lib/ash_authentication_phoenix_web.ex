@@ -1,4 +1,6 @@
 defmodule AshAuthentication.Phoenix.Web do
+  @moduledoc false
+
   alias AshAuthentication.Phoenix.{LayoutView, Utils.Flash, Web}
 
   @doc false

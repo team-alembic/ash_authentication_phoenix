@@ -1,4 +1,8 @@
 defmodule AshAuthentication.Phoenix.Utils.Flash do
+  @moduledoc """
+  Utility functions for sending and receiving flash messages.
+  """
+
   import Phoenix.LiveView
 
   @doc """
