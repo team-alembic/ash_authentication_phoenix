@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.9.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.7...v1.9.0) (2023-11-13)
+
+
+
+
+### Features:
+
+* Add rendering of flash messages from live components
+
 ## [v1.8.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.8.6...v1.8.7) (2023-10-26)
 
 
