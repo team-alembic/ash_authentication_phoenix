@@ -23,8 +23,17 @@ defmodule AshAuthentication.Phoenix.MixProject do
       ],
       docs: [
         main: "readme",
-        extras: extra_documentation(),
-        groups_for_extras: extra_documentation_groups(),
+        extras: [
+          "README.md",
+          "documentation/tutorials/getting-started-with-ash-authentication-phoenix.md",
+          "documentation/tutorials/use-ash-authentication-with-liveview.md"
+        ],
+        groups_for_extras: [
+          Tutorials: ~r'documentation/tutorials',
+          "How To": ~r'documentation/how_to',
+          Topics: ~r'documentation/topics',
+          DSLs: ~r'documentation/dsls'
+        ],
         formatters: ["html"],
         before_closing_head_tag: fn type ->
           if type == :html do
@@ -59,40 +68,12 @@ defmodule AshAuthentication.Phoenix.MixProject do
             ~r/^AshAuthentication\.Phoenix\.Overrides/,
             ~r/^AshAuthentication\.Phoenix\.Components/
           ],
-          Internals: ~r/.*/
+          Utilities: [
+            AshAuthentication.Phoenix.Utils.Flash
+          ]
         ]
       ]
     ]
-  end
-
-  defp extra_documentation do
-    (["README.md"] ++
-       Path.wildcard("documentation/**/*.md"))
-    |> Enum.map(fn
-      "README.md" ->
-        {:"README.md", title: "Read Me", ash_hq?: false}
-
-      "documentation/tutorials/" <> _ = path ->
-        {String.to_atom(path), []}
-
-      "documentation/topics/" <> _ = path ->
-        {String.to_atom(path), []}
-    end)
-  end
-
-  defp extra_documentation_groups do
-    "documentation/*"
-    |> Path.wildcard()
-    |> Enum.map(fn dir ->
-      name =
-        dir
-        |> Path.basename()
-        |> String.split(~r/_+/)
-        |> Enum.join(" ")
-        |> String.capitalize()
-
-      {name, dir |> Path.join("**") |> Path.wildcard()}
-    end)
   end
 
   def package do
