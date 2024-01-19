@@ -1,5 +1,5 @@
 defimpl AshPhoenix.FormData.Error, for: AshAuthentication.Errors.AuthenticationFailed do
-  import Phoenix.HTML.Form, only: [humanize: 1]
+  import PhoenixHTMLHelpers.Form, only: [humanize: 1]
 
   def to_form_error(error) when is_struct(error.strategy, AshAuthentication.Strategy.Password) do
     [

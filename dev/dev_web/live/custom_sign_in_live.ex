@@ -4,7 +4,7 @@ defmodule DevWeb.CustomSignInLive do
 
   alias AshAuthentication.{Phoenix.Components.Password, Info}
   alias Phoenix.LiveView.{Rendered, Socket}
-  import Phoenix.HTML.Form
+  import PhoenixHTMLHelpers.Form
 
   @doc false
   @impl true

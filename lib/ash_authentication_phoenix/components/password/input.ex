@@ -29,6 +29,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import Phoenix.HTML.Form
+  import PhoenixHTMLHelpers.Form
 
   @doc """
   Generate a form field for the configured identity field.

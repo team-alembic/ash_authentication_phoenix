@@ -36,7 +36,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
 
-  import Phoenix.HTML.Form
+  import PhoenixHTMLHelpers.Form
   import AshAuthentication.Phoenix.Components.Helpers
   import Slug
 

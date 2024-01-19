@@ -25,8 +25,8 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   alias AshAuthentication.{Info, Strategy}
   alias Phoenix.LiveView.Rendered
   import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
-  import Phoenix.HTML
-  import Phoenix.HTML.Form
+  import Phoenix.HTML, only: [raw: 1]
+  import PhoenixHTMLHelpers.Form, only: [humanize: 1]
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
