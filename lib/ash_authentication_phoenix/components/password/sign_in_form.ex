@@ -39,7 +39,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   import AshAuthentication.Phoenix.Components.Helpers,
     only: [route_helpers: 1]
 
-  import Phoenix.HTML.Form
+  import PhoenixHTMLHelpers.Form
   import Slug
 
   @type props :: %{
