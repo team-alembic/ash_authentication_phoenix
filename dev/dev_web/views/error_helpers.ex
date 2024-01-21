@@ -1,7 +1,6 @@
 defmodule DevWeb.ErrorHelpers do
   @moduledoc false
 
-  import Phoenix.HTML
   import Phoenix.HTML.Form
   use PhoenixHTMLHelpers
 
