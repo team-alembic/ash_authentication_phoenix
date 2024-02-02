@@ -172,6 +172,16 @@ defmodule AshAuthentication.Phoenix.Router do
       scope "/", unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
+        on_mount =
+          [
+            AshAuthenticationPhoenix.Router.OnLiveViewMount,
+            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+          ]
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
         live_session_opts = [
           session: %{
             "overrides" => unquote(overrides),
@@ -180,7 +190,7 @@ defmodule AshAuthentication.Phoenix.Router do
             "reset_path" => unquote(reset_path),
             "register_path" => unquote(register_path)
           },
-          on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
+          on_mount: on_mount
         ]
 
         live_session_opts =
@@ -274,9 +284,19 @@ defmodule AshAuthentication.Phoenix.Router do
       scope unquote(path), unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
+        on_mount =
+          [
+            AshAuthenticationPhoenix.Router.OnLiveViewMount,
+            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+          ]
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
         live_session_opts = [
           session: %{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)},
-          on_mount: [AshAuthenticationPhoenix.Router.OnLiveViewMount | unquote(on_mount || [])]
+          on_mount: on_mount
         ]
 
         live_session_opts =
