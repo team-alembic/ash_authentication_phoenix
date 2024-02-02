@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.9.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.9.1...v1.9.2) (2024-02-02)
+
+
+
+
+### Bug Fixes:
+
+* Ensure that `sign_in_route` and `reset_route` correctly initialise session. (#369)
+
 ## [v1.9.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.9.0...v1.9.1) (2024-01-21)
 
 
