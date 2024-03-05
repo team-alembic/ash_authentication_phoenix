@@ -22,7 +22,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     lg:px-20 xl:px-24
     """
 
-    set :strategy_class, "mx-auth w-full max-w-sm lg:w-96"
+    set :strategy_class, "mx-auto w-full max-w-sm lg:w-96"
   end
 
   override Components.Reset.Form do
@@ -39,7 +39,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     lg:px-20 xl:px-24
     """
 
-    set :strategy_class, "mx-auth w-full max-w-sm lg:w-96"
+    set :strategy_class, "mx-auto w-full max-w-sm lg:w-96"
 
     set :authentication_error_container_class, "text-black dark:text-white text-center"
     set :authentication_error_text_class, ""
