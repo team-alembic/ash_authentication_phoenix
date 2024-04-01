@@ -25,8 +25,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     * `strategy` - The configuration map as per
       `AshAuthentication.Info.strategy/2`. Required.
     * `label` - The text to show in the submit label.  Generated from the
-      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
-      supplied.  Set to `false` to disable.
+      configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
+      Set to `false` to disable.
     * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
@@ -170,7 +170,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   end
 
   defp blank_form(%{resettable: resettable} = strategy) when not is_nil(resettable) do
-    api = Info.authentication_api!(strategy.resource)
+    api = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     strategy.resource

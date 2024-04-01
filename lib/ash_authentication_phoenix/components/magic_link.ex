@@ -157,7 +157,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   end
 
   defp blank_form(strategy) do
-    api = Info.authentication_api!(strategy.resource)
+    api = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     strategy.resource

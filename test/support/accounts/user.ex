@@ -2,7 +2,8 @@ defmodule Example.Accounts.User do
   @moduledoc false
   use Ash.Resource,
     data_layer: Ash.DataLayer.Ets,
-    extensions: [AshAuthentication]
+    extensions: [AshAuthentication],
+    domain: Example.Accounts
 
   require Logger
 
@@ -51,19 +52,16 @@ defmodule Example.Accounts.User do
   end
 
   attributes do
-    uuid_primary_key(:id)
+    uuid_primary_key :id
 
-    attribute(:email, :ci_string, allow_nil?: false)
-    attribute(:hashed_password, :string, allow_nil?: true, sensitive?: true, private?: true)
+    attribute :email, :ci_string, allow_nil?: false, public?: true
+    attribute :hashed_password, :string, allow_nil?: true, sensitive?: true
 
-    create_timestamp(:created_at)
-    update_timestamp(:updated_at)
+    create_timestamp :created_at
+    update_timestamp :updated_at
   end
 
-  # wat 2
   authentication do
-    api(Example.Accounts)
-
     add_ons do
       confirmation :confirm do
         monitor_fields([:email])

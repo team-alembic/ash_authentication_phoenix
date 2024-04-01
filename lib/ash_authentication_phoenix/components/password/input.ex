@@ -206,8 +206,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `form` - An `AshPhoenix.Form`.  Required.
     * `action` - Either `:sign_in` or `:register`.  Required.
     * `label` - The text to show in the submit label.  Generated from the
-      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
-      supplied.
+      configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
     * `overrides` - A list of override modules.
   """
   @spec submit(%{

@@ -28,7 +28,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
     * `strategy` - The configuration map as per
       `AshAuthentication.Info.strategy/2`. Required.
     * `label` - The text to show in the submit label. Generated from the
-      configured action name (via `Phoenix.HTML.Form.humanize/1`) if not
+      configured action name (via `Phoenix.Naming.humanize/1`) if not
       supplied. Set to `false` to disable.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
@@ -55,7 +55,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
-    api = Info.authentication_api!(strategy.resource)
+    api = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     resettable = strategy.resettable

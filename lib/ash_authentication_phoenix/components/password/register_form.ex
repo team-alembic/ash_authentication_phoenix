@@ -53,7 +53,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   def update(assigns, socket) do
     strategy = assigns.strategy
 
-    api = Info.authentication_api!(strategy.resource)
+    api = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     form =
