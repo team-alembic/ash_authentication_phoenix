@@ -5,6 +5,23 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.0-rc.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.0-rc.0...v2.0.0-rc.1) (2024-04-02)
+### Breaking Changes:
+
+* Update to support Ash 3.0, et al.
+
+
+
+### Bug Fixes:
+
+* loosen rc requirements
+
+* Fix typos in override class names
+
+* honour the error field in AuthenticationFailed errors in forms. (#368)
+
+* Ensure that `sign_in_route` and `reset_route` correctly initialise session. (#369)
+
 ## [v2.0.0-rc.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v1.9.4...v2.0.0-rc.0) (2024-04-01)
 ### Breaking Changes:
 
