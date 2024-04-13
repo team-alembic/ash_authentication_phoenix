@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.0-rc.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.0-rc.1...v2.0.0-rc.2) (2024-04-13)
+
+
+
+
+### Bug Fixes:
+
+* show password strategy message if `field` is `nil`
+
 ## [v2.0.0-rc.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.0-rc.0...v2.0.0-rc.1) (2024-04-02)
 ### Breaking Changes:
 
