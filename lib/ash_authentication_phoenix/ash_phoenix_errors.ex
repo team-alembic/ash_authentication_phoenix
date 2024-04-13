@@ -6,7 +6,8 @@ defimpl AshPhoenix.FormData.Error, for: AshAuthentication.Errors.AuthenticationF
 
   def to_form_error(_), do: []
 
-  defp to_auth_failed_error(error) when error.strategy.password_field == error.field or is_nil(error.field) do
+  defp to_auth_failed_error(error)
+       when error.strategy.password_field == error.field or is_nil(error.field) do
     [
       {error.strategy.password_field,
        "#{humanize(error.strategy.identity_field)} or #{downcase_humanize(error.strategy.password_field)} was incorrect",
