@@ -65,6 +65,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
           |> slugify(),
+        tenant: socket.assigns[:current_tenant],
         context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )
 
