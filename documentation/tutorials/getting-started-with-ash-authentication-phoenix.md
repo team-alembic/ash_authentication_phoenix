@@ -150,7 +150,7 @@ defmodule Example.Repo do
   use AshPostgres.Repo, otp_app: :example
 
   def installed_extensions do
-    ["uuid-ossp", "citext"]
+    ["uuid-ossp", "citext", "ash-functions"]
   end
 end
 ```
@@ -166,7 +166,7 @@ import Config
 
 # add these lines -->
 config :example,
-  ash_apis: [Example.Accounts]
+  ash_domains: [Example.Accounts]
 # ...
 ```
 
@@ -211,18 +211,22 @@ lib/example
 ```elixir
 defmodule Example.Accounts.User do
   use Ash.Resource,
+    domain: Example.Accounts,
     data_layer: AshPostgres.DataLayer,
     extensions: [AshAuthentication]
 
   attributes do
     uuid_primary_key :id
-    attribute :email, :ci_string, allow_nil?: false
+
+    attribute :email, :ci_string do
+      allow_nil? false
+      public? true
+    end
+
     attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
   end
 
   authentication do
-    api Example.Accounts
-
     strategies do
       password :password do
         identity_field :email
@@ -279,12 +283,9 @@ end
 ```elixir
 defmodule Example.Accounts.Token do
   use Ash.Resource,
+    domain: Example.Accounts,
     data_layer: AshPostgres.DataLayer,
     extensions: [AshAuthentication.TokenResource]
-
-  token do
-    api Example.Accounts
-  end
 
   postgres do
     table "tokens"
@@ -304,7 +305,7 @@ end
 
 ```elixir
 defmodule Example.Accounts do
-  use Ash.Api
+  use Ash.Domain
 
   resources do
     resource Example.Accounts.User
