@@ -25,8 +25,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
         main: "readme",
         extras: [
           "README.md",
-          "documentation/tutorials/getting-started-with-ash-authentication-phoenix.md",
-          "documentation/tutorials/use-ash-authentication-with-liveview.md"
+          "documentation/tutorials/get-started.md",
+          "documentation/tutorials/liveview.md"
         ],
         groups_for_extras: [
           Tutorials: ~r'documentation/tutorials',

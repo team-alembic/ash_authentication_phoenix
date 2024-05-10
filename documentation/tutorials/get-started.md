@@ -230,14 +230,11 @@ defmodule Example.Accounts.User do
     strategies do
       password :password do
         identity_field :email
-        sign_in_tokens_enabled? true
       end
     end
 
     tokens do
-      enabled? true
       token_resource Example.Accounts.Token
-
       signing_secret Example.Accounts.Secrets
     end
   end
@@ -455,8 +452,8 @@ defmodule ExampleWeb.AuthController do
 
   def failure(conn, _activity, _reason) do
     conn
-    |> put_status(401)
-    |> render("failure.html")
+    |> put_flash(:error, "Incorrect email or password")
+    |> redirect(to: ~p"/sign-in")
   end
 
   def sign_out(conn, _params) do
