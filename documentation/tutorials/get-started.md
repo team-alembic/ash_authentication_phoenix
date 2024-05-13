@@ -212,6 +212,8 @@ defmodule Example.Accounts.User do
   use Ash.Resource,
     domain: Example.Accounts,
     data_layer: AshPostgres.DataLayer,
+    # If using policies, enable the policy authorizer:
+    # authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication]
 
   attributes do
@@ -281,6 +283,8 @@ defmodule Example.Accounts.Token do
   use Ash.Resource,
     domain: Example.Accounts,
     data_layer: AshPostgres.DataLayer,
+    # If using policies, enable the policy authorizer:
+    # authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication.TokenResource]
 
   postgres do
