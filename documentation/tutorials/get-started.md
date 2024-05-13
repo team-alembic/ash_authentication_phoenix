@@ -53,7 +53,7 @@ $ mix deps.get
 
 ### Formatter
 
-We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/master/Mix.Tasks.Format.html) for this.
+We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/Mix.Tasks.Format.html) for this.
 
 **.formatter.exs**
 
