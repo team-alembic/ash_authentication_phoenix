@@ -200,13 +200,12 @@ lib/example
 ├── accounts
 |   ├── accounts.ex
 |   ├── secrets.ex
-|   └── resources
-│       ├── token.ex
-|       └── user.ex
+│   ├── token.ex
+|   └── user.ex
 ...
 ```
 
-**lib/example/accounts/resources/user.ex**
+**lib/example/accounts/user.ex**
 
 ```elixir
 defmodule Example.Accounts.User do
@@ -275,7 +274,7 @@ defmodule Example.Accounts.Secrets do
 end
 ```
 
-**lib/example/accounts/resources/token.ex**
+**lib/example/accounts/token.ex**
 
 ```elixir
 defmodule Example.Accounts.Token do
@@ -605,9 +604,9 @@ Details: %AshAuthentication.Errors.AuthenticationFailed{
 
 ## Reset Password
 
-In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/resources/user.ex` with the following code:
+In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/user.ex` with the following code:
 
-**lib/example/accounts/resources/user.ex**
+**lib/example/accounts/user.ex**
 
 ```elixir
 # [...]
