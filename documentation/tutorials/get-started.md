@@ -49,7 +49,7 @@ $ mix deps.get
 
 > ### Picosat installation issues? {: .info}
 >
-> Replace `{:picosat_elixir, "~> x.x"}` with `{:simple_sat, "~> x.x"}` to use a simpler (but mildly slower) solver. You can always switch back to `picosat_elixir` later once you're done with the tutorial.
+> If you have trouble compiling `picosat_elixir`, then replace `{:picosat_elixir, "~> x.x"}` with `{:simple_sat, "~> x.x"}` to use a simpler (but mildly slower) solver. You can always switch back to `picosat_elixir` later once you're done with the tutorial.
 
 ### Formatter
 
