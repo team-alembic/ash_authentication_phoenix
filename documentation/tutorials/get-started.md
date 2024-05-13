@@ -33,7 +33,8 @@ defmodule Example.MixProject do
       {:ash, "~> x.x"},
       {:ash_authentication, "~> x.x"},
       {:ash_authentication_phoenix, "~> x.x"},
-      {:ash_postgres, "~> x.x"}
+      {:ash_postgres, "~> x.x"},
+      {:picosat_elixir, "~> x.x"}
       # <-- add these lines
     ]
   end
@@ -45,6 +46,10 @@ Let's fetch everything:
 ```bash
 $ mix deps.get
 ```
+
+> ### Picosat installation issues? {: .info}
+>
+> Replace `{:picosat_elixir, "~> x.x"}` with `{:simple_sat, "~> x.x"}` to use a simpler (but mildly slower) solver. You can always switch back to `picosat_elixir` later once you're done with the tutorial.
 
 ### Formatter
 
