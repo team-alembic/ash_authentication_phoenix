@@ -551,7 +551,7 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
 
 ### If you are using LiveView
 
-If you are using LiveView, jump over to the [Use AshAuthentication with LiveView](/documentation/tutorials/use-ash-authentication-with-liveview.md)
+If you are using LiveView, jump over to the [Use AshAuthentication with LiveView](/documentation/tutorials/liveview.md)
 section and set up your LiveView routes for `AshAuthentication`. Once that is done, you can proceed with the following steps.
 
 ### Start Phoenix

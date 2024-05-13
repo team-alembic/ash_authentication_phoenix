@@ -26,7 +26,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
         extras: [
           "README.md",
           "documentation/tutorials/get-started.md",
-          "documentation/tutorials/liveview.md"
+          "documentation/tutorials/liveview.md",
+          "documentation/tutorials/ui-overrides.md"
         ],
         groups_for_extras: [
           Tutorials: ~r'documentation/tutorials',
