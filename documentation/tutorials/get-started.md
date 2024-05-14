@@ -240,6 +240,7 @@ defmodule Example.Accounts.User do
     end
 
     tokens do
+      enabled? true
       token_resource Example.Accounts.Token
       signing_secret Example.Accounts.Secrets
     end
