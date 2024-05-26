@@ -194,9 +194,12 @@ defmodule Example.Application do
   # ...
 ```
 
-## Accounts Api and Resources
+## Accounts Domain and Resources
 
-We need to create an `Accounts` Api in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for just the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
+We need to create an `Accounts` domain in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for just the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
+
+Although we are using User in the example, you can name your resource anything you need, for instance Admin.
+The `current_*` assign will be inferred from it. User will make `current_user` available, Admin will make `current_admin` available.
 
 At the end we should have the following directory structure:
 
@@ -322,11 +325,11 @@ end
 
 ### Add to config
 
-Although mentioned in a step at the top, a common mistake here is not to add the new api into your `ash_apis` config in `config/config.exs`. It should look like this:
+Although mentioned in a step at the top, a common mistake here is not to add the new domain into your `ash_domains` config in `config/config.exs`. It should look like this:
 
 ```elixir
 config :example,
-  ash_apis: [..., Example.Accounts]
+  ash_domains: [..., Example.Accounts]
 ```
 
 ### Create and Migration
@@ -455,6 +458,7 @@ defmodule ExampleWeb.AuthController do
     conn
     |> delete_session(:return_to)
     |> store_in_session(user)
+    # If your resource has a different name, update the assign name here (i.e :current_admin)
     |> assign(:current_user, user)
     |> redirect(to: return_to)
   end
