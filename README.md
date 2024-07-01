@@ -30,6 +30,7 @@ Welcome! Here you will find everything you need to know to get started with Ash 
 
 - [Get Started](documentation/tutorials/get-started.md)
 - [Using with LiveView](documentation/tutorials/liveview.md)
+- [Overriding UI](documentation/tutorials/ui-overrides.md)
 
 ## Related packages
 

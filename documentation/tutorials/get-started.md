@@ -33,7 +33,8 @@ defmodule Example.MixProject do
       {:ash, "~> x.x"},
       {:ash_authentication, "~> x.x"},
       {:ash_authentication_phoenix, "~> x.x"},
-      {:ash_postgres, "~> x.x"}
+      {:ash_postgres, "~> x.x"},
+      {:picosat_elixir, "~> x.x"}
       # <-- add these lines
     ]
   end
@@ -46,9 +47,13 @@ Let's fetch everything:
 $ mix deps.get
 ```
 
+> ### Picosat installation issues? {: .info}
+>
+> If you have trouble compiling `picosat_elixir`, then replace `{:picosat_elixir, "~> x.x"}` with `{:simple_sat, "~> x.x"}` to use a simpler (but mildly slower) solver. You can always switch back to `picosat_elixir` later once you're done with the tutorial.
+
 ### Formatter
 
-We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/master/Mix.Tasks.Format.html) for this.
+We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/Mix.Tasks.Format.html) for this.
 
 **.formatter.exs**
 
@@ -189,9 +194,12 @@ defmodule Example.Application do
   # ...
 ```
 
-## Accounts Api and Resources
+## Accounts Domain and Resources
 
-We need to create an `Accounts` Api in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for just the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
+We need to create an `Accounts` domain in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for just the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
+
+Although we are using User in the example, you can name your resource anything you need, for instance Admin.
+The `current_*` assign will be inferred from it. User will make `current_user` available, Admin will make `current_admin` available.
 
 At the end we should have the following directory structure:
 
@@ -200,19 +208,20 @@ lib/example
 ├── accounts
 |   ├── accounts.ex
 |   ├── secrets.ex
-|   └── resources
-│       ├── token.ex
-|       └── user.ex
+│   ├── token.ex
+|   └── user.ex
 ...
 ```
 
-**lib/example/accounts/resources/user.ex**
+**lib/example/accounts/user.ex**
 
 ```elixir
 defmodule Example.Accounts.User do
   use Ash.Resource,
     domain: Example.Accounts,
     data_layer: AshPostgres.DataLayer,
+    # If using policies, enable the policy authorizer:
+    # authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication]
 
   attributes do
@@ -277,13 +286,15 @@ defmodule Example.Accounts.Secrets do
 end
 ```
 
-**lib/example/accounts/resources/token.ex**
+**lib/example/accounts/token.ex**
 
 ```elixir
 defmodule Example.Accounts.Token do
   use Ash.Resource,
     domain: Example.Accounts,
     data_layer: AshPostgres.DataLayer,
+    # If using policies, enable the policy authorizer:
+    # authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication.TokenResource]
 
   postgres do
@@ -315,11 +326,11 @@ end
 
 ### Add to config
 
-Although mentioned in a step at the top, a common mistake here is not to add the new api into your `ash_apis` config in `config/config.exs`. It should look like this:
+Although mentioned in a step at the top, a common mistake here is not to add the new domain into your `ash_domains` config in `config/config.exs`. It should look like this:
 
 ```elixir
 config :example,
-  ash_apis: [..., Example.Accounts]
+  ash_domains: [..., Example.Accounts]
 ```
 
 ### Create and Migration
@@ -448,6 +459,7 @@ defmodule ExampleWeb.AuthController do
     conn
     |> delete_session(:return_to)
     |> store_in_session(user)
+    # If your resource has a different name, update the assign name here (i.e :current_admin)
     |> assign(:current_user, user)
     |> redirect(to: return_to)
   end
@@ -553,7 +565,7 @@ To see how the authentication works we replace the default Phoenix `home.html.ee
 
 ### If you are using LiveView
 
-If you are using LiveView, jump over to the [Use AshAuthentication with LiveView](/documentation/tutorials/use-ash-authentication-with-liveview.md)
+If you are using LiveView, jump over to the [Use AshAuthentication with LiveView](/documentation/tutorials/liveview.md)
 section and set up your LiveView routes for `AshAuthentication`. Once that is done, you can proceed with the following steps.
 
 ### Start Phoenix
@@ -607,9 +619,9 @@ Details: %AshAuthentication.Errors.AuthenticationFailed{
 
 ## Reset Password
 
-In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/resources/user.ex` with the following code:
+In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/user.ex` with the following code:
 
-**lib/example/accounts/resources/user.ex**
+**lib/example/accounts/user.ex**
 
 ```elixir
 # [...]
