@@ -1,4 +1,4 @@
-<%= if live_flash(@flash, :info) do %>
+<%= if Phoenix.Flash.get(@flash, :info) do %>
   <p
     class="fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 text-sm
            bg-emerald-100 dark:bg-emerald-200 text-emerald-800"
@@ -6,11 +6,11 @@
     phx-click="lv:clear-flash"
     phx-value-key="info"
   >
-    <%= live_flash(@flash, :info) %>
+    <%= Phoenix.Flash.get(@flash, :info) %>
   </p>
 <% end %>
 
-<%= if live_flash(@flash, :error) do %>
+<%= if Phoenix.Flash.get(@flash, :error) do %>
   <p
     class="fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 text-sm
            bg-rose-100 dark:bg-rose-200 text-rose-900"
@@ -18,7 +18,7 @@
     phx-click="lv:clear-flash"
     phx-value-key="error"
   >
-    <%= live_flash(@flash, :error) %>
+    <%= Phoenix.Flash.get(@flash, :error) %>
   </p>
 <% end %>
 
