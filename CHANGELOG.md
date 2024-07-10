@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.0...v2.0.1) (2024-07-10)
+
+
+
+
+### Improvements:
+
+* fix deprecation warnings about live_flash/2.
+
 ## [v2.0.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.0-rc.3...v2.0.0) (2024-05-10)
 
 
