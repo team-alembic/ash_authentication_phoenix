@@ -188,7 +188,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, @password_input_label class: override_for(@overrides, :label_class)) %>
+      <%= label(@form, @password_input_label, class: override_for(@overrides, :label_class)) %>
       <%= password_input(@form, @password_confirmation_field,
         class: @input_class,
         value: input_value(@form, @password_confirmation_field),
