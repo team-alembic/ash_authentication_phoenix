@@ -3,6 +3,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     field_class: "CSS class for `div` elements surrounding the fields.",
     label_class: "CSS class for `label` elements.",
     input_class: "CSS class for text/password `input` elements.",
+    identity_input_label: "Label for identity (email) field.",
+    password_input_label: "Label for password field.",
     input_class_with_error:
       "CSS class for text/password `input` elements when there is a validation error.",
     submit_class: "CSS class for the form submit `input` element.",
