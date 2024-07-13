@@ -127,7 +127,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     assigns =
       assigns
       |> assign(:password_field, password_field)
-      |> assign(:password_input_label, override_for(assigns.overrides, :password_input_label))
+      |> assign_new(:password_input_label, override_for(assigns.overrides, :password_input_label))
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_field) do
           override_for(assigns.overrides, :input_class_with_error)
@@ -177,7 +177,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     assigns =
       assigns
       |> assign(:password_confirmation_field, password_confirmation_field)
-      |> assign(:password_input_label, override_for(assigns.overrides, :password_input_label))
+      |> assign_new(:password_input_label, override_for(assigns.overrides, :password_input_label))
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_confirmation_field) do
           override_for(assigns.overrides, :input_class_with_error)
