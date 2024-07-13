@@ -3,8 +3,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     field_class: "CSS class for `div` elements surrounding the fields.",
     label_class: "CSS class for `label` elements.",
     input_class: "CSS class for text/password `input` elements.",
-    identity_input_label: "Label for identity (email) field.",
-    password_input_label: "Label for password field.",
     input_class_with_error:
       "CSS class for text/password `input` elements when there is a validation error.",
     submit_class: "CSS class for the form submit `input` element.",
@@ -66,9 +64,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     assigns =
       assigns
-      |> assign(:identity_field, identity_field)
-      #|> assign(:identity_input_label, override_for(assigns.overrides, :identity_input_label))
-      |> assign_new(:input_type, fn ->
+        |> assign(:identity_field, identity_field)
+        |> assign_new(:input_type, fn ->
         identity_field
         |> to_string()
         |> String.contains?("email")
@@ -127,7 +124,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     assigns =
       assigns
       |> assign(:password_field, password_field)
-     # |> assign_new(:password_input_label, override_for(assigns.overrides, :password_input_label))
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_field) do
           override_for(assigns.overrides, :input_class_with_error)
@@ -177,7 +173,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     assigns =
       assigns
       |> assign(:password_confirmation_field, password_confirmation_field)
-      #|> assign_new(:password_input_label, override_for(assigns.overrides, :password_input_label))
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_confirmation_field) do
           override_for(assigns.overrides, :input_class_with_error)
