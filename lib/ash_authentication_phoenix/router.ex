@@ -183,13 +183,17 @@ defmodule AshAuthentication.Phoenix.Router do
           end)
 
         live_session_opts = [
-          session: %{
-            "overrides" => unquote(overrides),
-            "otp_app" => unquote(otp_app),
-            "path" => unquote(path),
-            "reset_path" => unquote(reset_path),
-            "register_path" => unquote(register_path)
-          },
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "overrides" => unquote(overrides),
+                 "otp_app" => unquote(otp_app),
+                 "path" => unquote(path),
+                 "reset_path" => unquote(reset_path),
+                 "register_path" => unquote(register_path)
+               }
+             ]},
           on_mount: on_mount
         ]
 
@@ -295,7 +299,9 @@ defmodule AshAuthentication.Phoenix.Router do
           end)
 
         live_session_opts = [
-          session: %{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)},
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [%{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)}]},
           on_mount: on_mount
         ]
 
@@ -313,5 +319,10 @@ defmodule AshAuthentication.Phoenix.Router do
         end
       end
     end
+  end
+
+  @doc false
+  def generate_session(conn, session) do
+    Map.put(session, "tenant", Ash.PlugHelpers.get_tenant(conn))
   end
 end
