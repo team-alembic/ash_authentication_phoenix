@@ -120,6 +120,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   end
 
   override Components.Password.Input do
+
     set :field_class, "mt-2 mb-2 dark:text-white"
     set :label_class, "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
 
@@ -141,7 +142,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
     mt-4 mb-4
     """
-
+    set :password_input_label, "Password"
+    set :identity_input_label, "Email"
     set :error_ul, "text-red-400 font-light my-3 italic text-sm"
     set :error_li, nil
     set :input_debounce, 350
