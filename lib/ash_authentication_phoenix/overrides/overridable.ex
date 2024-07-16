@@ -63,19 +63,16 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
 
     if Map.has_key?(component_overrides, selector) do
       quote do
-        override =
-          unquote(overrides)
-          |> Enum.reduce_while(nil, fn module, _ ->
-            module.overrides()
-            |> Map.fetch({unquote(component), unquote(selector)})
-            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-            |> case do
-              {:ok, value} -> {:halt, value}
-              :error -> {:cont, nil}
-            end
-          end)
-
-        override || unquote(default)
+        unquote(overrides)
+        |> Enum.reduce_while(unquote(default), fn module, value ->
+          module.overrides()
+          |> Map.fetch({unquote(component), unquote(selector)})
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+          |> case do
+            {:ok, value} -> {:halt, value}
+            :error -> {:cont, value}
+          end
+        end)
       end
     else
       IO.warn(
