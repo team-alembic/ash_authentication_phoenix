@@ -66,8 +66,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     assigns =
       assigns
-        |> assign(:identity_field, identity_field)
-        |> assign_new(:input_type, fn ->
+      |> assign(:identity_field, identity_field)
+      |> assign_new(:input_type, fn ->
         identity_field
         |> to_string()
         |> String.contains?("email")
@@ -86,7 +86,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, override_for(@overrides, :identity_input_label), class: override_for(@overrides, :label_class)) %>
+      <%= label(@form, override_for(@overrides, :identity_input_label),
+        class: override_for(@overrides, :label_class)
+      ) %>
       <%= text_input(@form, @identity_field,
         type: to_string(@input_type),
         class: @input_class,
@@ -136,7 +138,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, override_for(@overrides, :password_input_label), class: override_for(@overrides, :label_class)) %>
+      <%= label(@form, override_for(@overrides, :password_input_label),
+        class: override_for(@overrides, :label_class)
+      ) %>
       <%= password_input(@form, @password_field,
         class: @input_class,
         value: input_value(@form, @password_field),
@@ -185,7 +189,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, override_for(@overrides, :password_input_label), class: override_for(@overrides, :label_class)) %>
+      <%= label(@form, override_for(@overrides, :password_input_label),
+        class: override_for(@overrides, :label_class)
+      ) %>
       <%= password_input(@form, @password_confirmation_field,
         class: @input_class,
         value: input_value(@form, @password_confirmation_field),
