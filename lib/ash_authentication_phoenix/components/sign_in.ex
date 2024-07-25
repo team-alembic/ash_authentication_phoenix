@@ -172,6 +172,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategy_style(%Strategy.MagicLink{}), do: :form
   defp strategy_style(_), do: :link
 
+  defp component_for_strategy(%{name: :apple}), do: Components.Apple
+
   defp component_for_strategy(strategy) do
     strategy.__struct__
     |> Module.split()
