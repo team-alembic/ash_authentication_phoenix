@@ -24,13 +24,14 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   use AshAuthentication.Phoenix.Web, :live_component
   alias AshAuthentication.{Info, Strategy}
   alias Phoenix.LiveView.Rendered
-  import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
+  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
   import Phoenix.HTML, only: [raw: 1]
   import PhoenixHTMLHelpers.Form, only: [humanize: 1]
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:auth_routes_prefix) => String.t()
         }
 
   @doc false
@@ -41,16 +42,12 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
       assigns
       |> assign(:subject_name, Info.authentication_subject_name!(assigns.strategy.resource))
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <a
-        href={
-          route_helpers(@socket).auth_path(
-            @socket.endpoint,
-            {@subject_name, Strategy.name(@strategy), :request}
-          )
-        }
+        href={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request)}
         class={override_for(@overrides, :link_class)}
       >
         <.icon icon={@strategy.icon} overrides={@overrides} />

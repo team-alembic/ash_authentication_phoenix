@@ -81,6 +81,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       |> assign_new(:reset_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
   end
@@ -103,6 +104,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               live_action={@live_action}
               strategy={strategy}
               path={@path}
+              auth_routes_prefix={@auth_routes_prefix}
               reset_path={@reset_path}
               register_path={@register_path}
               overrides={@overrides}
@@ -125,6 +127,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               component={component_for_strategy(strategy)}
               live_action={@live_action}
               strategy={strategy}
+              auth_routes_prefix={@auth_routes_prefix}
               path={@path}
               reset_path={@reset_path}
               register_path={@register_path}
@@ -145,6 +148,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         module={@component}
         id={strategy_id(@strategy)}
         strategy={@strategy}
+        auth_routes_prefix={@auth_routes_prefix}
         path={@path}
         reset_path={@reset_path}
         register_path={@register_path}

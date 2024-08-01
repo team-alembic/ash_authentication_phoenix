@@ -1,4 +1,4 @@
-defmodule AshAuthenticationPhoenix.Router.OnLiveViewMount do
+defmodule AshAuthentication.Phoenix.Router.OnLiveViewMount do
   @moduledoc false
   import Phoenix.Component
 

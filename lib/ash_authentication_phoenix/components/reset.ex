@@ -53,6 +53,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
       socket
       |> assign(strategies: strategies)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
   end
@@ -71,6 +72,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
         <div class={override_for(@overrides, :strategy_class)}>
           <.live_component
             module={Components.Reset.Form}
+            auth_routes_prefix={@auth_routes_prefix}
             strategy={strategy}
             token={@token}
             id="reset-form"

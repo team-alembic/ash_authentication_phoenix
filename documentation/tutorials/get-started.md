@@ -73,21 +73,6 @@ We can make our life easier and the code more consistent by adding formatters to
 ]
 ```
 
-### Phoenix 1.7 compatibility
-
-For Phoenix 1.7 we need to change `helpers: false` to `helpers: true` in the router section:
-
-**lib/example_web.ex**
-
-```elixir
-defmodule ExampleWeb do
-# ...
-  def router do
-    quote do
-      use Phoenix.Router, helpers: true # <-- Change this line
-    # ...
-```
-
 ### Tailwind
 
 If you plan on using our default [Tailwind](https://tailwindcss.com/)-based
@@ -120,25 +105,28 @@ module.exports = {
   plugins: [
     require("@tailwindcss/forms"),
     plugin(({ addVariant }) =>
-      addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])
+      addVariant("phx-no-feedback", [
+        ".phx-no-feedback&",
+        ".phx-no-feedback &",
+      ]),
     ),
     plugin(({ addVariant }) =>
       addVariant("phx-click-loading", [
         ".phx-click-loading&",
         ".phx-click-loading &",
-      ])
+      ]),
     ),
     plugin(({ addVariant }) =>
       addVariant("phx-submit-loading", [
         ".phx-submit-loading&",
         ".phx-submit-loading &",
-      ])
+      ]),
     ),
     plugin(({ addVariant }) =>
       addVariant("phx-change-loading", [
         ".phx-change-loading&",
         ".phx-change-loading &",
-      ])
+      ]),
     ),
   ],
 };
@@ -380,12 +368,17 @@ defmodule ExampleWeb.Router do
     get "/", PageController, :home
 
     # add these lines -->
+
+    # Standard controller-backed routes
+    auth_routes AuthController, Example.Accounts.User, path: "/auth"
+    sign_out_route AuthController
+
+    # Prebuilt LiveViews for signing in, registration, resetting, etc.
     # Leave out `register_path` and `reset_path` if you don't want to support
     # user registration and/or password resets respectively.
-    sign_in_route(register_path: "/register", reset_path: "/reset")
-    sign_out_route AuthController
-    auth_routes_for Example.Accounts.User, to: AuthController
+    sign_in_route(register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth")
     reset_route []
+
     # <-- add these lines
   end
 

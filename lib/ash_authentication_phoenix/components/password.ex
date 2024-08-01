@@ -143,6 +143,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> assign_new(:reset_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     show =
       if assigns[:live_action] == :sign_in && is_nil(assigns[:reset_path]) &&
@@ -160,6 +161,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         <.live_component
           :let={form}
           module={Password.SignInForm}
+          auth_routes_prefix={@auth_routes_prefix}
           id={@sign_in_id}
           strategy={@strategy}
           label={false}
@@ -204,6 +206,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           <.live_component
             :let={form}
             module={Password.RegisterForm}
+            auth_routes_prefix={@auth_routes_prefix}
             id={@register_id}
             strategy={@strategy}
             label={false}
@@ -245,6 +248,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           <.live_component
             :let={form}
             module={Password.ResetForm}
+            auth_routes_prefix={@auth_routes_prefix}
             id={@reset_id}
             strategy={@strategy}
             label={false}
