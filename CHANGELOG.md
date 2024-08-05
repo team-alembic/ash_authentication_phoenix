@@ -5,6 +5,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.1...v2.0.2) (2024-08-05)
+
+
+
+
+### Bug Fixes:
+
+* use any overridden value, including `nil` or `false` (#476)
+
+* set tenant in sign_in and reset_route (#478)
+
+### Improvements:
+
+* Added overrides for identity (email) and password fields.  (#477)
+
 ## [v2.0.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.0...v2.0.1) (2024-07-10)
 
 
