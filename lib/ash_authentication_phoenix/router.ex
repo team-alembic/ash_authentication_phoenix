@@ -190,8 +190,12 @@ defmodule AshAuthentication.Phoenix.Router do
                  "overrides" => unquote(overrides),
                  "otp_app" => unquote(otp_app),
                  "path" => Phoenix.Router.scoped_path(__MODULE__, unquote(path)),
-                 "reset_path" => unquote(reset_path) && Phoenix.Router.scoped_path(__MODULE__, unquote(reset_path)),
-                 "register_path" => unquote(register_path) && Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
+                 "reset_path" =>
+                   unquote(reset_path) &&
+                     Phoenix.Router.scoped_path(__MODULE__, unquote(reset_path)),
+                 "register_path" =>
+                   unquote(register_path) &&
+                     Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
                }
              ]},
           on_mount: on_mount
