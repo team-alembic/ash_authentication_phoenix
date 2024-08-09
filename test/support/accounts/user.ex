@@ -57,7 +57,7 @@ defmodule Example.Accounts.User do
       if query.action.name == :sign_in_with_password && query.context[:should_fail] do
         Ash.Query.add_error(
           query,
-          Ash.Error.Query.InvalidArgument.exception(
+          InvalidArgument.exception(
             field: :email,
             message: "I cant let you do that dave."
           )
