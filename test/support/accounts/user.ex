@@ -6,6 +6,7 @@ defmodule Example.Accounts.User do
     domain: Example.Accounts
 
   require Logger
+  alias Ash.Error.Query.InvalidArgument
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
