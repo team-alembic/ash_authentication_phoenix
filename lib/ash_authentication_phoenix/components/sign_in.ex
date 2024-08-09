@@ -50,7 +50,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           optional(:path) => String.t(),
           optional(:reset_path) => String.t(),
           optional(:register_path) => String.t(),
-          optional(:current_tenant) => String.t()
+          optional(:current_tenant) => String.t(),
+          optional(:context) => map()
         }
 
   @doc false
@@ -81,6 +82,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       |> assign_new(:reset_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
@@ -109,6 +111,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               register_path={@register_path}
               overrides={@overrides}
               current_tenant={@current_tenant}
+              context={@context}
             />
           <% end %>
         <% end %>
@@ -133,6 +136,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
               register_path={@register_path}
               overrides={@overrides}
               current_tenant={@current_tenant}
+              context={@context}
             />
           <% end %>
         <% end %>
@@ -155,6 +159,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         live_action={@live_action}
         overrides={@overrides}
         current_tenant={@current_tenant}
+        context={@context}
       />
     </div>
     """

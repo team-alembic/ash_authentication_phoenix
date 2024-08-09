@@ -40,6 +40,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:overrides) => [module],
           optional(:current_tenant) => String.t(),
+          optional(:context) => map(),
           optional(:auth_routes_prefix) => String.t()
         }
 
@@ -50,7 +51,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     strategy = assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
-    form = blank_form(strategy)
+    form = blank_form(strategy, assigns[:context] || %{})
 
     socket =
       socket
@@ -59,6 +60,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:label, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
@@ -130,7 +132,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
     socket =
       socket
-      |> assign(:form, blank_form(strategy))
+      |> assign(:form, blank_form(strategy, socket.assigns[:context] || %{}))
 
     socket =
       if flash do
@@ -153,7 +155,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     Map.get(params, param_key, %{})
   end
 
-  defp blank_form(strategy) do
+  defp blank_form(strategy, context) do
     api = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
@@ -163,7 +165,11 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
       as: subject_name |> to_string(),
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}" |> slugify(),
-      context: %{strategy: strategy, private: %{ash_authentication?: true}}
+      context:
+        Ash.Helpers.deep_merge_maps(context, %{
+          strategy: strategy,
+          private: %{ash_authentication?: true}
+        })
     )
   end
 end

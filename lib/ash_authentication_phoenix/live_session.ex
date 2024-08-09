@@ -99,6 +99,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     tenant = session["tenant"]
 
     socket = assign(socket, current_tenant: tenant)
+    context = session["context"] || %{}
 
     socket =
       socket
@@ -115,7 +116,10 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         assign_new(socket, current_subject_name, fn ->
           if value = session[subject_name] do
             # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-            case AshAuthentication.subject_to_user(value, resource, tenant: tenant) do
+            case AshAuthentication.subject_to_user(value, resource,
+                   tenant: tenant,
+                   context: context
+                 ) do
               {:ok, user} -> user
               _ -> nil
             end
@@ -155,10 +159,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           session
           |> Map.put(subject_name, AshAuthentication.user_to_subject(user))
           |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
+          |> Map.put("context", Ash.PlugHelpers.get_context(conn))
 
         _ ->
           session
           |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
+          |> Map.put("context", Ash.PlugHelpers.get_context(conn))
       end
     end)
   end

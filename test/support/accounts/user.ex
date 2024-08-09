@@ -51,6 +51,22 @@ defmodule Example.Accounts.User do
     end
   end
 
+  preparations do
+    prepare fn query, _ ->
+      if query.action.name == :sign_in_with_password && query.context[:should_fail] do
+        Ash.Query.add_error(
+          query,
+          Ash.Error.Query.InvalidArgument.exception(
+            field: :email,
+            message: "I cant let you do that dave."
+          )
+        )
+      else
+        query
+      end
+    end
+  end
+
   attributes do
     uuid_primary_key :id
 
@@ -111,10 +127,9 @@ defmodule Example.Accounts.User do
     tokens do
       enabled?(true)
       token_resource(Example.Accounts.Token)
+      store_all_tokens? true
 
-      signing_secret(fn _, _ ->
-        Application.fetch_env(:ash_authentication_phoenix, :signing_secret)
-      end)
+      signing_secret("fake_secret")
     end
   end
 
