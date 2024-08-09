@@ -37,6 +37,13 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   defmacro ash_authentication_live_session(session_name \\ :ash_authentication, opts \\ [],
              do: block
            ) do
+    opts =
+      if Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      else
+        opts
+      end
+
     quote do
       on_mount = [LiveSession]
 
@@ -63,6 +70,11 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       end
     end
   end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:mount, 3}})
+
+  defp expand_alias(other, _env), do: other
 
   @doc """
   Inspects the incoming session for any subject_name -> subject values and loads

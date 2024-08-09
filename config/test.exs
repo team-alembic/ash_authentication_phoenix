@@ -13,3 +13,11 @@ config :ash_authentication, AshAuthentication.Jwt,
   signing_secret: "Marty McFly in the past with the Delorean"
 
 config :phoenix, :json_library, Jason
+
+config :ash_authentication_phoenix, AshAuthentication.Phoenix.Test.Endpoint,
+  server: false,
+  debug_errors: true,
+  live_view: [signing_salt: "aaaaaaaa"],
+  secret_key_base: String.duplicate("a", 64)
+
+config :logger, level: :error

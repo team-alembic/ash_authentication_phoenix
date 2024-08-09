@@ -132,7 +132,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:mimic, "~> 1.7", only: [:dev, :test]},
       {:mix_audit, "~> 2.1", only: [:dev, :test]},
       {:plug_cowboy, "~> 2.5", only: [:dev, :test]},
-      {:sobelow, "~> 0.13", only: [:dev, :test]}
+      {:sobelow, "~> 0.13", only: [:dev, :test]},
+      {:floki, ">= 0.30.0", only: :test}
     ]
   end
 

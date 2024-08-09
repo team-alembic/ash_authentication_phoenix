@@ -14,11 +14,11 @@ defmodule DevWeb.HomePageLive do
     <%= if @current_user do %>
       <h2>Current user: <%= @current_user.email %></h2>
 
-      <.link navigate={Routes.auth_path(@socket, :sign_out)}>Sign out</.link>
+      <.link navigate="/sign-out">Sign out</.link>
     <% else %>
       <h2>Please sign in</h2>
 
-      <.link navigate={Routes.auth_path(@socket, :sign_in)}>Standard sign in</.link>
+      <.link navigate="/auth/sign-in">Standard sign in</.link>
       <br />
       <.link navigate={Routes.live_path(@socket, DevWeb.CustomSignInLive)}>Custom sign in</.link>
     <% end %>

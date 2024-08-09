@@ -18,6 +18,32 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
       |> socket.endpoint.config()
   end
 
+  def auth_path(socket, subject_name, auth_routes_prefix, strategy, phase, params \\ %{}) do
+    if auth_routes_prefix do
+      strategy
+      |> AshAuthentication.Strategy.routes()
+      |> Enum.find(&(elem(&1, 1) == phase))
+      |> elem(0)
+      |> URI.parse()
+      |> Map.put(:query, URI.encode_query(params))
+      |> Map.update!(:path, &Path.join(auth_routes_prefix, &1))
+      |> URI.to_string()
+    else
+      route_helpers = route_helpers(socket)
+
+      if Code.ensure_loaded?(route_helpers) do
+        route_helpers.auth_path(
+          socket.endpoint,
+          {subject_name, AshAuthentication.Strategy.name(strategy), phase}
+        )
+      else
+        raise """
+        Must configure the `auth_routes_prefix`, or enable router helpers.
+        """
+      end
+    end
+  end
+
   @doc """
   The LiveView `Socket` contains a refererence to the Phoenix router, and from
   there we can generate the name of the route helpers module.

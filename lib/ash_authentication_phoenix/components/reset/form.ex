@@ -38,7 +38,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
   alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
-  import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
+  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
   import PhoenixHTMLHelpers.Form
   import Slug
 
@@ -47,7 +47,8 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
           required(:strategy) => AshAuthentication.Strategy.t(),
           required(:token) => String.t(),
           optional(:label) => String.t() | false,
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:auth_routes_prefix) => String.t()
         }
 
   @doc false
@@ -82,6 +83,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
       )
       |> assign_new(:label, fn -> humanize(resettable.password_reset_action_name) end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
   end
@@ -103,12 +105,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         phx-submit="submit"
         phx-trigger-action={@trigger_action}
         phx-target={@myself}
-        action={
-          route_helpers(@socket).auth_path(
-            @socket.endpoint,
-            {@subject_name, Strategy.name(@strategy), :reset}
-          )
-        }
+        action={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :reset)}
         method="POST"
         class={override_for(@overrides, :form_class)}
       >

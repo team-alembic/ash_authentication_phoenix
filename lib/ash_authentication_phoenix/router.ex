@@ -120,6 +120,60 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
+  Generates the routes needed for the various strategies for a given
+  AshAuthentication resource.
+
+  This matches *all* routes at the provided `path`, which defaults to `/auth`. This means that
+  if you have any other routes that begin with `/auth`, you will need to make sure this
+  appears after them.
+
+  ## Upgrading from `auth_routes_for/2`
+
+  If you are using route helpers anywhere in your application, typically looks like `Routes.auth_path/3`
+  or `Helpers.auth_path/3` you will need to update them to use verified routes. To see what routes are
+  available to you, use `mix ash_authentication.phoenix.routes`.
+
+  If you are using any of the components provided by `AshAuthenticationPhoenix`, you will need to supply
+  them with the `auth_routes_prefix` assign, set to the `path` you provide here (set to `/auth` by default).
+
+  ## Options
+
+  * `path` - the path to mount auth routes at. Defaults to `/auth`. If changed, you will also want
+    to change the `auth_routes_prefix` option in `sign_in_route` to match.
+    routes.
+  * `not_found_plug` - a plug to call if no route is found. By default, it renders a simple JSON
+    response with a 404 status code.
+  * `as` - the alias to use for the generated scope. Defaults to `:auth`.
+  """
+  @spec auth_routes(
+          auth_controller :: module(),
+          Ash.Resource.t() | list(Ash.Resource.t()),
+          auth_route_options
+        ) :: Macro.t()
+  defmacro auth_routes(auth_controller, resource_or_resources, opts \\ []) when is_list(opts) do
+    resource_or_resources =
+      resource_or_resources
+      |> List.wrap()
+      |> Enum.map(&Macro.expand_once(&1, %{__CALLER__ | function: {:auth_routes, 2}}))
+
+    quote location: :keep do
+      opts = unquote(opts)
+      path = Keyword.get(opts, :path, "/auth")
+      not_found_plug = Keyword.get(opts, :not_found_plug)
+      controller = Phoenix.Router.scoped_alias(__MODULE__, unquote(auth_controller))
+
+      scope "/", alias: false do
+        forward path, AshAuthentication.Phoenix.StrategyRouter,
+          path: Phoenix.Router.scoped_path(__MODULE__, path),
+          as: opts[:as] || :auth,
+          controller: controller,
+          not_found_plug: not_found_plug,
+          resources: List.wrap(unquote(resource_or_resources))
+      end
+    end
+  end
+
+  @doc """
   Generates a generic, white-label sign-in page using LiveView and the
   components in `AshAuthentication.Phoenix.Components`.
 
@@ -128,12 +182,15 @@ defmodule AshAuthentication.Phoenix.Router do
   Available options are:
 
   * `path` the path under which to mount the sign-in live-view. Defaults to `"/sign-in"`.
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
   * `register_path` - the path under which to mount the password strategy's registration live-view.
      If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
   * `reset_path` - the path under which to mount the password strategy's password reset live-view.
     If not set, and password reset is supported, password reset will use a dynamic toggle and will not be routeable to.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
+  * `auth_routes_prefix` the prefix to use for the auth routes. Defaults to `"/auth"`.
   * `as` which is passed to the generated `live` route. Defaults to `:auth`.
   * `otp_app` the otp app or apps to find authentication resources in. Pulls from the socket by default.
   * `overrides` specify any override modules for customisation.  See
@@ -160,6 +217,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
     {reset_path, opts} = Keyword.pop(opts, :reset_path)
     {register_path, opts} = Keyword.pop(opts, :register_path)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -174,7 +232,7 @@ defmodule AshAuthentication.Phoenix.Router do
 
         on_mount =
           [
-            AshAuthenticationPhoenix.Router.OnLiveViewMount,
+            AshAuthentication.Phoenix.Router.OnLiveViewMount,
             AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
           ]
           |> Enum.uniq_by(fn
@@ -182,12 +240,30 @@ defmodule AshAuthentication.Phoenix.Router do
             mod -> mod
           end)
 
+        register_path =
+          case unquote(register_path) do
+            nil -> nil
+            {:unscoped, value} -> value
+            value -> Phoenix.Router.scoped_path(__MODULE__, value)
+          end
+
+        reset_path =
+          case unquote(reset_path) do
+            nil -> nil
+            {:unscoped, value} -> value
+            value -> Phoenix.Router.scoped_path(__MODULE__, value)
+          end
+
+        unquote(register_path) &&
+          Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
+
         live_session_opts = [
           session:
             {AshAuthentication.Phoenix.Router, :generate_session,
              [
                %{
                  "overrides" => unquote(overrides),
+                 "auth_routes_prefix" => unquote(auth_routes_prefix),
                  "otp_app" => unquote(otp_app),
                  "path" => Phoenix.Router.scoped_path(__MODULE__, unquote(path)),
                  "reset_path" =>
@@ -294,7 +370,7 @@ defmodule AshAuthentication.Phoenix.Router do
 
         on_mount =
           [
-            AshAuthenticationPhoenix.Router.OnLiveViewMount,
+            AshAuthentication.Phoenix.Router.OnLiveViewMount,
             AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
           ]
           |> Enum.uniq_by(fn

@@ -27,11 +27,17 @@ defmodule DevWeb.Router do
     end
   end
 
-  scope "/", DevWeb do
+  scope "/auth", DevWeb do
     pipe_through :browser
-    auth_routes_for(Example.Accounts.User, to: AuthController, path: "/auth")
-    sign_in_route(overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default])
+
     sign_out_route(AuthController, "/sign-out")
     reset_route()
+
+    sign_in_route(
+      path: "/sign-in",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
+
+    auth_routes(AuthController, Example.Accounts.User)
   end
 end
