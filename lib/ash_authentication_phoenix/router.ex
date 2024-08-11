@@ -240,6 +240,8 @@ defmodule AshAuthentication.Phoenix.Router do
             mod -> mod
           end)
 
+        sign_in_path = Phoenix.Router.scoped_path(__MODULE__, unquote(path))
+
         register_path =
           case unquote(register_path) do
             nil -> nil
@@ -254,8 +256,12 @@ defmodule AshAuthentication.Phoenix.Router do
             value -> Phoenix.Router.scoped_path(__MODULE__, value)
           end
 
-        unquote(register_path) &&
-          Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
+        auth_routes_prefix =
+          case unquote(auth_routes_prefix) do
+            nil -> nil
+            {:unscoped, value} -> value
+            value -> Phoenix.Router.scoped_path(__MODULE__, value)
+          end
 
         live_session_opts = [
           session:
@@ -263,15 +269,11 @@ defmodule AshAuthentication.Phoenix.Router do
              [
                %{
                  "overrides" => unquote(overrides),
-                 "auth_routes_prefix" => unquote(auth_routes_prefix),
+                 "auth_routes_prefix" => auth_routes_prefix,
                  "otp_app" => unquote(otp_app),
-                 "path" => Phoenix.Router.scoped_path(__MODULE__, unquote(path)),
-                 "reset_path" =>
-                   unquote(reset_path) &&
-                     Phoenix.Router.scoped_path(__MODULE__, unquote(reset_path)),
-                 "register_path" =>
-                   unquote(register_path) &&
-                     Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
+                 "path" => sign_in_path,
+                 "reset_path" => reset_path,
+                 "register_path" => register_path
                }
              ]},
           on_mount: on_mount
@@ -286,15 +288,15 @@ defmodule AshAuthentication.Phoenix.Router do
               Keyword.put(live_session_opts, :layout, layout)
           end
 
-        live_session :sign_in, live_session_opts do
+          live_session :"#{unquote(as)}_sign_in", live_session_opts do
           live(unquote(path), unquote(live_view), :sign_in, as: unquote(as))
 
-          if unquote(reset_path) do
-            live(unquote(reset_path), unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
+          if reset_path do
+            live(reset_path, unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
           end
 
-          if unquote(register_path) do
-            live(unquote(register_path), unquote(live_view), :register,
+          if register_path do
+            live(register_path, unquote(live_view), :register,
               as: :"#{unquote(as)}_register"
             )
           end
@@ -394,7 +396,7 @@ defmodule AshAuthentication.Phoenix.Router do
               Keyword.put(live_session_opts, :layout, layout)
           end
 
-        live_session :reset, live_session_opts do
+        live_session :"#{unquote(as)}_reset", live_session_opts do
           live("/:token", unquote(live_view), :reset, as: unquote(as))
         end
       end
