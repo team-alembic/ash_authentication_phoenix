@@ -11,7 +11,7 @@ defmodule AshAuthentication.Phoenix.Test.AuthController do
     |> store_in_session(user)
     |> assign(:current_user, user)
     |> put_status(200)
-    |> render("success.html")
+    |> render(:success)
   end
 
   @doc false
@@ -27,6 +27,6 @@ defmodule AshAuthentication.Phoenix.Test.AuthController do
   def sign_out(conn, _params) do
     conn
     |> clear_session()
-    |> render("sign_out.html")
+    |> render(:signed_out)
   end
 end
