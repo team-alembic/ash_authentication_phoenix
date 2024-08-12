@@ -33,9 +33,10 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
       conn
     end
 
-    @tag failing: "yes"
-    test "register user", %{conn: conn} do
+    test "register user with password", %{conn: conn} do
       strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
+      email = "register@email"
+      password = "register.secret"
 
       {:ok, lv, _html} = live(conn, ~p"/register")
 
@@ -43,38 +44,70 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
         lv
         |> form(~s{[action="/auth/user/password/register?"]},
           user: %{
-            strategy.identity_field => "some@email",
-            strategy.password_field => "some password",
-            strategy.password_confirmation_field => "some password"
-          }
-        )
-        |> render_submit()
-        |> follow_redirect(conn)
-
-      assert get_session(conn, :user_token)
-      assert conn.assigns.current_user
-    end
-
-    @tag failing: "yes"
-    test "sign-in user", %{conn: conn} do
-      strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
-
-      {:ok, lv, _html} = live(conn, ~p"/sign-in")
-
-      {:ok, conn} =
-        lv
-        |> form(~s{[action="/auth/user/password/sign_in?"]},
-          user: %{
-            strategy.identity_field => "some@email",
-            strategy.password_field => "some password"
+            strategy.identity_field => email,
+            strategy.password_field => password,
+            strategy.password_confirmation_field => password
           }
         )
         |> render_submit()
         |> follow_redirect(conn)
 
       assert html_response(conn, 200) =~ "Success"
-      assert get_session(conn, :user_token)
-      assert conn.assigns.current_user
+      assert Ash.CiString.value(conn.assigns.current_user.email) == email
     end
+
+    test "sign-in user with password", %{conn: conn} do
+      strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
+      email = "sign.in@email"
+      password = "sign.in.secret"
+      create_user!(strategy, email, password)
+      conn = sign_in_user(conn, strategy, email, password)
+
+      assert html_response(conn, 200) =~ "Success"
+      assert get_session(conn, :user) != nil
+      assert Ash.CiString.value(conn.assigns.current_user.email) == email
+    end
+
+    test "sign-out user", %{conn: conn} do
+      strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
+      email = "sign.out@email"
+      password = "sign.out.secret"
+      create_user!(strategy, email, password)
+
+      conn =
+        conn
+        |> sign_in_user(strategy, email, password)
+        |> get(~p"/sign-out")
+
+      assert html_response(conn, 200) =~ "Signed out"
+      assert get_session(conn, :user) == nil
+    end
+  end
+
+  defp sign_in_user(conn, strategy, email, password) do
+    {:ok, lv, _html} = live(conn, ~p"/sign-in")
+
+    {:ok, conn} =
+      lv
+      |> form(~s{[action="/auth/user/password/sign_in?"]},
+        user: %{
+          strategy.identity_field => email,
+          strategy.password_field => password
+        }
+      )
+      |> render_submit()
+      |> follow_redirect(conn)
+
+    conn
+  end
+
+  defp create_user!(strategy, email, password) do
+    Example.Accounts.User
+    |> Ash.Changeset.for_create(:register_with_password, %{
+      strategy.identity_field => email,
+      strategy.password_field => password,
+      strategy.password_confirmation_field => password
+    })
+    |> Ash.create!()
   end
 end
