@@ -86,7 +86,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, override_for(@overrides, :identity_input_label),
+      <%= label(@form, @identity_field, override_for(@overrides, :identity_input_label),
         class: override_for(@overrides, :label_class)
       ) %>
       <%= text_input(@form, @identity_field,
@@ -138,7 +138,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, override_for(@overrides, :password_input_label),
+      <%= label(@form, @password_field, override_for(@overrides, :password_input_label),
         class: override_for(@overrides, :label_class)
       ) %>
       <%= password_input(@form, @password_field,
@@ -189,7 +189,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, override_for(@overrides, :password_input_label),
+      <%= label(@form, @password_confirmation_field, override_for(@overrides, :password_input_label),
         class: override_for(@overrides, :label_class)
       ) %>
       <%= password_input(@form, @password_confirmation_field,
