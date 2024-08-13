@@ -47,6 +47,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           optional(:label) => String.t() | false,
           optional(:overrides) => [module],
           optional(:current_tenant) => String.t(),
+          optional(:context) => map(),
           optional(:auth_routes_prefix) => String.t()
         }
 
@@ -66,8 +67,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
           |> slugify(),
-        tenant: socket.assigns[:current_tenant],
-        context: %{strategy: strategy, private: %{ash_authentication?: true}}
+        tenant: assigns[:current_tenant],
+        context:
+          Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
+            strategy: strategy,
+            private: %{ash_authentication?: true}
+          })
       )
 
     socket =
@@ -78,6 +83,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
@@ -96,6 +102,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       <.form
         :let={form}
         for={@form}
+        id={@form.id}
         phx-change="change"
         phx-submit="submit"
         phx-trigger-action={@trigger_action}
@@ -115,6 +122,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
 
         <Password.Input.submit
           strategy={@strategy}
+          id={@form.id <> "-submit"}
           form={form}
           action={:sign_in}
           disable_text={override_for(@overrides, :disable_button_text)}

@@ -69,6 +69,7 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     plug :put_secure_browser_headers
 
     plug :load_from_session
+    plug :put_test_context
   end
 
   scope "/", AshAuthentication.Phoenix.Test do
@@ -108,6 +109,14 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     pipe_through(:browser)
 
     live("/", HomeLive, :index)
+  end
+
+  @doc false
+  def put_test_context(conn, _) do
+    case Application.get_env(:ash_authentication_phoenix, :test_context) do
+      nil -> conn
+      context -> Ash.PlugHelpers.set_context(conn, context)
+    end
   end
 end
 

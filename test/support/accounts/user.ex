@@ -6,6 +6,7 @@ defmodule Example.Accounts.User do
     domain: Example.Accounts
 
   require Logger
+  alias Ash.Error.Query.InvalidArgument
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
@@ -47,6 +48,22 @@ defmodule Example.Accounts.User do
 
         changeset
         |> Ash.Changeset.change_attribute(:email, user_info["email"])
+      end
+    end
+  end
+
+  preparations do
+    prepare fn query, _ ->
+      if query.action.name == :sign_in_with_password && query.context[:should_fail] do
+        Ash.Query.add_error(
+          query,
+          InvalidArgument.exception(
+            field: :email,
+            message: "I cant let you do that dave."
+          )
+        )
+      else
+        query
       end
     end
   end
@@ -111,10 +128,9 @@ defmodule Example.Accounts.User do
     tokens do
       enabled?(true)
       token_resource(Example.Accounts.Token)
+      store_all_tokens? true
 
-      signing_secret(fn _, _ ->
-        Application.fetch_env(:ash_authentication_phoenix, :signing_secret)
-      end)
+      signing_secret("fake_secret")
     end
   end
 

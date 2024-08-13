@@ -9,7 +9,7 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
   def call(conn, opts) do
     # ensure query params have been fetched
     conn = Plug.Conn.fetch_query_params(conn)
-
+  
     opts
     |> routes()
     |> Enum.reduce_while(

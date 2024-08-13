@@ -407,6 +407,8 @@ defmodule AshAuthentication.Phoenix.Router do
 
   @doc false
   def generate_session(conn, session) do
-    Map.put(session, "tenant", Ash.PlugHelpers.get_tenant(conn))
+    session
+    |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
+    |> Map.put("context", Ash.PlugHelpers.get_context(conn))
   end
 end

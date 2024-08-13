@@ -45,6 +45,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
           optional(:overrides) => [module],
           optional(:live_action) => :sign_in | :register,
           optional(:current_tenant) => String.t(),
+          optional(:context) => map(),
           optional(:auth_routes_prefix) => String.t()
         }
 
@@ -80,6 +81,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
@@ -158,6 +160,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
              before_submit: fn changeset ->
                changeset
                |> Ash.Changeset.set_context(%{token_type: :sign_in})
+               |> Ash.Changeset.set_context(socket.assigns[:context] || %{})
                |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
              end
            ) do
