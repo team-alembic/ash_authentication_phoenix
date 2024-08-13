@@ -35,7 +35,8 @@ defmodule DevWeb.Router do
 
     sign_in_route(
       path: "/sign-in",
-      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default],
+      auth_routes_prefix: "/auth"
     )
 
     auth_routes(AuthController, Example.Accounts.User)
