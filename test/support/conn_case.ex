@@ -1,4 +1,5 @@
 defmodule AshAuthentication.Phoenix.Test.ConnCase do
+  @moduledoc false
   use ExUnit.CaseTemplate
 
   using do
@@ -9,7 +10,8 @@ defmodule AshAuthentication.Phoenix.Test.ConnCase do
       use Phoenix.VerifiedRoutes,
         endpoint: @endpoint,
         router: AshAuthentication.Phoenix.Test.Router
-        #statics: ~w(assets fonts images favicon.ico robots.txt)
+
+      # statics: ~w(assets fonts images favicon.ico robots.txt)
 
       # Import conveniences for testing with connections
       import Plug.Conn

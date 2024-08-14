@@ -1,6 +1,9 @@
 defmodule AshAuthentication.Phoenix.Test.AuthView do
+  @moduledoc false
   use Phoenix.Component
 
-  def success(assigns), do:  ~H"<p>Success</p>"
-  def signed_out(assigns), do:  ~H"<p>Signed out</p>"
+  @doc false
+  def success(assigns), do: ~H"<p>Success</p>"
+  @doc false
+  def signed_out(assigns), do: ~H"<p>Signed out</p>"
 end
