@@ -1,5 +1,6 @@
 defmodule AshAuthentication.Phoenix.SignInTest do
   @moduledoc false
+
   use ExUnit.Case, async: false
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest

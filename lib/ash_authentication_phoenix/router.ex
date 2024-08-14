@@ -181,17 +181,20 @@ defmodule AshAuthentication.Phoenix.Router do
 
   Available options are:
 
-  * `path` the path under which to mount the sign-in live-view. Defaults to `"/sign-in"`.
+  * `path` the path under which to mount the sign-in live-view. Defaults to `"/sign-in"` within the current router scope.
   * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
     Allows disabling `helpers: true`.
+    If a tuple {:unscoped, path} is provided, the path prefix will not inherit the current route scope.
   * `register_path` - the path under which to mount the password strategy's registration live-view.
      If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
+     If a tuple {:unscoped, path} is provided, the registration path will not inherit the current route scope.
   * `reset_path` - the path under which to mount the password strategy's password reset live-view.
     If not set, and password reset is supported, password reset will use a dynamic toggle and will not be routeable to.
+    If a tuple {:unscoped, path} is provided, the reset path will not inherit the current route scope.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
   * `auth_routes_prefix` the prefix to use for the auth routes. Defaults to `"/auth"`.
-  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `as` which is used to prefix the generated `live_session` and `live` route name. Defaults to `:auth`.
   * `otp_app` the otp app or apps to find authentication resources in. Pulls from the socket by default.
   * `overrides` specify any override modules for customisation.  See
     `AshAuthentication.Phoenix.Overrides` for more information.
@@ -240,6 +243,8 @@ defmodule AshAuthentication.Phoenix.Router do
             mod -> mod
           end)
 
+        sign_in_path = Phoenix.Router.scoped_path(__MODULE__, unquote(path))
+
         register_path =
           case unquote(register_path) do
             nil -> nil
@@ -254,8 +259,12 @@ defmodule AshAuthentication.Phoenix.Router do
             value -> Phoenix.Router.scoped_path(__MODULE__, value)
           end
 
-        unquote(register_path) &&
-          Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
+        auth_routes_prefix =
+          case unquote(auth_routes_prefix) do
+            nil -> nil
+            {:unscoped, value} -> value
+            value -> Phoenix.Router.scoped_path(__MODULE__, value)
+          end
 
         live_session_opts = [
           session:
@@ -263,15 +272,11 @@ defmodule AshAuthentication.Phoenix.Router do
              [
                %{
                  "overrides" => unquote(overrides),
-                 "auth_routes_prefix" => unquote(auth_routes_prefix),
+                 "auth_routes_prefix" => auth_routes_prefix,
                  "otp_app" => unquote(otp_app),
-                 "path" => Phoenix.Router.scoped_path(__MODULE__, unquote(path)),
-                 "reset_path" =>
-                   unquote(reset_path) &&
-                     Phoenix.Router.scoped_path(__MODULE__, unquote(reset_path)),
-                 "register_path" =>
-                   unquote(register_path) &&
-                     Phoenix.Router.scoped_path(__MODULE__, unquote(register_path))
+                 "path" => sign_in_path,
+                 "reset_path" => reset_path,
+                 "register_path" => register_path
                }
              ]},
           on_mount: on_mount
@@ -286,17 +291,15 @@ defmodule AshAuthentication.Phoenix.Router do
               Keyword.put(live_session_opts, :layout, layout)
           end
 
-        live_session :sign_in, live_session_opts do
+        live_session :"#{unquote(as)}_sign_in", live_session_opts do
           live(unquote(path), unquote(live_view), :sign_in, as: unquote(as))
 
-          if unquote(reset_path) do
-            live(unquote(reset_path), unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
+          if reset_path do
+            live(reset_path, unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
           end
 
-          if unquote(register_path) do
-            live(unquote(register_path), unquote(live_view), :register,
-              as: :"#{unquote(as)}_register"
-            )
+          if register_path do
+            live(register_path, unquote(live_view), :register, as: :"#{unquote(as)}_register")
           end
         end
       end
@@ -337,7 +340,8 @@ defmodule AshAuthentication.Phoenix.Router do
       `AshAuthentication.Phoenix.Overrides` for more information. all other
       options are passed to the generated `scope`.
 
-  This is completely optional.
+  This is completely optional, in particular, if the `reset_path` option is passed to the
+  `sign_in_route` helper, using the `reset_route` helper is redundant.
   """
   @spec reset_route(
           opts :: [
@@ -394,7 +398,7 @@ defmodule AshAuthentication.Phoenix.Router do
               Keyword.put(live_session_opts, :layout, layout)
           end
 
-        live_session :reset, live_session_opts do
+        live_session :"#{unquote(as)}_reset", live_session_opts do
           live("/:token", unquote(live_view), :reset, as: unquote(as))
         end
       end

@@ -81,6 +81,30 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     auth_routes AuthController, Example.Accounts.User, path: "/auth"
   end
 
+  scope "/nested", AshAuthentication.Phoenix.Test do
+    pipe_through :browser
+
+    sign_in_route register_path: "/register",
+                  reset_path: "/reset",
+                  auth_routes_prefix: "/auth",
+                  as: :nested
+
+    sign_out_route AuthController
+    reset_route as: :nested
+  end
+
+  scope "/unscoped", AshAuthentication.Phoenix.Test do
+    pipe_through :browser
+
+    sign_in_route register_path: {:unscoped, "/register"},
+                  reset_path: {:unscoped, "/reset"},
+                  auth_routes_prefix: {:unscoped, "/auth"},
+                  as: :unscoped
+
+    sign_out_route AuthController
+    reset_route as: :unscoped
+  end
+
   scope "/", AshAuthentication.Phoenix.Test do
     pipe_through(:browser)
 
