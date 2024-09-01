@@ -7,7 +7,6 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
     dark_image_class: "Css class for the `img` tag in dark mode.",
     image_url: "A URL for the `img` `src` attribute. Set to `nil` to disable.",
     dark_image_url: "A URL for the `img` `src` attribute in dark mode. Set to `nil` to disable.",
-    image_class: "CSS class for the `img` tag in dark mode.",
     text_class: "CSS class for the text `div`.",
     text: "Banner text. Set to `nil` to disable."
 
