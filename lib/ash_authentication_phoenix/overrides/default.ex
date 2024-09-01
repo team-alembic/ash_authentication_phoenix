@@ -162,4 +162,17 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :icon_class, "-ml-0.4 mr-2 h-4 w-4"
   end
+
+  override Components.Apple do
+    set :root_class, "w-full mt-2 mb-4"
+
+    set :link_class, """
+    w-full flex justify-center px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-black focus:outline-none
+    focus:ring-2 focus:ring-offset-2 focus:ring-black inline-flex items-center
+    dark:bg-white dark:text-black dark:ring-white
+    """
+
+    set :icon_class, ""
+  end
 end
