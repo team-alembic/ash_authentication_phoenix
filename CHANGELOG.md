@@ -5,6 +5,41 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.2...v2.1.0) (2024-09-01)
+
+
+
+
+### Features:
+
+* Dynamic Router + compile time dependency fixes (#487)
+
+### Bug Fixes:
+
+* check strategy module instead of name
+
+* ensure path params are processed on strategy router
+
+* Re-link form labels and form inputs on Password strategy forms (#494)
+
+* Restore linkage between form inputs and form fields on Password strategy form
+
+* Use separate override labels for Password and Password Confirmation fields
+
+* only scope reset/register paths if they are set
+
+* Ensure session respects router scope when using sign_in_route helper (#490)
+
+### Improvements:
+
+* add button for the Apple strategy (#482)
+
+* add apple component
+
+* pass context down to all actions
+
+* create a new dynamic router, and avoid other compile time dependencies
+
 ## [v2.0.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.1...v2.0.2) (2024-08-05)
 
 
