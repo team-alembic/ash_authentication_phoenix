@@ -18,7 +18,7 @@ defmodule DevWeb.HomePageLive do
     <% else %>
       <h2>Please sign in</h2>
 
-      <.link navigate="/auth/sign-in">Standard sign in</.link>
+      <.link navigate="/sign-in">Standard sign in</.link>
       <br />
       <.link navigate={Routes.live_path(@socket, DevWeb.CustomSignInLive)}>Custom sign in</.link>
     <% end %>

@@ -27,7 +27,7 @@ defmodule DevWeb.Router do
     end
   end
 
-  scope "/auth", DevWeb do
+  scope "/", DevWeb do
     pipe_through :browser
 
     sign_out_route(AuthController, "/sign-out")

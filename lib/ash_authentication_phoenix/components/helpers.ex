@@ -34,7 +34,8 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
       if Code.ensure_loaded?(route_helpers) do
         route_helpers.auth_path(
           socket.endpoint,
-          {subject_name, AshAuthentication.Strategy.name(strategy), phase}
+          {subject_name, AshAuthentication.Strategy.name(strategy), phase},
+          params
         )
       else
         raise """

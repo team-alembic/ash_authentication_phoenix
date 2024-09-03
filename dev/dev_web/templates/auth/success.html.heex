@@ -1,2 +1,1 @@
-Welcome back <%= @current_user.email %>.
-<%= link("Home", to: Routes.live_path(@conn, DevWeb.HomePageLive)) %>
+Welcome back <%= @current_user.email %>. <%= link("Home", to: "/") %>
