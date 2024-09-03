@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.0...v2.1.1) (2024-09-03)
+
+
+
+
+### Bug Fixes:
+
+* ensure that params are sent when using route helpers
+
 ## [v2.1.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.0.2...v2.1.0) (2024-09-01)
 
 
