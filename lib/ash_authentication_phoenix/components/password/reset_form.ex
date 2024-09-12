@@ -89,7 +89,15 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
         phx-submit="submit"
         phx-change="change"
         phx-target={@myself}
-        action={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :reset_request)}
+        action={
+          auth_path(
+            @socket,
+            @subject_name,
+            @auth_routes_prefix,
+            @strategy,
+            :reset_request
+          )
+        }
         method="POST"
         class={override_for(@overrides, :form_class)}
       >

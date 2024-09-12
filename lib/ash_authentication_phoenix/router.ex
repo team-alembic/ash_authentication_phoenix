@@ -26,10 +26,10 @@ defmodule AshAuthentication.Phoenix.Router do
 
     scope "/", MyAppWeb do
       pipe_through :browser
-      sign_in_route
+      sign_in_route auth_routes_prefix: "/auth"
       sign_out_route AuthController
       auth_routes_for MyApp.Accounts.User, to: AuthController
-      reset_route
+      reset_route auth_routes_prefix: "/auth"
     end
   ```
   """
@@ -135,6 +135,8 @@ defmodule AshAuthentication.Phoenix.Router do
 
   If you are using any of the components provided by `AshAuthenticationPhoenix`, you will need to supply
   them with the `auth_routes_prefix` assign, set to the `path` you provide here (set to `/auth` by default).
+
+  You also will need to set `auth_routes_prefix` on the `reset_route`, i.e `reset_route(auth_routes_prefix: "/auth")`
 
   ## Options
 
@@ -360,6 +362,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -369,6 +372,13 @@ defmodule AshAuthentication.Phoenix.Router do
       |> Keyword.put_new(:alias, false)
 
     quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
       scope unquote(path), unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
@@ -385,7 +395,13 @@ defmodule AshAuthentication.Phoenix.Router do
         live_session_opts = [
           session:
             {AshAuthentication.Phoenix.Router, :generate_session,
-             [%{"overrides" => unquote(overrides), "otp_app" => unquote(otp_app)}]},
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "otp_app" => unquote(otp_app)
+               }
+             ]},
           on_mount: on_mount
         ]
 

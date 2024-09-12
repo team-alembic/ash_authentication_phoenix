@@ -377,7 +377,7 @@ defmodule ExampleWeb.Router do
     # Leave out `register_path` and `reset_path` if you don't want to support
     # user registration and/or password resets respectively.
     sign_in_route(register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth")
-    reset_route []
+    reset_route [auth_routes_prefix: "/auth"]
 
     # <-- add these lines
   end
@@ -431,7 +431,7 @@ Liveviews provided by AshAuthentication.Phoenix will use the same root layout co
 If you would like to use your own layout file instead, you can specify this as an option to the route helpers, eg.
 
 ```elixir
-reset_route(layout: {MyAppWeb, :live})
+reset_route(layout: {MyAppWeb, :live}, auth_routes_prefix: "/auth")
 ```
 
 ## AuthController

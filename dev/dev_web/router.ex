@@ -31,7 +31,7 @@ defmodule DevWeb.Router do
     pipe_through :browser
 
     sign_out_route(AuthController, "/sign-out")
-    reset_route()
+    reset_route(auth_routes_prefix: "/auth")
 
     sign_in_route(
       path: "/sign-in",

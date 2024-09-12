@@ -105,7 +105,15 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         phx-submit="submit"
         phx-trigger-action={@trigger_action}
         phx-target={@myself}
-        action={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :reset)}
+        action={
+          auth_path(
+            @socket,
+            @subject_name,
+            @auth_routes_prefix,
+            @strategy,
+            :reset
+          )
+        }
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
