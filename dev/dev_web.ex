@@ -74,7 +74,7 @@ defmodule DevWeb do
   @doc false
   def router do
     quote do
-      use Phoenix.Router, helpers: false
+      use Phoenix.Router, helpers: true
 
       import Plug.Conn
       import Phoenix.Controller
