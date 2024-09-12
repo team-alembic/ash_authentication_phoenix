@@ -9,7 +9,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       app: :ash_authentication_phoenix,
       version: @version,
       description: "Phoenix integration for Ash Authentication",
-      elixir: "~> 1.14",
+      elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       preferred_cli_env: [ci: :test],
       aliases: aliases(),
