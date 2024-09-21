@@ -1,79 +1,146 @@
 # Getting Started Ash Authentication Phoenix
 
-In this step-by-step tutorial we create a new empty `Example` Phoenix + Ash application which provides the functionality for authentication. For beginners it is the best to follow the tutorial in the given order. For more advanced users it is a good reference to pick and choose from.
+<!-- tabs-open -->
 
-We assumes that you have [Elixir](https://elixir-lang.org) version 1.14.x (check with `elixir -v`) and Phoenix 1.7 (check with `mix phx.new --version`) installed. We also assume that you have a [PostgreSQL](https://www.postgresql.org) database running which we use to persist the user data.
+### With Igniter
 
-## Green Field Phoenix Application
+This will also install `ash_authentication` if you haven't run that installer.
 
-We start with a new Phoenix application:
-
-```bash
-$ mix phx.new example
-$ cd example
+```sh
+mix igniter.install ash_authentication_phoenix
 ```
 
-## Basic Ash Setup
+If you'd like to see only the changes that `ash_authentication_phoenix` makes, you can run:
 
-### Application Dependencies
+```sh
+mix igniter.install ash_authentication
+# and then run
+mix igniter.install ash_authentication_phoenix
+```
 
-We need to add the following dependencies. Use `mix hex.info dependency_name` to get the latest version of each dependency.
+### Manual
 
-**mix.exs**
+#### Router Setup
+
+`ash_authentication_phoenix` includes several helper macros which can generate
+Phoenix routes for you. For that you need to add 6 lines in the router module or just replace the whole file with the following code:
+
+**lib/example_web/router.ex**
 
 ```elixir
-defmodule Example.MixProject do
-  use Mix.Project
-  # ...
+defmodule ExampleWeb.Router do
+  use ExampleWeb, :router
 
-    defp deps do
-    [
-      # ...
-      # add these lines -->
-      {:ash, "~> x.x"},
-      {:ash_authentication, "~> x.x"},
-      {:ash_authentication_phoenix, "~> x.x"},
-      {:ash_postgres, "~> x.x"},
-      {:picosat_elixir, "~> x.x"}
-      # <-- add these lines
-    ]
+  use AshAuthentication.Phoenix.Router # <-------- Add this line
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, {ExampleWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :load_from_session # <-------- Add this line
   end
-  # ...
+
+  pipeline :api do
+    plug :accepts, ["json"]
+    plug :load_from_bearer # <--------- Add this line
+  end
+
+  scope "/", ExampleWeb do
+    pipe_through :browser
+
+    get "/", PageController, :home
+
+    # add these lines -->
+
+    # Standard controller-backed routes
+    auth_routes AuthController, Example.Accounts.User, path: "/auth"
+    sign_out_route AuthController
+
+    # Prebuilt LiveViews for signing in, registration, resetting, etc.
+    # Leave out `register_path` and `reset_path` if you don't want to support
+    # user registration and/or password resets respectively.
+    sign_in_route(register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth")
+    reset_route [auth_routes_prefix: "/auth"]
+
+    # <-- add these lines
+  end
+
+  ...
+end
 ```
 
-Let's fetch everything:
+#### AuthController
 
-```bash
-$ mix deps.get
-```
+While running `mix phx.routes` you probably saw the warning message that the `ExampleWeb.AuthController.init/1 is undefined`. Let's fix that by creating a new controller:
 
-> ### Picosat installation issues? {: .info}
->
-> If you have trouble compiling `picosat_elixir`, then replace `{:picosat_elixir, "~> x.x"}` with `{:simple_sat, "~> x.x"}` to use a simpler (but mildly slower) solver. You can always switch back to `picosat_elixir` later once you're done with the tutorial.
-
-### Formatter
-
-We can make our life easier and the code more consistent by adding formatters to the project. We will use [Elixir's built-in formatter](https://hexdocs.pm/mix/Mix.Tasks.Format.html) for this.
-
-**.formatter.exs**
+**lib/example_web/controllers/auth_controller.ex**
 
 ```elixir
-[
-  import_deps: [
-    :phoenix,
-    # add these lines -->
-    :ash,
-    :ash_authentication,
-    :ash_authentication_phoenix,
-    :ash_postgres
-    # <-- add these lines
-    ],
-  plugins: [Phoenix.LiveView.HTMLFormatter],
-  inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}"]
-]
+defmodule ExampleWeb.AuthController do
+  use ExampleWeb, :controller
+  use AshAuthentication.Phoenix.Controller
+
+  def success(conn, _activity, user, _token) do
+    return_to = get_session(conn, :return_to) || ~p"/"
+
+    conn
+    |> delete_session(:return_to)
+    |> store_in_session(user)
+    # If your resource has a different name, update the assign name here (i.e :current_admin)
+    |> assign(:current_user, user)
+    |> redirect(to: return_to)
+  end
+
+  def failure(conn, _activity, _reason) do
+    conn
+    |> put_flash(:error, "Incorrect email or password")
+    |> redirect(to: ~p"/sign-in")
+  end
+
+  def sign_out(conn, _params) do
+    return_to = get_session(conn, :return_to) || ~p"/"
+
+    conn
+    |> clear_session()
+    |> redirect(to: return_to)
+  end
+end
 ```
 
-### Tailwind
+<!-- tabs-close -->
+
+## Generated routes
+
+Given the above configuration you should see the following in your routes:
+
+```
+# mix phx.routes
+
+Generated example app
+          auth_path  GET  /sign-in                               AshAuthentication.Phoenix.SignInLive :sign_in
+          auth_path  GET  /sign-out                              ExampleWeb.AuthController :sign_out
+          auth_path  *    /auth/user/password/register           ExampleWeb.AuthController {:user, :password, :register}
+          auth_path  *    /auth/user/password/sign_in            ExampleWeb.AuthController {:user, :password, :sign_in}
+          page_path  GET  /                                      ExampleWeb.PageController :home
+...
+```
+
+### Customizing the generated routes
+
+If you're integrating AshAuthentication into an existing app, you probably already have existing HTML layouts you want to use, to wrap the provided sign in/forgot password/etc. forms.
+
+Liveviews provided by AshAuthentication.Phoenix will use the same root layout configured in your router's `:browser` pipeline, but it includes its own layout file primarily for rendering flash messages.
+
+If you would like to use your own layout file instead, you can specify this as an option to the route helpers, eg.
+
+```elixir
+reset_route(layout: {MyAppWeb, :live}, auth_routes_prefix: "/auth")
+```
+
+## Tailwind
 
 If you plan on using our default [Tailwind](https://tailwindcss.com/)-based
 components without overriding them you will need to modify your
@@ -132,365 +199,10 @@ module.exports = {
 };
 ```
 
-## AshPostgres.Repo Setup
-
-We use [AshPostgres](https://hexdocs.pm/ash_postgres/AshPostgres.html) to handle the database tables for our application. We need to replace the content of the `Repo` module with the following code:
-
-**lib/example/repo.ex**
-
-```elixir
-defmodule Example.Repo do
-  use AshPostgres.Repo, otp_app: :example
-
-  def installed_extensions do
-    ["uuid-ossp", "citext", "ash-functions"]
-  end
-end
-```
-
-We have to configure the Repo in `config/config.exs`. While doing that we also configure other stuff which we need later.
-
-**config/config.exs**
-
-```elixir
-# ...
-
-import Config
-
-# add these lines -->
-config :example,
-  ash_domains: [Example.Accounts]
-# ...
-```
-
-We need to add `AshAuthentication.Supervisor` to the supervision tree in `lib/example/application.ex`:
-
-`** lib/example/application.ex **`
-
-```elixir
-defmodule Example.Application do
-  # ...
-
-  @impl true
-  def start(_type, _args) do
-    children = [
-      # ...
-      # add this line -->
-      {AshAuthentication.Supervisor, otp_app: :example}
-      # <-- add this line
-    ]
-  # ...
-```
-
-## Accounts Domain and Resources
-
-We need to create an `Accounts` domain in our application to provide a `User` and a `Token` resource. Strictly speaking we don't need the `Token` resource for just the login with a password. But we'll need it later (e.g. for the password reset) so we just create it now while we are here.
-
-Although we are using User in the example, you can name your resource anything you need, for instance Admin.
-The `current_*` assign will be inferred from it. User will make `current_user` available, Admin will make `current_admin` available.
-
-At the end we should have the following directory structure:
-
-```bash
-lib/example
-├── accounts
-|   ├── accounts.ex
-|   ├── secrets.ex
-│   ├── token.ex
-|   └── user.ex
-...
-```
-
-**lib/example/accounts/user.ex**
-
-```elixir
-defmodule Example.Accounts.User do
-  use Ash.Resource,
-    domain: Example.Accounts,
-    data_layer: AshPostgres.DataLayer,
-    # If using policies, enable the policy authorizer:
-    # authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication]
-
-  attributes do
-    uuid_primary_key :id
-
-    attribute :email, :ci_string do
-      allow_nil? false
-      public? true
-    end
-
-    attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
-  end
-
-  authentication do
-    strategies do
-      password :password do
-        identity_field :email
-      end
-    end
-
-    tokens do
-      enabled? true
-      token_resource Example.Accounts.Token
-      signing_secret Example.Accounts.Secrets
-    end
-  end
-
-  postgres do
-    table "users"
-    repo Example.Repo
-  end
-
-  identities do
-    identity :unique_email, [:email]
-  end
-
-  # If using policies, add the following bypass:
-  # policies do
-  #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
-  #     authorize_if always()
-  #   end
-  # end
-end
-```
-
-**lib/example/accounts/secrets.ex**
-
-```elixir
-defmodule Example.Accounts.Secrets do
-  use AshAuthentication.Secret
-
-
-  def secret_for([:authentication, :tokens, :signing_secret], Example.Accounts.User, _) do
-    case Application.fetch_env(:example, ExampleWeb.Endpoint) do
-      {:ok, endpoint_config} ->
-        Keyword.fetch(endpoint_config, :secret_key_base)
-      :error ->
-        :error
-    end
-  end
-end
-```
-
-**lib/example/accounts/token.ex**
-
-```elixir
-defmodule Example.Accounts.Token do
-  use Ash.Resource,
-    domain: Example.Accounts,
-    data_layer: AshPostgres.DataLayer,
-    # If using policies, enable the policy authorizer:
-    # authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication.TokenResource]
-
-  postgres do
-    table "tokens"
-    repo Example.Repo
-  end
-
-  # If using policies, add the following bypass:
-  # policies do
-  #   bypass AshAuthentication.Checks.AshAuthenticationInteraction do
-  #     authorize_if always()
-  #   end
-  # end
-end
-```
-
-**lib/example/accounts/accounts.ex**
-
-```elixir
-defmodule Example.Accounts do
-  use Ash.Domain
-
-  resources do
-    resource Example.Accounts.User
-    resource Example.Accounts.Token
-  end
-end
-```
-
-### Add to config
-
-Although mentioned in a step at the top, a common mistake here is not to add the new domain into your `ash_domains` config in `config/config.exs`. It should look like this:
-
-```elixir
-config :example,
-  ash_domains: [..., Example.Accounts]
-```
-
-### Create and Migration
-
-Now is a good time to create the database and run the migrations. You have to use specific `ash_postgres` mix tasks for that:
-
-```bash
-$ mix ash_postgres.create
-$ mix ash_postgres.generate_migrations --name add_user_and_token
-$ mix ash_postgres.migrate
-```
-
-> In case you want to drop the database and start over again during development you can use `mix ash_postgres.drop` followed by `mix ash_postgres.create` and `mix ash_postgres.migrate`.
-
-## Router Setup
-
-`ash_authentication_phoenix` includes several helper macros which can generate
-Phoenix routes for you. For that you need to add 6 lines in the router module or just replace the whole file with the following code:
-
-**lib/example_web/router.ex**
-
-```elixir
-defmodule ExampleWeb.Router do
-  use ExampleWeb, :router
-  # Add this line
-  use AshAuthentication.Phoenix.Router
-
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, {ExampleWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-    # Add the next line
-    plug :load_from_session
-  end
-
-  pipeline :api do
-    plug :accepts, ["json"]
-    # Add the next line
-    plug :load_from_bearer
-  end
-
-  scope "/", ExampleWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-
-    # add these lines -->
-
-    # Standard controller-backed routes
-    auth_routes AuthController, Example.Accounts.User, path: "/auth"
-    sign_out_route AuthController
-
-    # Prebuilt LiveViews for signing in, registration, resetting, etc.
-    # Leave out `register_path` and `reset_path` if you don't want to support
-    # user registration and/or password resets respectively.
-    sign_in_route(register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth")
-    reset_route [auth_routes_prefix: "/auth"]
-
-    # <-- add these lines
-  end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", ExampleWeb do
-  #   pipe_through :api
-  # end
-
-  # Enable LiveDashboard and Swoosh mailbox preview in development
-  if Application.compile_env(:example, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
-
-    scope "/dev" do
-      pipe_through :browser
-
-      live_dashboard "/dashboard", metrics: ExampleWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
-  end
-end
-```
-
-### Generated routes
-
-Given the above configuration you should see the following in your routes:
-
-```
-# mix phx.routes
-
-Generated example app
-          auth_path  GET  /sign-in                               AshAuthentication.Phoenix.SignInLive :sign_in
-          auth_path  GET  /sign-out                              ExampleWeb.AuthController :sign_out
-          auth_path  *    /auth/user/password/register           ExampleWeb.AuthController {:user, :password, :register}
-          auth_path  *    /auth/user/password/sign_in            ExampleWeb.AuthController {:user, :password, :sign_in}
-          page_path  GET  /                                      ExampleWeb.PageController :home
-...
-```
-
-### Customizing the generated routes
-
-If you're integrating AshAuthentication into an existing app, you probably already have existing HTML layouts you want to use, to wrap the provided sign in/forgot password/etc. forms.
-
-Liveviews provided by AshAuthentication.Phoenix will use the same root layout configured in your router's `:browser` pipeline, but it includes its own layout file primarily for rendering flash messages.
-
-If you would like to use your own layout file instead, you can specify this as an option to the route helpers, eg.
-
-```elixir
-reset_route(layout: {MyAppWeb, :live}, auth_routes_prefix: "/auth")
-```
-
-## AuthController
-
-While running `mix phx.routes` you probably saw the warning message that the `ExampleWeb.AuthController.init/1 is undefined`. Let's fix that by creating a new controller:
-
-**lib/example_web/controllers/auth_controller.ex**
-
-```elixir
-defmodule ExampleWeb.AuthController do
-  use ExampleWeb, :controller
-  use AshAuthentication.Phoenix.Controller
-
-  def success(conn, _activity, user, _token) do
-    return_to = get_session(conn, :return_to) || ~p"/"
-
-    conn
-    |> delete_session(:return_to)
-    |> store_in_session(user)
-    # If your resource has a different name, update the assign name here (i.e :current_admin)
-    |> assign(:current_user, user)
-    |> redirect(to: return_to)
-  end
-
-  def failure(conn, _activity, _reason) do
-    conn
-    |> put_flash(:error, "Incorrect email or password")
-    |> redirect(to: ~p"/sign-in")
-  end
-
-  def sign_out(conn, _params) do
-    return_to = get_session(conn, :return_to) || ~p"/"
-
-    conn
-    |> clear_session()
-    |> redirect(to: return_to)
-  end
-end
-```
-
-**lib/example_web/controllers/auth_html.ex**
-
-```elixir
-defmodule ExampleWeb.AuthHTML do
-  use ExampleWeb, :html
-
-  embed_templates "auth_html/*"
-end
-```
-
-**lib/example_web/controllers/auth_html/failure.html.heex**
-
-```html
-<h1 class="text-2xl">Authentication Error</h1>
-```
-
 ## Example home.html.heex
 
-To see how the authentication works we replace the default Phoenix `home.html.eex` with a minimal example which has a top navbar. On the right side it shows the `@current_user` and a sign out button. If you are not signed in you will see a sign in button.
+If you've just created your application, you can replace the default Phoenix `home.html.eex` with a minimal example which has a top navbar.
+On the right side it shows the `@current_user` and a sign out button. If you are not signed in you will see a sign in button.
 
 **lib/example_web/controllers/page_html/home.html.heex**
 
