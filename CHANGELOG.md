@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.1...v2.1.2) (2024-09-23)
+
+
+
+
+### Bug Fixes:
+
+* apply `auth_routes_prefix` logic to `reset_route` as well
+
 ## [v2.1.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.0...v2.1.1) (2024-09-03)
 
 
