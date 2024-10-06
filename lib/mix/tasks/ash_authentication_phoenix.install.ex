@@ -292,17 +292,11 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
             """)
 
           if run_installer? do
-            install_ash_authentication(igniter, argv)
+            Igniter.compose_task(igniter, "ash_authentication.install", argv)
           else
             igniter
           end
         end
     end
-  end
-
-  defp install_ash_authentication(igniter, argv) do
-    igniter
-    |> Igniter.apply_and_fetch_dependencies(error_on_abort?: true)
-    |> Igniter.compose_task("ash_authentication.install", argv)
   end
 end
