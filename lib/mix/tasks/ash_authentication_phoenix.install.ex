@@ -302,7 +302,6 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
 
   defp install_ash_authentication(igniter, argv) do
     igniter
-    |> Igniter.Project.Deps.add_dep({:bcrypt_elixir, "~> 3.0"})
     |> Igniter.apply_and_fetch_dependencies(error_on_abort?: true)
     |> Igniter.compose_task("ash_authentication.install", argv)
   end
