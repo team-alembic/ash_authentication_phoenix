@@ -1,3 +1,5 @@
+# credo:disable-for-this-file Credo.Check.Design.AliasUsage
+# credo:disable-for-this-file Credo.Check.Readability.TrailingWhiteSpace
 defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
   use Igniter.Mix.Task
 

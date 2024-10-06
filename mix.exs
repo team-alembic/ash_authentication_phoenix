@@ -143,11 +143,12 @@ defmodule AshAuthentication.Phoenix.MixProject do
       ci: [
         "format --check-formatted",
         "doctor --full --raise",
-        "credo --strict",
+        "credo",
         "dialyzer",
         "hex.audit",
         "test"
       ],
+      credo: "credo --strict",
       docs: ["docs", "spark.replace_doc_links"]
     ]
   end
