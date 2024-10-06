@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.2...v2.1.3) (2024-10-06)
+
+
+
+
+### Improvements:
+
+* `mix igniter.install ash_authentication_phoenix` (#504)
+
 ## [v2.1.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.1...v2.1.2) (2024-09-23)
 
 
