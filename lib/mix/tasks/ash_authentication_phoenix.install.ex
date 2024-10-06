@@ -28,13 +28,15 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
       schema: [
         accounts: :string,
         user: :string,
-        token: :string
+        token: :string,
+        yes: :boolean
       ],
       composes: ["ash_authentication.install"],
       aliases: [
         a: :accounts,
         u: :user,
-        t: :token
+        t: :token,
+        y: :yes
       ]
     }
   end
@@ -62,7 +64,9 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
     igniter =
       if install? do
         igniter
-        |> install_ash_authentication(argv)
+        |> Igniter.Project.Deps.add_dep({:ash_authentication, "~> 4.1"}, yes: options[:yes])
+        |> Igniter.apply_and_fetch_dependencies(error_on_abort?: true, yes: options[:yes])
+        |> Igniter.compose_task("ash_authentication.install", argv)
       else
         igniter
       end
