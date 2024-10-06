@@ -92,7 +92,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
         sign_out_route AuthController
 
         # Remove these if you'd like to use your own authentication views
-        sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect web_module}.LiveUserAuth, :live_no_user}]
+        sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}]
 
         # Remove this if you do not want to use the reset password feature
         reset_route auth_routes_prefix: "/auth"
@@ -162,7 +162,6 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
     Igniter.Project.Module.create_module(
       igniter,
       Igniter.Libs.Phoenix.web_module_name(igniter, "LiveUserAuth"),
-
       """
       @moduledoc \"\"\"
       Helpers for authenticating users in LiveViews.
@@ -201,7 +200,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
   defp create_auth_controller(igniter) do
     Igniter.Project.Module.create_module(
       igniter,
-      Igniter.Libs.Phoenix.web_module_name(igniter, AuthController),
+      Igniter.Libs.Phoenix.web_module_name(igniter, "AuthController"),
       """
       use #{inspect(Igniter.Libs.Phoenix.web_module(igniter))}, :controller
       use AshAuthentication.Phoenix.Controller
@@ -261,11 +260,11 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
 
   defp warn_on_missing_modules(igniter, options, argv, install?) do
     with {:accounts, {true, igniter}} <-
-           {:accounts, Igniter.Project.Module.module_exists?(igniter, options[:accounts])},
+           {:accounts, Igniter.Project.Module.module_exists(igniter, options[:accounts])},
          {:user, {true, igniter}} <-
-           {:user, Igniter.Project.Module.module_exists?(igniter, options[:user])},
+           {:user, Igniter.Project.Module.module_exists(igniter, options[:user])},
          {:token, {true, igniter}} <-
-           {:token, Igniter.Project.Module.module_exists?(igniter, options[:token])} do
+           {:token, Igniter.Project.Module.module_exists(igniter, options[:token])} do
       igniter
     else
       {type, {false, igniter}} ->
