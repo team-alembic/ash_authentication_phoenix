@@ -272,6 +272,11 @@ On the right side it shows the `@current_user` and a sign out button. If you are
 If you are using LiveView, jump over to the [Use AshAuthentication with LiveView](/documentation/tutorials/liveview.md)
 section and set up your LiveView routes for `AshAuthentication`. Once that is done, you can proceed with the following steps.
 
+### Configure strategies
+
+By default, no strategies are included. See the [getting started guide](https://hexdocs.pm/ash_authentication/get-started.html) in
+`AshAuthentication` for more on setting up individual authentication strategies.
+
 ### Start Phoenix
 
 You can now start Phoenix and visit
