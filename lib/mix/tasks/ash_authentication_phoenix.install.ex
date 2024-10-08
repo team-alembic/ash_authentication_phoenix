@@ -65,7 +65,13 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
       if install? do
         igniter
         |> Igniter.Project.Deps.add_dep({:ash_authentication, "~> 4.1"}, yes: options[:yes])
-        |> Igniter.apply_and_fetch_dependencies(error_on_abort?: true, yes: options[:yes])
+        |> then(fn igniter ->
+          if igniter.assigns[:test_mode?] do
+            igniter
+          else
+            Igniter.apply_and_fetch_dependencies(igniter, error_on_abort?: true, yes: options[:yes])
+          end
+        end)
         |> Igniter.compose_task("ash_authentication.install", argv)
       else
         igniter
@@ -79,6 +85,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
 
     if router do
       web_module = Igniter.Libs.Phoenix.web_module(igniter)
+      overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
 
       igniter
       |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
@@ -87,6 +94,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
       |> explain_tailwind_changes()
       |> use_authentication_phoenix_router(router)
       |> create_auth_controller()
+      |> create_overrides_module(overrides)
       |> Igniter.Libs.Phoenix.append_to_pipeline(:browser, "plug :load_from_session",
         router: router
       )
@@ -98,7 +106,8 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
         sign_out_route AuthController
 
         # Remove these if you'd like to use your own authentication views
-        sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}]
+        sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
+          overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
 
         # Remove this if you do not want to use the reset password feature
         reset_route auth_routes_prefix: "/auth"
@@ -116,6 +125,29 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
       Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
       """)
     end
+  end
+
+  defp create_overrides_module(igniter, name) do
+    Igniter.Project.Module.create_module(igniter, name, """
+    use AshAuthentication.Phoenix.Overrides
+
+    # configure your UI overrides here
+
+    # First argument to `override` is the component name you are overriding.
+    # The body contains any number of configurations you wish to override
+    # Below are some examples
+
+    # For a complete reference, see https://hexdocs.pm/ash_authentication_phoenix/ui-overrides.html
+
+    # override AshAuthentication.Phoenix.Components.Banner do
+    #   set :image_url, "https://media.giphy.com/media/g7GKcSzwQfugw/giphy.gif"
+    #   set :text_class, "bg-red-500"
+    # end
+
+    # override AshAuthentication.Phoenix.Components.SignIn do
+    #  set :show_banner false
+    # end
+    """)
   end
 
   defp setup_live_view(igniter, router, web_module) do

@@ -18,6 +18,9 @@ mix igniter.install ash_authentication
 mix igniter.install ash_authentication_phoenix
 ```
 
+See the [AshAuthentication getting started guide](https://hexdocs.pm/ash_authentication/get-started.html) for information
+on how to add strategies and configure `AshAuthentication` if you have not already.
+
 ### Manual
 
 #### Router Setup

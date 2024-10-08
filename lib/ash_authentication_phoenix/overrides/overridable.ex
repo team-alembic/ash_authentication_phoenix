@@ -26,6 +26,11 @@ defmodule AshAuthentication.Phoenix.Overrides.Overridable do
       @overrides unquote(overrides)
       import Overrides.Overridable, only: :macros
 
+      if hd(Module.split(__MODULE__)) == "AshAuthentication" and
+           __MODULE__ not in AshAuthenticationPhoenix.Overrides.List.overridable() do
+        raise "#{inspect(__MODULE__)} must be present in `AshAuthentication.Overrides.List` to be used as an overridable component."
+      end
+
       @doc false
       @impl true
       @spec __overrides__ :: %{required(atom) => binary}

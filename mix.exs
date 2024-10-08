@@ -25,9 +25,9 @@ defmodule AshAuthentication.Phoenix.MixProject do
         main: "readme",
         extras: [
           "README.md",
-          "documentation/tutorials/get-started.md",
-          "documentation/tutorials/liveview.md",
-          "documentation/tutorials/ui-overrides.md"
+          {"documentation/tutorials/get-started.md", title: "Get Started"},
+          {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
+          {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"}
         ],
         groups_for_extras: [
           Tutorials: ~r'documentation/tutorials',
@@ -149,7 +149,12 @@ defmodule AshAuthentication.Phoenix.MixProject do
         "test"
       ],
       credo: "credo --strict",
-      docs: ["docs", "spark.replace_doc_links"]
+      docs: [
+        "compile",
+        fn _ -> AshAuthenticationPhoenix.Overrides.List.write_docs!() end,
+        "docs",
+        "spark.replace_doc_links"
+      ]
     ]
   end
 
