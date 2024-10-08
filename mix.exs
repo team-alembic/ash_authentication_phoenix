@@ -149,6 +149,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
         "test"
       ],
       credo: "credo --strict",
+      sobelow: "sobelow --skip",
       docs: [
         "compile",
         fn _ -> AshAuthenticationPhoenix.Overrides.List.write_docs!() end,

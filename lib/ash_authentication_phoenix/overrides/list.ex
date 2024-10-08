@@ -39,7 +39,7 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
   @overrides_start_comment "<!-- override-docs-begin -->"
   @overrides_end_comment "<!-- override-docs-end -->"
 
-  @spec overridable() :: Keyword.t()
+  @spec overridable() :: list(module())
   @doc false
   def overridable, do: @overrides
 
