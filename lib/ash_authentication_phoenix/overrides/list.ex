@@ -39,8 +39,13 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
   @overrides_start_comment "<!-- override-docs-begin -->"
   @overrides_end_comment "<!-- override-docs-end -->"
 
+  @spec overridable() :: Keyword.t()
+  @doc false
   def overridable, do: @overrides
 
+  # sobelow_skip ["Traversal.FileModule"]
+  @spec write_docs! :: :ok
+  @doc false
   def write_docs! do
     [prelude, _ | rest] =
       @overrides_file
@@ -53,7 +58,7 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
     |> then(&File.write!(@overrides_file, &1))
   end
 
-  def override_docs() do
+  defp override_docs do
     Enum.map_join(@categorized_overrides, "\n", fn {category, overrides} ->
       "## #{category}\n#{Enum.map_join(overrides, "\n", &override_doc/1)}"
     end)

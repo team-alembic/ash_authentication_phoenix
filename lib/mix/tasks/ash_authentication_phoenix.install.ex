@@ -65,12 +65,15 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
       if install? do
         igniter
         |> Igniter.Project.Deps.add_dep({:ash_authentication, "~> 4.1"}, yes: options[:yes])
-        |> then(fn igniter ->
-          if igniter.assigns[:test_mode?] do
+        |> then(fn
+          %{assigns: %{test_mode?: true}} = igniter ->
             igniter
-          else
-            Igniter.apply_and_fetch_dependencies(igniter, error_on_abort?: true, yes: options[:yes])
-          end
+
+          igniter ->
+            Igniter.apply_and_fetch_dependencies(igniter,
+              error_on_abort?: true,
+              yes: options[:yes]
+            )
         end)
         |> Igniter.compose_task("ash_authentication.install", argv)
       else
