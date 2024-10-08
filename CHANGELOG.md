@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.3...v2.1.4) (2024-10-08)
+
+
+
+
+### Improvements:
+
+* generate overrides module in installer
+
 ## [v2.1.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.2...v2.1.3) (2024-10-06)
 
 
