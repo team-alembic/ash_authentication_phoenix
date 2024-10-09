@@ -35,6 +35,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
   import Slug
+  require Logger
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
@@ -127,6 +128,15 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
         |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
       end
     )
+    |> case do
+      {:ok, _result} ->
+        :ok
+
+      {:error, form} ->
+        Logger.warning(
+          "Error sending magic link email\n\n#{inspect(AshPhoenix.Form.errors(form, for_path: :all), pretty: true)}"
+        )
+    end
 
     flash = override_for(socket.assigns.overrides, :request_flash_text)
 
