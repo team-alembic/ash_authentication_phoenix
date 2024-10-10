@@ -11,7 +11,7 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.Password.RegisterForm,
       AshAuthentication.Phoenix.Components.Password.SignInForm
     ],
-    "Passoword Reset": [
+    "Password Reset": [
       AshAuthentication.Phoenix.ResetLive,
       AshAuthentication.Phoenix.Components.Reset,
       AshAuthentication.Phoenix.Components.Reset.Form,
