@@ -5,6 +5,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.4...v2.1.5) (2024-10-11)
+
+
+
+
+### Improvements:
+
+* recommend a single ash_authentication_live_session in installer
+
+* log a warning on failure to create a magic link
+
 ## [v2.1.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.3...v2.1.4) (2024-10-08)
 
 
