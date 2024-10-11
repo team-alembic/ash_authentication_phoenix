@@ -178,19 +178,17 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
           igniter,
           "/",
           """
-          ash_authentication_live_session :authentication_required,
-            on_mount: {#{inspect(web_module)}.LiveUserAuth, :live_user_required} do
-            # Put live routes that require a user to be logged in here
-          end
-
-          ash_authentication_live_session :authentication_optional,
-            on_mount: {#{inspect(web_module)}.LiveUserAuth, :live_user_optional} do
-            # Put live routes that allow a user to be logged in *or* logged out here
-          end
-
-          ash_authentication_live_session :authentication_rejected,
-            on_mount: {#{inspect(web_module)}.LiveUserAuth, :live_no_user} do
-            # Put live routes that a user who is logged in should never see here
+          ash_authentication_live_session :authenticated_routes do
+            # in each liveview, add one of the following at the top of the module:
+            #
+            # If an authenticated user must be present:
+            # on_mount {#{inspect(web_module)}.LiveUserAuth, :live_user_required}
+            #
+            # If an authenticated user *may* be present:
+            # on_mount {#{inspect(web_module)}.LiveUserAuth, :live_user_optional}
+            #
+            # If an authenticated user must *not* be present:
+            # on_mount {#{inspect(web_module)}.LiveUserAuth, :live_no_user}
           end
           """,
           arg2: Igniter.Libs.Phoenix.web_module(igniter),
