@@ -56,7 +56,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
-    api = Info.authentication_domain!(strategy.resource)
+    domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     resettable = strategy.resettable
@@ -64,7 +64,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
     form =
       strategy.resource
       |> Form.for_action(strategy.resettable.password_reset_action_name,
-        api: api,
+        domain: domain,
         as: subject_name |> to_string(),
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.password_reset_action_name}"

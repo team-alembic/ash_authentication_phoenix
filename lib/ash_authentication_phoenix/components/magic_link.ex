@@ -123,12 +123,20 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     socket.assigns.form
     |> Form.validate(params)
     |> Form.submit(
-      before_submit: fn changeset ->
-        changeset
-        |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
+      before_submit: fn
+        %Ash.Query{} = query ->
+          query
+          |> Ash.Query.set_tenant(socket.assigns.current_tenant)
+
+        %Ash.ActionInput{} = action_input ->
+          action_input
+          |> Ash.ActionInput.set_tenant(socket.assigns.current_tenant)
       end
     )
     |> case do
+      :ok ->
+        :ok
+
       {:ok, _result} ->
         :ok
 
@@ -166,12 +174,12 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   end
 
   defp blank_form(strategy, context) do
-    api = Info.authentication_domain!(strategy.resource)
+    domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     strategy.resource
     |> Form.for_action(strategy.request_action_name,
-      api: api,
+      domain: domain,
       as: subject_name |> to_string(),
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}" |> slugify(),

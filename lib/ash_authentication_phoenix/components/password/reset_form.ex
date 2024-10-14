@@ -177,12 +177,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   end
 
   defp blank_form(%{resettable: resettable} = strategy, context) when not is_nil(resettable) do
-    api = Info.authentication_domain!(strategy.resource)
+    domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     strategy.resource
     |> Form.for_action(resettable.request_password_reset_action_name,
-      api: api,
+      domain: domain,
       as: subject_name |> to_string(),
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.request_password_reset_action_name}"
