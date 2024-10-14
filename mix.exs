@@ -121,7 +121,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:phoenix, "~> 1.6"},
       {:bcrypt_elixir, "~> 3.0"},
       {:slugify, "~> 1.3"},
-      {:igniter, "~> 0.3 and >= 0.3.39"},
+      {:igniter, "~> 0.3 and >= 0.3.62"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},
