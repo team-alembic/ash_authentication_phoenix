@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.6...v2.1.7) (2024-10-14)
+
+
+
+
+### Improvements:
+
+* set a `group` on install task
+
 ## [v2.1.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.5...v2.1.6) (2024-10-14)
 
 
