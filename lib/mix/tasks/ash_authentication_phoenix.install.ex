@@ -25,6 +25,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
   def info(_argv, _composing_task) do
     %Igniter.Mix.Task.Info{
       example: @example,
+      group: :ash,
       schema: [
         accounts: :string,
         user: :string,
