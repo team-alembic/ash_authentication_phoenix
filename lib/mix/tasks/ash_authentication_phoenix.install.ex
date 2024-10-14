@@ -58,6 +58,9 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
       |> Keyword.put_new_lazy(:token, fn ->
         Module.concat(options[:accounts], Token)
       end)
+      |> module_option(:user)
+      |> module_option(:accounts)
+      |> module_option(:token)
 
     install? =
       !Igniter.Project.Deps.get_dependency_declaration(igniter, :ash_authentication)
@@ -311,7 +314,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
         if install? do
           Igniter.add_issue(
             igniter,
-            "Could not find #{type} module. Something went wrong with installing ash_authentication."
+            "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
           )
         else
           run_installer? =
@@ -335,6 +338,16 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
             igniter
           end
         end
+    end
+  end
+
+  defp module_option(opts, name) do
+    case Keyword.fetch(opts, name) do
+      {:ok, value} when is_binary(value) ->
+        Keyword.put(opts, name, Igniter.Code.Module.parse(value))
+
+      _ ->
+        opts
     end
   end
 end
