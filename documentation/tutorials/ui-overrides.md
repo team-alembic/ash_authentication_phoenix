@@ -134,7 +134,7 @@ Generates a default sign in form.
   * `:label_class` - CSS class for the `h2` element.
 
 
-## Passoword Reset
+## Password Reset
 ### `AshAuthentication.Phoenix.ResetLive`
 
 A generic, white-label password reset page.
