@@ -71,13 +71,13 @@ Renders sign in mark-up for an authenticated resource.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:authentication_error_container_class` - CSS class for the container for the text of the authentication error.
-
-  * `:authentication_error_text_class` - CSS class for the authentication error text.
+  * `:strategy_class` - CSS class for a `div` surrounding each strategy component.
 
   * `:show_banner` - Whether or not to show the banner.
 
-  * `:strategy_class` - CSS class for a `div` surrounding each strategy component.
+  * `:authentication_error_container_class` - CSS class for the container for the text of the authentication error.
+
+  * `:authentication_error_text_class` - CSS class for the authentication error text.
 
 
 ## Password Sign-in
@@ -87,21 +87,21 @@ Generates sign in, registration and reset forms for a resource.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:hide_class` - CSS class to apply to hide an element.
-
-  * `:show_first` - The form to show on first load.  Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
 
   * `:interstitial_class` - CSS class for the `div` element between the form and the button.
+
+  * `:toggler_class` - CSS class for the toggler `a` element.
+
+  * `:sign_in_toggle_text` - Toggle text to display when the sign in form is not showing (or `nil` to disable).
 
   * `:register_toggle_text` - Toggle text to display when the register form is not showing (or `nil` to disable).
 
   * `:reset_toggle_text` - Toggle text to display when the reset form is not showing (or `nil` to disable).
 
-  * `:sign_in_toggle_text` - Toggle text to display when the sign in form is not showing (or `nil` to disable).
+  * `:show_first` - The form to show on first load.  Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.
 
-  * `:slot_class` - CSS class for the `div` surrounding the slot.
-
-  * `:toggler_class` - CSS class for the toggler `a` element.
+  * `:hide_class` - CSS class to apply to hide an element.
 
 
 ### `AshAuthentication.Phoenix.Components.Password.RegisterForm`
@@ -110,13 +110,13 @@ Generates a default registration form.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:slot_class` - CSS class for the `div` surrounding the slot.
-
-  * `:disable_button_text` - Text for the submit button when the request is happening.
+  * `:label_class` - CSS class for the `h2` element.
 
   * `:form_class` - CSS class for the `form` element.
 
-  * `:label_class` - CSS class for the `h2` element.
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
 
 
 ### `AshAuthentication.Phoenix.Components.Password.SignInForm`
@@ -125,13 +125,13 @@ Generates a default sign in form.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:slot_class` - CSS class for the `div` surrounding the slot.
-
-  * `:disable_button_text` - Text for the submit button when the request is happening.
+  * `:label_class` - CSS class for the `h2` element.
 
   * `:form_class` - CSS class for the `form` element.
 
-  * `:label_class` - CSS class for the `h2` element.
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
 
 
 ## Password Reset
@@ -150,9 +150,9 @@ Renders a password-reset form.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:show_banner` - Whether or not to show the banner.
-
   * `:strategy_class` - CSS class for a `div` surrounding each strategy component.
+
+  * `:show_banner` - Whether or not to show the banner.
 
 
 ### `AshAuthentication.Phoenix.Components.Reset.Form`
@@ -161,11 +161,11 @@ Generates a default password reset form.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:disable_button_text` - Text for the submit button when the request is happening.
+  * `:label_class` - CSS class for the `h2` element.
 
   * `:form_class` - CSS class for the `form` element.
 
-  * `:label_class` - CSS class for the `h2` element.
+  * `:disable_button_text` - Text for the submit button when the request is happening.
 
   * `:spacer_class` - CSS classes for space between the password input and submit elements.
 
@@ -176,13 +176,13 @@ Generates a default password reset form.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:slot_class` - CSS class for the `div` surrounding the slot.
-
-  * `:disable_button_text` - Text for the submit button when the request is happening.
+  * `:label_class` - CSS class for the `h2` element.
 
   * `:form_class` - CSS class for the `form` element.
 
-  * `:label_class` - CSS class for the `h2` element.
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
 
   * `:reset_flash_text` - Text for the flash message when a request is received.  Set to `nil` to disable.
 
@@ -195,25 +195,25 @@ authentication.
 
   * `:label_class` - CSS class for `label` elements.
 
-  * `:input_class` - CSS class for text/password `input` elements.
-
-  * `:error_li` - CSS class for the `li` elements on error lists.
-
-  * `:error_ul` - CSS class for the `ul` element on error lists.
-
   * `:field_class` - CSS class for `div` elements surrounding the fields.
+
+  * `:input_class` - CSS class for text/password `input` elements.
 
   * `:identity_input_label` - Label for identity field.
 
-  * `:input_class_with_error` - CSS class for text/password `input` elements when there is a validation error.
-
-  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
+  * `:password_input_label` - Label for password field.
 
   * `:password_confirmation_input_label` - Label for password confirmation field.
 
-  * `:password_input_label` - Label for password field.
+  * `:input_class_with_error` - CSS class for text/password `input` elements when there is a validation error.
 
   * `:submit_class` - CSS class for the form submit `input` element.
+
+  * `:error_ul` - CSS class for the `ul` element on error lists.
+
+  * `:error_li` - CSS class for the `li` elements on error lists.
+
+  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
 
 
 ## Magic Link
@@ -223,13 +223,13 @@ Generates a sign-in for for a resource using the "Magic link" strategy.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:disable_button_text` - Text for the submit button when the request is happening.
+  * `:label_class` - CSS class for the `h2` element.
 
   * `:form_class` - CSS class for the `form` element.
 
-  * `:label_class` - CSS class for the `h2` element.
-
   * `:request_flash_text` - Text for the flash message when a request is received.  Set to `nil` to disable.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
 
 
 ## OAuth2
@@ -239,9 +239,9 @@ Generates a sign-in button for Apple.
 
   * `:root_class` - CSS classes for the root `div` element.
 
-  * `:icon_class` - CSS classes for the icon SVG.
-
   * `:link_class` - CSS classes for the `a` element.
+
+  * `:icon_class` - CSS classes for the icon SVG.
 
 
 ### `AshAuthentication.Phoenix.Components.OAuth2`
@@ -250,9 +250,9 @@ Generates a sign-in button for OAuth2.
 
   * `:root_class` - CSS classes for the root `div` element.
 
-  * `:icon_class` - CSS classes for the icon SVG.
-
   * `:link_class` - CSS classes for the `a` element.
+
+  * `:icon_class` - CSS classes for the icon SVG.
 
 
 ## Miscellaneous
@@ -264,13 +264,13 @@ A horizontal rule with text.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:hr_inner_class` - CSS class for the inner `div` element of the horizontal rule.
-
   * `:hr_outer_class` - CSS class for the outer `div` element of the horizontal rule.
 
-  * `:text_inner_class` - CSS class for the inner `div` element of the text area.
+  * `:hr_inner_class` - CSS class for the inner `div` element of the horizontal rule.
 
   * `:text_outer_class` - CSS class for the outer `div` element of the text area.
+
+  * `:text_inner_class` - CSS class for the inner `div` element of the text area.
 
 
 ### `AshAuthentication.Phoenix.Components.Banner`
@@ -281,17 +281,17 @@ Renders a very simple banner at the top of the sign-in component.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:dark_image_class` - Css class for the `img` tag in dark mode.
-
-  * `:dark_image_url` - A URL for the `img` `src` attribute in dark mode. Set to `nil` to disable.
-
   * `:href_class` - CSS class for the `a` tag.
 
   * `:href_url` - A URL for the banner image to link to. Set to `nil` to disable.
 
   * `:image_class` - CSS class for the `img` tag.
 
+  * `:dark_image_class` - Css class for the `img` tag in dark mode.
+
   * `:image_url` - A URL for the `img` `src` attribute. Set to `nil` to disable.
+
+  * `:dark_image_url` - A URL for the `img` `src` attribute in dark mode. Set to `nil` to disable.
 
   * `:text_class` - CSS class for the text `div`.
 
