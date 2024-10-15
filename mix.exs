@@ -29,6 +29,9 @@ defmodule AshAuthentication.Phoenix.MixProject do
           {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
           {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"}
         ],
+        redirects: %{
+          "getting-started-with-ash-authentication-phoenix" => "get-started"
+        },
         groups_for_extras: [
           Tutorials: ~r'documentation/tutorials',
           "How To": ~r'documentation/how_to',
@@ -51,7 +54,9 @@ defmodule AshAuthentication.Phoenix.MixProject do
             """
           end
         end,
-        filter_modules: ~r/^Elixir.AshAuthentication.Phoenix/,
+        filter_modules: fn module, _ ->
+          String.match?(to_string(module), ~r/^Elixir.AshAuthentication.Phoenix/) || String.match?(to_string(module), ~r/^Elixir.Mix.Tasks/)
+        end,
         source_url_pattern:
           "https://github.com/team-alembic/ash_authentication_phoenix/blob/main/%{path}#L%{line}",
         groups_for_modules: [
