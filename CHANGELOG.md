@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.1.9](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.8...v2.1.9) (2024-10-15)
+
+
+
+
+### Bug Fixes:
+
+* ensure browser pipeline is added to installer
+
 ## [v2.1.8](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.7...v2.1.8) (2024-10-14)
 
 
