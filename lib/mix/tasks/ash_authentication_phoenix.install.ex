@@ -182,6 +182,8 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
           igniter,
           "/",
           """
+          pipe_through :browser
+
           ash_authentication_live_session :authenticated_routes do
             # in each liveview, add one of the following at the top of the module:
             #

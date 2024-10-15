@@ -170,38 +170,40 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     17 21   |  end
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
-    23 + |  scope "/", TestWeb do
-    24 + |    ash_authentication_live_session :authenticated_routes do
-    25 + |      # in each liveview, add one of the following at the top of the module:
-    26 + |      #
-    27 + |      # If an authenticated user must be present:
-    28 + |      # on_mount {TestWeb.LiveUserAuth, :live_user_required}
-    29 + |      #
-    30 + |      # If an authenticated user *may* be present:
-    31 + |      # on_mount {TestWeb.LiveUserAuth, :live_user_optional}
-    32 + |      #
-    33 + |      # If an authenticated user must *not* be present:
-    34 + |      # on_mount {TestWeb.LiveUserAuth, :live_no_user}
-    35 + |    end
-    36 + |  end
-    37 + |
-    38 + |  scope "/", TestWeb do
-    39 + |    pipe_through([:browser])
-    40 + |    auth_routes(AuthController, Test.Accounts.User, path: "/auth")
-    41 + |    sign_out_route(AuthController)
-    42 + |
-    43 + |    # Remove these if you'd like to use your own authentication views
-    44 + |    sign_in_route(
-    45 + |      register_path: "/register",
-    46 + |      reset_path: "/reset",
-    47 + |      auth_routes_prefix: "/auth",
-    48 + |      on_mount: [{TestWeb.LiveUserAuth, :live_no_user}],
-    49 + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
-    50 + |    )
-    51 + |
-    52 + |    # Remove this if you do not want to use the reset password feature
-    53 + |    reset_route(auth_routes_prefix: "/auth")
-    54 + |  end
+    + |  scope "/", TestWeb do
+    + |    pipe_through(:browser)
+    + |
+    + |    ash_authentication_live_session :authenticated_routes do
+    + |      # in each liveview, add one of the following at the top of the module:
+    + |      #
+    + |      # If an authenticated user must be present:
+    + |      # on_mount {TestWeb.LiveUserAuth, :live_user_required}
+    + |      #
+    + |      # If an authenticated user *may* be present:
+    + |      # on_mount {TestWeb.LiveUserAuth, :live_user_optional}
+    + |      #
+    + |      # If an authenticated user must *not* be present:
+    + |      # on_mount {TestWeb.LiveUserAuth, :live_no_user}
+    + |    end
+    + |  end
+    + |
+    + |  scope "/", TestWeb do
+    + |    pipe_through([:browser])
+    + |    auth_routes(AuthController, Test.Accounts.User, path: "/auth")
+    + |    sign_out_route(AuthController)
+    + |
+    + |    # Remove these if you'd like to use your own authentication views
+    + |    sign_in_route(
+    + |      register_path: "/register",
+    + |      reset_path: "/reset",
+    + |      auth_routes_prefix: "/auth",
+    + |      on_mount: [{TestWeb.LiveUserAuth, :live_no_user}],
+    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |    )
+    + |
+    + |    # Remove this if you do not want to use the reset password feature
+    + |    reset_route(auth_routes_prefix: "/auth")
+    + |  end
     """)
   end
 end
