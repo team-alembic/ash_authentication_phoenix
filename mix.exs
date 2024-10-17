@@ -55,7 +55,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
           end
         end,
         filter_modules: fn module, _ ->
-          String.match?(to_string(module), ~r/^Elixir.AshAuthentication.Phoenix/) || String.match?(to_string(module), ~r/^Elixir.Mix.Tasks/)
+          String.match?(to_string(module), ~r/^Elixir.AshAuthentication.Phoenix/) ||
+            String.match?(to_string(module), ~r/^Elixir.Mix.Tasks/)
         end,
         source_url_pattern:
           "https://github.com/team-alembic/ash_authentication_phoenix/blob/main/%{path}#L%{line}",
