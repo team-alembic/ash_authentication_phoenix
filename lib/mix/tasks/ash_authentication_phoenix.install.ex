@@ -30,10 +30,12 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
         accounts: :string,
         user: :string,
         token: :string,
-        yes: :boolean
+        yes: :boolean,
+        auth_strategy: :string
       ],
       composes: ["ash_authentication.install"],
       aliases: [
+        s: :auth_strategy,
         a: :accounts,
         u: :user,
         t: :token,
