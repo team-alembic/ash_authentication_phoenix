@@ -52,7 +52,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     strategy = assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
-    form = blank_form(strategy, assigns[:context] || %{})
+    form = blank_form(strategy, assigns[:context] || %{}, socket)
 
     socket =
       socket
@@ -122,17 +122,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
     socket.assigns.form
     |> Form.validate(params)
-    |> Form.submit(
-      before_submit: fn
-        %Ash.Query{} = query ->
-          query
-          |> Ash.Query.set_tenant(socket.assigns.current_tenant)
-
-        %Ash.ActionInput{} = action_input ->
-          action_input
-          |> Ash.ActionInput.set_tenant(socket.assigns.current_tenant)
-      end
-    )
+    |> Form.submit()
     |> case do
       :ok ->
         :ok
@@ -150,7 +140,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
     socket =
       socket
-      |> assign(:form, blank_form(strategy, socket.assigns[:context] || %{}))
+      |> assign(:form, blank_form(strategy, socket.assigns[:context] || %{}, socket))
 
     socket =
       if flash do
@@ -173,7 +163,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     Map.get(params, param_key, %{})
   end
 
-  defp blank_form(strategy, context) do
+  defp blank_form(strategy, context, socket) do
     domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
@@ -183,6 +173,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
       as: subject_name |> to_string(),
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}" |> slugify(),
+      tenant: socket.assigns.current_tenant,
       context:
         Ash.Helpers.deep_merge_maps(context, %{
           strategy: strategy,
