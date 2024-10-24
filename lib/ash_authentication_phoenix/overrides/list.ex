@@ -70,7 +70,7 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
 
     #{first_line_of_docs(overridable)}
 
-    #{overridable.__overrides__() |> Enum.map_join("\n", &"  * `#{inspect(elem(&1, 0))}` - #{elem(&1, 1)}\n")}
+    #{overridable.__overrides__() |> Enum.sort_by(&elem(&1, 0)) |> Enum.map_join("\n", &"  * `#{inspect(elem(&1, 0))}` - #{elem(&1, 1)}\n")}
     """
   end
 
