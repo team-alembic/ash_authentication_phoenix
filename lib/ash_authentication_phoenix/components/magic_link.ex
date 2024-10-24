@@ -52,17 +52,20 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     strategy = assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
-    form = blank_form(strategy, assigns[:context] || %{}, socket)
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(form: form, trigger_action: false, subject_name: subject_name)
+      |> assign(trigger_action: false, subject_name: subject_name)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:label, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+
+    form = blank_form(strategy, assigns[:context] || %{}, socket)
+
+    socket = assign(socket, form: form)
 
     {:ok, socket}
   end

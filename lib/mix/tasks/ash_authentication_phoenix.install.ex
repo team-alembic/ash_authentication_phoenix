@@ -348,7 +348,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
   defp module_option(opts, name) do
     case Keyword.fetch(opts, name) do
       {:ok, value} when is_binary(value) ->
-        Keyword.put(opts, name, Igniter.Code.Module.parse(value))
+        Keyword.put(opts, name, Igniter.Project.Module.parse(value))
 
       _ ->
         opts
