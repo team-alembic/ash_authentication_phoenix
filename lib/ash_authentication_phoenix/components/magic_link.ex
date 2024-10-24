@@ -52,7 +52,6 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     strategy = assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
-
     socket =
       socket
       |> assign(assigns)
