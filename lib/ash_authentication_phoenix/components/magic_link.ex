@@ -123,8 +123,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     params = get_params(params, strategy)
 
     socket.assigns.form
-    |> Form.validate(params)
-    |> Form.submit()
+    |> Form.submit(params: params)
     |> case do
       :ok ->
         :ok
