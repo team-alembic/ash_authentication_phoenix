@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.2.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.11...v2.2.0) (2024-11-05)
+
+
+
+
+### Features:
+
+* Slack: Add icon for Slack strategy. (#524)
+
 ## [v2.1.11](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.10...v2.1.11) (2024-10-31)
 
 
