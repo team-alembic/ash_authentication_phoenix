@@ -50,6 +50,22 @@ defmodule Example.Accounts.User do
         |> Ash.Changeset.change_attribute(:email, user_info["email"])
       end
     end
+
+    create :register_with_slack do
+      argument :user_info, :map, allow_nil?: false
+      argument :oauth_tokens, :map, allow_nil?: false
+      upsert? true
+      upsert_identity :unique_email
+
+      change AshAuthentication.GenerateTokenChange
+
+      change fn changeset, _ ->
+        user_info = Ash.Changeset.get_argument(changeset, :user_info)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:email, user_info["email"])
+      end
+    end
   end
 
   preparations do
@@ -111,6 +127,12 @@ defmodule Example.Accounts.User do
       end
 
       github do
+        client_id &get_config/2
+        redirect_uri &get_config/2
+        client_secret &get_config/2
+      end
+
+      slack do
         client_id &get_config/2
         redirect_uri &get_config/2
         client_secret &get_config/2
