@@ -133,7 +133,6 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
           form={form}
           action={:reset}
           disable_text={override_for(@overrides, :disable_button_text)}
-          label={humanize(@resettable.password_reset_action_name)}
           overrides={@overrides}
         />
       </.form>
