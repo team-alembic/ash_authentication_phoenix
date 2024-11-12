@@ -202,7 +202,10 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |    )
     + |
     + |    # Remove this if you do not want to use the reset password feature
-    + |    reset_route(auth_routes_prefix: "/auth")
+    + |    reset_route(
+    + |      auth_routes_prefix: "/auth",
+    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |    )
     + |  end
     """)
   end
