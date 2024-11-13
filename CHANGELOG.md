@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.2.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.2.0...v2.2.1) (2024-11-13)
+
+
+
+
+### Bug Fixes:
+
+* Components.Password.ResetForm: Handle the fact that we now ask users to use a generic action. (#531)
+
 ## [v2.2.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.1.11...v2.2.0) (2024-11-05)
 
 
