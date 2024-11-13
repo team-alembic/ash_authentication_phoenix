@@ -144,9 +144,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     |> Form.validate(params)
     |> Form.submit(
       params: params,
-      before_submit: fn changeset ->
-        changeset
-        |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
+      before_submit: fn
+        input when is_struct(input, Ash.ActionInput) ->
+          input
+          |> Ash.ActionInput.set_tenant(socket.assigns.current_tenant)
+
+        changeset when is_struct(changeset, Ash.Changeset) ->
+          changeset
+          |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
       end
     )
 
