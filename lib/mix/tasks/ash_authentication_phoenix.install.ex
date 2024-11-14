@@ -119,7 +119,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
           overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
 
         # Remove this if you do not want to use the reset password feature
-        reset_route auth_routes_prefix: "/auth"
+        reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
         """,
         with_pipelines: [:browser],
         arg2: Igniter.Libs.Phoenix.web_module(igniter),
