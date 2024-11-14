@@ -235,6 +235,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:label, fn ->
         case assigns.action do
+          :reset ->
+            assigns.strategy.resettable
+            |> Kernel.||(%{})
+            |> Map.get(:password_reset_action_name, :reset)
+            |> to_string()
+            |> String.trim_trailing("_with_password")
+
           :request_reset ->
             assigns.strategy.resettable
             |> Kernel.||(%{})
