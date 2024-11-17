@@ -152,6 +152,10 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
         changeset when is_struct(changeset, Ash.Changeset) ->
           changeset
           |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
+
+        query when is_struct(query, Ash.Query) ->
+          query
+          |> Ash.Query.set_tenant(socket.assigns.current_tenant)
       end
     )
 
