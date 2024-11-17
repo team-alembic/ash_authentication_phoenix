@@ -145,6 +145,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :password_input_label, "Password"
     set :password_confirmation_input_label, "Password Confirmation"
     set :identity_input_label, "Email"
+    set :identity_input_placeholder, nil
     set :error_ul, "text-red-400 font-light my-3 italic text-sm"
     set :error_li, nil
     set :input_debounce, 350

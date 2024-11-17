@@ -4,6 +4,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     label_class: "CSS class for `label` elements.",
     input_class: "CSS class for text/password `input` elements.",
     identity_input_label: "Label for identity field.",
+    identity_input_placeholder: "Placeholder for identity field.",
     password_input_label: "Label for password field.",
     password_confirmation_input_label: "Label for password confirmation field.",
     input_class_with_error:
@@ -94,7 +95,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         type: to_string(@input_type),
         class: @input_class,
         phx_debounce: override_for(@overrides, :input_debounce),
-        autofocus: "true"
+        autofocus: "true",
+        placeholder: override_for(@overrides, :identity_input_placeholder)
       ) %>
       <.error form={@form} field={@identity_field} overrides={@overrides} />
     </div>
