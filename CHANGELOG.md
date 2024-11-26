@@ -5,6 +5,23 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.3.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.2.1...v2.3.0) (2024-11-26)
+
+
+
+
+### Features:
+
+* Add override for identity input placeholder (#538)
+
+* Add action-specific flash messages to the generated AuthController (#532)
+
+### Bug Fixes:
+
+* handle tenant-specific query in Password Reset Form handle_event/3 (#537)
+
+* Apply overrides to password reset update form (#529)
+
 ## [v2.2.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.2.0...v2.2.1) (2024-11-13)
 
 
