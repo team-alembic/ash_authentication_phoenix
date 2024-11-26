@@ -201,6 +201,8 @@ authentication.
 
   * `:identity_input_label` - Label for identity field.
 
+  * `:identity_input_placeholder` - Placeholder for identity field.
+
   * `:input_class` - CSS class for text/password `input` elements.
 
   * `:input_class_with_error` - CSS class for text/password `input` elements when there is a validation error.
