@@ -122,7 +122,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:jason, "~> 1.0"},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_html_helpers, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.18"},
+      {:phoenix_live_view, "~> 1.0"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:bcrypt_elixir, "~> 3.0"},
