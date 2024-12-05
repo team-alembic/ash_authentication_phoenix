@@ -33,37 +33,35 @@ defmodule DevWeb.CustomSignInLive do
       >
         <:sign_in_extra :let={form}>
           <div class="mt-2 mb-2 dark:text-white">
-            <%= label(form, :capcha,
+            {label(form, :capcha,
               class: "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
-            ) %>
-            <%= text_input(form, :capcha,
+            )}
+            {text_input(form, :capcha,
               class:
                 "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-pale-500 focus:border-blue-pale-500 sm:text-sm dark:text-black"
-            ) %>
+            )}
           </div>
         </:sign_in_extra>
 
         <:register_extra :let={form}>
           <div class="mt-2 mb-2 dark:text-white">
-            <%= label(form, :name,
-              class: "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
-            ) %>
-            <%= text_input(form, :name,
+            {label(form, :name, class: "block text-sm font-medium text-gray-700 mb-1 dark:text-white")}
+            {text_input(form, :name,
               class:
                 "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-pale-500 focus:border-blue-pale-500 sm:text-sm dark:text-black"
-            ) %>
+            )}
           </div>
         </:register_extra>
 
         <:reset_extra :let={form}>
           <div class="mt-2 mb-2 dark:text-white">
-            <%= label(form, :capcha,
+            {label(form, :capcha,
               class: "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
-            ) %>
-            <%= text_input(form, :capcha,
+            )}
+            {text_input(form, :capcha,
               class:
                 "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-pale-500 focus:border-blue-pale-500 sm:text-sm dark:text-black"
-            ) %>
+            )}
           </div>
         </:reset_extra>
       </.live_component>

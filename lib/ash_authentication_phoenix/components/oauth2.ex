@@ -50,8 +50,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
         href={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request)}
         class={override_for(@overrides, :link_class)}
       >
-        <.icon icon={@strategy.icon} overrides={@overrides} />
-        Sign in with <%= strategy_name(@strategy) %>
+        <.icon icon={@strategy.icon} overrides={@overrides} /> Sign in with {strategy_name(@strategy)}
       </a>
     </div>
     """
@@ -60,7 +59,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   def icon(assigns) do
     ~H"""
     <%= if @icon do %>
-      <%= raw(icon_svg(@icon, override_for(@overrides, :icon_class))) %>
+      {raw(icon_svg(@icon, override_for(@overrides, :icon_class)))}
     <% end %>
     """
   end

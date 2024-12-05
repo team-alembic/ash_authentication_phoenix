@@ -61,7 +61,7 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
 
   def icon(assigns) do
     ~H"""
-    <%= raw(icon_svg(@icon, override_for(@overrides, :icon_class))) %>
+    {raw(icon_svg(@icon, override_for(@overrides, :icon_class)))}
     """
   end
 

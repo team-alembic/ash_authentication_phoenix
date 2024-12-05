@@ -88,16 +88,16 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, @identity_field, override_for(@overrides, :identity_input_label),
+      {label(@form, @identity_field, override_for(@overrides, :identity_input_label),
         class: override_for(@overrides, :label_class)
-      ) %>
-      <%= text_input(@form, @identity_field,
+      )}
+      {text_input(@form, @identity_field,
         type: to_string(@input_type),
         class: @input_class,
         phx_debounce: override_for(@overrides, :input_debounce),
         autofocus: "true",
         placeholder: override_for(@overrides, :identity_input_placeholder)
-      ) %>
+      )}
       <.error form={@form} field={@identity_field} overrides={@overrides} />
     </div>
     """
@@ -141,14 +141,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(@form, @password_field, override_for(@overrides, :password_input_label),
+      {label(@form, @password_field, override_for(@overrides, :password_input_label),
         class: override_for(@overrides, :label_class)
-      ) %>
-      <%= password_input(@form, @password_field,
+      )}
+      {password_input(@form, @password_field,
         class: @input_class,
         value: input_value(@form, @password_field),
         phx_debounce: override_for(@overrides, :input_debounce)
-      ) %>
+      )}
       <.error form={@form} field={@password_field} overrides={@overrides} />
     </div>
     """
@@ -192,17 +192,17 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <%= label(
+      {label(
         @form,
         @password_confirmation_field,
         override_for(@overrides, :password_confirmation_input_label),
         class: override_for(@overrides, :label_class)
-      ) %>
-      <%= password_input(@form, @password_confirmation_field,
+      )}
+      {password_input(@form, @password_confirmation_field,
         class: @input_class,
         value: input_value(@form, @password_confirmation_field),
         phx_debounce: override_for(@overrides, :input_debounce)
-      ) %>
+      )}
       <.error form={@form} field={@password_confirmation_field} overrides={@overrides} />
     </div>
     """
@@ -269,10 +269,10 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       |> assign_new(:disable_text, fn -> nil end)
 
     ~H"""
-    <%= submit(@label,
+    {submit(@label,
       class: override_for(@overrides, :submit_class),
       phx_disable_with: @disable_text
-    ) %>
+    )}
     """
   end
 
@@ -310,7 +310,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       <ul class={override_for(@overrides, :error_ul)}>
         <%= for error <- @errors do %>
           <li class={override_for(@overrides, :error_li)} phx-feedback-for={input_name(@form, @field)}>
-            <%= error %>
+            {error}
           </li>
         <% end %>
       </ul>

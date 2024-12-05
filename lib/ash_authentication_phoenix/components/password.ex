@@ -173,7 +173,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         >
           <%= if @sign_in_extra do %>
             <div class={override_for(@overrides, :slot_class)}>
-              <%= render_slot(@sign_in_extra, form) %>
+              {render_slot(@sign_in_extra, form)}
             </div>
           <% end %>
 
@@ -219,7 +219,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           >
             <%= if @register_extra do %>
               <div class={override_for(@overrides, :slot_class)}>
-                <%= render_slot(@register_extra, form) %>
+                {render_slot(@register_extra, form)}
               </div>
             <% end %>
 
@@ -262,7 +262,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           >
             <%= if @reset_extra do %>
               <div class={override_for(@overrides, :slot_class)}>
-                <%= render_slot(@reset_extra, form) %>
+                {render_slot(@reset_extra, form)}
               </div>
             <% end %>
 
@@ -308,13 +308,13 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     if assigns[:to] do
       ~H"""
       <.link patch={@to} class={override_for(@overrides, :toggler_class)}>
-        <%= @message %>
+        {@message}
       </.link>
       """
     else
       ~H"""
       <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@overrides, :toggler_class)}>
-        <%= @message %>
+        {@message}
       </a>
       """
     end

@@ -12,7 +12,7 @@ defmodule DevWeb.HomePageLive do
 
     ~H"""
     <%= if @current_user do %>
-      <h2>Current user: <%= @current_user.email %></h2>
+      <h2>Current user: {@current_user.email}</h2>
 
       <.link navigate="/sign-out">Sign out</.link>
     <% else %>

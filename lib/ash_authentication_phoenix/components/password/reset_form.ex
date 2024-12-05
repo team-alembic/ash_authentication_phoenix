@@ -79,7 +79,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
         <h2 class={override_for(@overrides, :label_class)}>
-          <%= @label %>
+          {@label}
         </h2>
       <% end %>
 
@@ -105,7 +105,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
-            <%= render_slot(@inner_block, form) %>
+            {render_slot(@inner_block, form)}
           </div>
         <% end %>
 

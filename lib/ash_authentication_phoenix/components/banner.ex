@@ -61,12 +61,12 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
         <% {nil, nil} -> %>
         <% {nil, txt} -> %>
           <div class={override_for(@overrides, :text_class)}>
-            <%= txt %>
+            {txt}
           </div>
         <% {hrf, txt} -> %>
           <div class={override_for(@overrides, :text_class)}>
             <a class={override_for(@overrides, :href_class)} href={hrf}>
-              <%= txt %>
+              {txt}
             </a>
           </div>
       <% end %>

@@ -95,7 +95,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@overrides, :label_class)}><%= @label %></h2>
+        <h2 class={override_for(@overrides, :label_class)}>{@label}</h2>
       <% end %>
 
       <.form
@@ -117,7 +117,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <%= hidden_input(form, :reset_token, value: @token) %>
+        {hidden_input(form, :reset_token, value: @token)}
         <Input.error field={:reset_token} form={@form} overrides={@overrides} />
 
         <Input.password_field strategy={@strategy} form={form} overrides={@overrides} />

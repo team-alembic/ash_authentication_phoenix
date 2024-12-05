@@ -42,7 +42,7 @@ defmodule AshAuthentication.Phoenix.Components.HorizontalRule do
       </div>
       <div class={override_for(@overrides, :text_outer_class)}>
         <span class={override_for(@overrides, :text_inner_class)}>
-          <%= override_for(@overrides, :text) %>
+          {override_for(@overrides, :text)}
         </span>
       </div>
     </div>
