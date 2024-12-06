@@ -15,11 +15,12 @@ defmodule AshAuthentication.Phoenix.Plug do
   A wrapper around `AshAuthentication.Plug.Helpers.retrieve_from_session/2`
   with the `otp_app` as extracted from the endpoint.
   """
-  @spec load_from_session(Conn.t(), any) :: Conn.t()
+  @spec load_from_session(Conn.t(), keyword) :: Conn.t()
   def load_from_session(conn, opts) do
-    otp_app = opts[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
+    {maybe_otp_app, opts} = Keyword.pop(opts, :otp_app)
+    otp_app = maybe_otp_app || conn.private.phoenix_endpoint.config(:otp_app)
 
-    Helpers.retrieve_from_session(conn, otp_app)
+    Helpers.retrieve_from_session(conn, otp_app, opts)
   end
 
   @doc """
@@ -28,10 +29,12 @@ defmodule AshAuthentication.Phoenix.Plug do
   A wrapper around `AshAuthentication.Plug.Helpers.retrieve_from_bearer/2` with
   the `otp_app` as extracted from the endpoint.
   """
-  @spec load_from_bearer(Conn.t(), any) :: Conn.t()
-  def load_from_bearer(conn, _opts) do
-    otp_app = conn.private.phoenix_endpoint.config(:otp_app)
-    Helpers.retrieve_from_bearer(conn, otp_app)
+  @spec load_from_bearer(Conn.t(), keyword) :: Conn.t()
+  def load_from_bearer(conn, opts) do
+    {maybe_otp_app, opts} = Keyword.pop(opts, :otp_app)
+    otp_app = maybe_otp_app || conn.private.phoenix_endpoint.config(:otp_app)
+
+    Helpers.retrieve_from_bearer(conn, otp_app, opts)
   end
 
   @doc """
