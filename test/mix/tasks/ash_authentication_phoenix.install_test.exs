@@ -106,7 +106,24 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
         |> redirect(to: return_to)
       end
 
-      def failure(conn, _activity, _reason) do
+      def failure(conn, activity, reason) do
+        message =
+          case {activity, reason} do
+            {{:magic_link, _},
+             %AshAuthentication.Errors.AuthenticationFailed{
+               caused_by: %Ash.Error.Forbidden{
+                 errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
+               }
+             }} ->
+              \"\"\"
+              You have already signed in another way, but have not confirmed your account.
+              You can confirm your account using the link we sent to you, or by resetting your password.
+              \"\"\"
+
+            _ ->
+              "Incorrect email or password"
+          end
+
         conn
         |> put_flash(:error, "Incorrect email or password")
         |> redirect(to: ~p"/sign-in")
