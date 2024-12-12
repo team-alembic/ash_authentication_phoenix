@@ -5,6 +5,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.0...v2.4.1) (2024-12-12)
+
+
+
+
+### Improvements:
+
+* provide better error message on hijack protection
+
+* Pass opts of plugs to retrieve helpers (#546)
+
 ## [v2.4.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.3.0...v2.4.0) (2024-12-05)
 
 
