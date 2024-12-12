@@ -280,7 +280,10 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
                 errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
               }
             }} ->
-              "You have already signed in another way, but have not confirmed your account. Please confirm your account."
+              \"\"\"
+              You have already signed in another way, but have not confirmed your account.
+              You can confirm your account using the link we sent to you, or by resetting your password.
+              \"\"\"
 
             _ ->
               "Incorrect email or password"
