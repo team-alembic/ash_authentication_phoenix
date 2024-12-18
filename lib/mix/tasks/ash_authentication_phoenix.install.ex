@@ -290,7 +290,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
           end
 
         conn
-        |> put_flash(:error, "Incorrect email or password")
+        |> put_flash(:error, message)
         |> redirect(to: ~p"/sign-in")
       end
 
