@@ -386,7 +386,6 @@ else
   defmodule Mix.Tasks.AshAuthenticationPhoenix.Install do
     use Mix.Task
 
-    @example "mix igniter.install ash_authentication_phoenix"
     @shortdoc "Installs AshAuthenticationPhoenix. Invoke with `mix igniter.install ash_authentication_phoenix`"
 
     @moduledoc @shortdoc
