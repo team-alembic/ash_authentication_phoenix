@@ -5,6 +5,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.1...v2.4.2) (2024-12-20)
+
+
+
+
+### Bug Fixes:
+
+* Set the expected message in failure function generators. (#550)
+
+### Improvements:
+
+* make igniter optional
+
+* update message with helpful instructions
+
 ## [v2.4.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.0...v2.4.1) (2024-12-12)
 
 
