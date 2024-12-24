@@ -108,7 +108,12 @@ if Code.ensure_loaded?(Igniter) do
         |> Igniter.Libs.Phoenix.append_to_pipeline(:browser, "plug :load_from_session",
           router: router
         )
-        |> Igniter.Libs.Phoenix.append_to_pipeline(:api, "plug :load_from_bearer", router: router)
+        |> Igniter.Libs.Phoenix.append_to_pipeline(
+          :api,
+          "plug :load_from_bearer\nplug :set_actor, :user",
+          router: router
+        )
+        |> add_to_graphql_pipeline(router)
         |> Igniter.Libs.Phoenix.append_to_scope(
           "/",
           """
@@ -134,6 +139,21 @@ if Code.ensure_loaded?(Igniter) do
 
         Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
         """)
+      end
+    end
+
+    defp add_to_graphql_pipeline(igniter, router) do
+      case Igniter.Libs.Phoenix.has_pipeline(igniter, router, :graphql) do
+        {igniter, true} ->
+          Igniter.Libs.Phoenix.prepend_to_pipeline(
+            igniter,
+            :graphql,
+            "plug :load_from_bearer\nplug :set_actor, :user",
+            router: router
+          )
+
+        {igniter, _} ->
+          igniter
       end
     end
 

@@ -190,10 +190,11 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     15 + |    plug(:load_from_session)
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
-    15 18   |  pipeline :api do
-    16 19   |    plug(:accepts, ["json"])
-       20 + |    plug(:load_from_bearer)
-    17 21   |  end
+      |  pipeline :api do
+      |    plug(:accepts, ["json"])
+    + |    plug(:load_from_bearer)
+    + |    plug(:set_actor, :user)
+      |  end
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
     + |  scope "/", TestWeb do
