@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.3...v2.4.4) (2024-12-26)
+
+
+
+
+### Bug Fixes:
+
+* fix installer for cases where liveview is not included
+
 ## [v2.4.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.2...v2.4.3) (2024-12-26)
 
 
