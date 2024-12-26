@@ -65,7 +65,9 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           opts
         end
 
-      live_session unquote(session_name), opts do
+      require Phoenix.LiveView.Router
+
+      Phoenix.LiveView.Router.live_session unquote(session_name), opts do
         unquote(block)
       end
     end
