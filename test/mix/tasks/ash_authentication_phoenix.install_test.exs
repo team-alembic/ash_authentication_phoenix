@@ -109,7 +109,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
       def failure(conn, activity, reason) do
         message =
           case {activity, reason} do
-            {{:magic_link, _},
+            {_,
              %AshAuthentication.Errors.AuthenticationFailed{
                caused_by: %Ash.Error.Forbidden{
                  errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
