@@ -5,6 +5,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.2...v2.4.3) (2024-12-26)
+
+
+
+
+### Improvements:
+
+* match on any source of `CannotConfirmUnconfirmedUser`
+
+* generate auth code for graphql & add `set_user` plug for
+
 ## [v2.4.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.1...v2.4.2) (2024-12-20)
 
 
