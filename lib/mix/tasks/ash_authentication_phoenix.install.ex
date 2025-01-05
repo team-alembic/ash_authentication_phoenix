@@ -79,7 +79,8 @@ if Code.ensure_loaded?(Igniter) do
             igniter ->
               Igniter.apply_and_fetch_dependencies(igniter,
                 error_on_abort?: true,
-                yes: options[:yes]
+                yes: options[:yes],
+                yes_to_deps: true
               )
           end)
           |> Igniter.compose_task("ash_authentication.install", argv)
