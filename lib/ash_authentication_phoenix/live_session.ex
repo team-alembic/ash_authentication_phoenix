@@ -44,7 +44,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         opts
       end
 
-    quote do
+    quote generated: true do
       on_mount = [LiveSession]
 
       opts = unquote(opts)
@@ -67,6 +67,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
       require Phoenix.LiveView.Router
 
+      # credo:disable-for-next-line Credo.Check.Design.AliasUsage
       Phoenix.LiveView.Router.live_session unquote(session_name), opts do
         unquote(block)
       end
