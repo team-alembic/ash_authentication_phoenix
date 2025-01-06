@@ -187,7 +187,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     6 + |  use AshAuthentication.Phoenix.Router
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
-    15 + |    plug(:load_from_session)
+    + |    plug(:load_from_session)
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
       |  pipeline :api do
