@@ -163,9 +163,10 @@ defmodule AshAuthentication.Phoenix.Router do
       path = Keyword.get(opts, :path, "/auth")
       not_found_plug = Keyword.get(opts, :not_found_plug)
       controller = Phoenix.Router.scoped_alias(__MODULE__, unquote(auth_controller))
+      plug = Keyword.get(opts, :strategy_router_plug, AshAuthentication.Phoenix.StrategyRouter)
 
       scope "/", alias: false do
-        forward path, AshAuthentication.Phoenix.StrategyRouter,
+        forward path, plug,
           path: Phoenix.Router.scoped_path(__MODULE__, path),
           as: opts[:as] || :auth,
           controller: controller,
