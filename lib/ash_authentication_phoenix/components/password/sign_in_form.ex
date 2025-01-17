@@ -27,6 +27,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
       Set to `false` to disable.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -45,10 +46,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:label) => String.t() | false,
-          optional(:overrides) => [module],
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t()
+          optional(:auth_routes_prefix) => String.t(),
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -96,7 +98,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@overrides, :label_class)}>{@label}</h2>
+        <h2 class={override_for(@overrides, :label_class)}>{_gettext(@label)}</h2>
       <% end %>
 
       <.form
@@ -111,8 +113,18 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Password.Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
-        <Password.Input.password_field strategy={@strategy} form={form} overrides={@overrides} />
+        <Password.Input.identity_field
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
+        <Password.Input.password_field
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
 
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
@@ -127,6 +139,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           action={:sign_in}
           disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
+          gettext_fn={@gettext_fn}
         />
       </.form>
     </div>

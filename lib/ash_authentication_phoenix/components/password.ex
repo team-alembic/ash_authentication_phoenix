@@ -33,6 +33,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   ## Slots
 
@@ -80,11 +81,12 @@ defmodule AshAuthentication.Phoenix.Components.Password do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module],
           optional(:live_action) => :sign_in | :register,
           optional(:path) => String.t(),
           optional(:current_tenant) => String.t(),
-          optional(:context) => map()
+          optional(:context) => map(),
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   slot :sign_in_extra
@@ -170,6 +172,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           overrides={@overrides}
           current_tenant={@current_tenant}
           context={@context}
+          gettext_fn={@gettext_fn}
         >
           <%= if @sign_in_extra do %>
             <div class={override_for(@overrides, :slot_class)}>
@@ -185,6 +188,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                 hide={[@sign_in_id, @register_id]}
                 to={@reset_path}
                 overrides={@overrides}
+                gettext_fn={@gettext_fn}
               />
             <% end %>
 
@@ -195,6 +199,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                 hide={[@sign_in_id, @reset_id]}
                 to={@register_path}
                 overrides={@overrides}
+                gettext_fn={@gettext_fn}
               />
             <% end %>
           </div>
@@ -216,6 +221,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             overrides={@overrides}
             current_tenant={@current_tenant}
             context={@context}
+            gettext_fn={@gettext_fn}
           >
             <%= if @register_extra do %>
               <div class={override_for(@overrides, :slot_class)}>
@@ -231,6 +237,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   hide={[@sign_in_id, @register_id]}
                   to={@reset_path}
                   overrides={@overrides}
+                  gettext_fn={@gettext_fn}
                 />
               <% end %>
               <%= if @sign_in_enabled? do %>
@@ -240,6 +247,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   hide={[@register_id, @reset_id]}
                   to={if @register_path, do: @path}
                   overrides={@overrides}
+                  gettext_fn={@gettext_fn}
                 />
               <% end %>
             </div>
@@ -259,6 +267,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             overrides={@overrides}
             current_tenant={@current_tenant}
             context={@context}
+            gettext_fn={@gettext_fn}
           >
             <%= if @reset_extra do %>
               <div class={override_for(@overrides, :slot_class)}>
@@ -274,6 +283,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   hide={[@sign_in_id, @reset_id]}
                   message={override_for(@overrides, :register_toggle_text)}
                   overrides={@overrides}
+                  gettext_fn={@gettext_fn}
                 />
               <% end %>
               <%= if @sign_in_enabled? do %>
@@ -283,6 +293,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   hide={[@register_id, @reset_id]}
                   to={if @reset_path, do: @path}
                   overrides={@overrides}
+                  gettext_fn={@gettext_fn}
                 />
               <% end %>
             </div>
@@ -308,13 +319,13 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     if assigns[:to] do
       ~H"""
       <.link patch={@to} class={override_for(@overrides, :toggler_class)}>
-        {@message}
+        {_gettext(@message)}
       </.link>
       """
     else
       ~H"""
       <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@overrides, :toggler_class)}>
-        {@message}
+        {_gettext(@message)}
       </a>
       """
     end

@@ -1,0 +1,64 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new messages manually only if they're dynamic
+## messages that can't be statically extracted.
+##
+## Leave "msgstr"s empty as changing them here has no
+## effect: edit them in PO (.po) files instead.
+#
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Already have an account?"
+msgstr ""
+
+msgid "Email or password was incorrect"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Forgot your password?"
+msgstr ""
+
+msgid "If this user exists in our database you will contacted with a sign-in link shortly."
+msgstr ""
+
+msgid "If this user exists in our system, you will be contacted with reset instructions shortly."
+msgstr ""
+
+msgid "Need an account?"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Password Confirmation"
+msgstr ""
+
+msgid "Request magic link"
+msgstr ""
+
+msgid "Request password reset token"
+msgstr ""
+
+msgid "Requesting ..."
+msgstr ""
+
+msgid "Reset password with token"
+msgstr ""
+
+msgid "Sign in"
+msgstr ""
+
+msgid "Signing in ..."
+msgstr ""
+
+msgid "Your password has successfully been reset"
+msgstr ""

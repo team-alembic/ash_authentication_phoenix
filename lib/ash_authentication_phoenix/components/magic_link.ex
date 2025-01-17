@@ -25,6 +25,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     * `strategy` - the strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -39,10 +40,11 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module],
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t()
+          optional(:auth_routes_prefix) => String.t(),
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -76,7 +78,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= if @label do %>
-        <h2 class={override_for(@overrides, :label_class)}>{@label}</h2>
+        <h2 class={override_for(@overrides, :label_class)}>{_gettext(@label)}</h2>
       <% end %>
 
       <.form
@@ -90,14 +92,20 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
+        <Input.identity_field
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
 
         <Input.submit
           strategy={@strategy}
           form={form}
           action={@strategy.request_action_name}
-          disable_text={override_for(@overrides, :disable_button_text)}
+          disable_text={_gettext(override_for(@overrides, :disable_button_text))}
           overrides={@overrides}
+          gettext_fn={@gettext_fn}
         />
       </.form>
     </div>
@@ -146,7 +154,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     socket =
       if flash do
         socket
-        |> put_flash!(:info, flash)
+        |> put_flash!(:info, _gettext(flash))
       else
         socket
       end

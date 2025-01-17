@@ -34,6 +34,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
       |> assign(:current_tenant, session["tenant"])
       |> assign(:context, session["context"] || %{})
       |> assign(:auth_routes_prefix, session["auth_routes_prefix"])
+      |> assign(:gettext_fn, session["gettext_fn"])
 
     {:ok, socket}
   end
@@ -60,6 +61,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
         overrides={@overrides}
         current_tenant={@current_tenant}
         context={@context}
+        gettext_fn={@gettext_fn}
       />
     </div>
     """

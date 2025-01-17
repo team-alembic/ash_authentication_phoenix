@@ -17,6 +17,7 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -29,7 +30,8 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -53,7 +55,8 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
         class={override_for(@overrides, :link_class)}
       >
         <.icon icon={:apple_white} overrides={@overrides} />
-        <.icon icon={:apple_black} overrides={@overrides} /> Sign in with Apple
+        <.icon icon={:apple_black} overrides={@overrides} />
+        {_gettext("Sign in with Apple")}
       </a>
     </div>
     """

@@ -94,7 +94,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
         "Source" => "https://github.com/team-alembic/ash_authentication_phoenix"
       },
       source_url: "https://github.com/team-alembic/ash_authentication_phoenix",
-      files: ~w[lib .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation]
+      files: ~w[lib .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation i18n]
     ]
   end
 

@@ -17,6 +17,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -30,8 +31,9 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
+          optional(:auth_routes_prefix) => String.t(),
           optional(:overrides) => [module],
-          optional(:auth_routes_prefix) => String.t()
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -50,7 +52,8 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
         href={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request)}
         class={override_for(@overrides, :link_class)}
       >
-        <.icon icon={@strategy.icon} overrides={@overrides} /> Sign in with {strategy_name(@strategy)}
+        <.icon icon={@strategy.icon} overrides={@overrides} />
+        {_gettext("Sign in with #{strategy_name(@strategy)}")}
       </a>
     </div>
     """
