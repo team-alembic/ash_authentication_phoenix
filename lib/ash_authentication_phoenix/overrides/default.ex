@@ -129,13 +129,17 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     dark:text-black
     """
 
-    set :input_class, @base_input_class <> """
-    border-gray-300 focus:ring-blue-pale-500 focus:border-blue-pale-500
-    """
+    set :input_class,
+        @base_input_class <>
+          """
+          border-gray-300 focus:ring-blue-pale-500 focus:border-blue-pale-500
+          """
 
-    set :input_class_with_error, @base_input_class <> """
-    border-red-400
-    """
+    set :input_class_with_error,
+        @base_input_class <>
+          """
+          border-red-400
+          """
 
     set :submit_class, """
     w-full flex justify-center py-2 px-4 border border-transparent rounded-md
