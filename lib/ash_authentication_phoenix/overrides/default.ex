@@ -30,6 +30,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :spacer_class, "py-1"
+    set :button_text, "Change password"
     set :disable_button_text, "Changing password ..."
   end
 
@@ -96,6 +97,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :slot_class, "my-4"
+    set :button_text, "Sign in"
     set :disable_button_text, "Signing in ..."
   end
 
@@ -104,6 +106,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :slot_class, "my-4"
+    set :button_text, "Register"
     set :disable_button_text, "Registering ..."
   end
 
@@ -112,11 +115,11 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :form_class, nil
     set :slot_class, "my-4"
+    set :button_text, "Request reset password link"
+    set :disable_button_text, "Requesting ..."
 
     set :reset_flash_text,
         "If this user exists in our system, you will be contacted with reset instructions shortly."
-
-    set :disable_button_text, "Requesting ..."
   end
 
   override Components.Password.Input do

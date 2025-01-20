@@ -4,6 +4,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
     slot_class: "CSS class for the `div` surrounding the slot.",
+    button_text: "Text for the submit button.",
     disable_button_text: "Text for the submit button when the request is happening."
 
   @moduledoc """
@@ -127,6 +128,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
           strategy={@strategy}
           form={form}
           action={:register}
+          label={override_for(@overrides, :button_text)}
           disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
         />

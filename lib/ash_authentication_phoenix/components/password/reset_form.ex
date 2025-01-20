@@ -4,9 +4,10 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
     slot_class: "CSS class for the `div` surrounding the slot.",
+    button_text: "Tex for the submit button.",
+    disable_button_text: "Text for the submit button when the request is happening.",
     reset_flash_text:
-      "Text for the flash message when a request is received.  Set to `nil` to disable.",
-    disable_button_text: "Text for the submit button when the request is happening."
+      "Text for the flash message when a request is received.  Set to `nil` to disable."
 
   @moduledoc """
   Generates a default password reset form.
@@ -113,6 +114,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
           strategy={@strategy}
           form={form}
           action={:request_reset}
+          label={override_for(@overrides, :button_text)}
           disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
         />
