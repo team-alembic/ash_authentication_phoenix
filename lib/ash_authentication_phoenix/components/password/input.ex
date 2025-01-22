@@ -224,7 +224,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.  Required.
     * `form` - An `AshPhoenix.Form`.  Required.
-    * `action` - Either `:sign_in` or `:register`.  Required.
+    * `action` - Either `:sign_in`, `:register`, `:request_reset` or `:reset`.  Required.
     * `label` - The text to show in the submit label.  Generated from the
       configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
     * `overrides` - A list of override modules.
@@ -234,7 +234,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
-          required(:action) => :sign_in | :register,
+          required(:action) => :sign_in | :register | :request_reset | :reset,
           optional(:label) => String.t(),
           optional(:overrides) => [module],
           optional(:gettext_fn) => {module, atom}
