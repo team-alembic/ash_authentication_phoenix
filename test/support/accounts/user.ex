@@ -7,6 +7,7 @@ defmodule Example.Accounts.User do
 
   require Logger
   alias Ash.Error.Query.InvalidArgument
+  alias AshAuthentication.Phoenix.Test.Helper
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
@@ -101,6 +102,7 @@ defmodule Example.Accounts.User do
 
         sender(fn user, token, _ ->
           Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")
+          Helper.notify_test(:sender_password_confirmation_fired)
         end)
       end
     end
@@ -115,6 +117,7 @@ defmodule Example.Accounts.User do
         resettable do
           sender(fn user, token, _ ->
             Logger.debug("Password reset request for #{user.email} with token #{inspect(token)}")
+            Helper.notify_test({:sender_password_reset_request_fired, token})
           end)
         end
       end
