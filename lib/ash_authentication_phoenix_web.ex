@@ -65,26 +65,22 @@ defmodule AshAuthentication.Phoenix.Web do
           end
 
         quote generated: true do
-          case unquote(msgid) do
-            nil ->
-              ""
-
-            msg ->
-              Web.gettext_switch(
-                unquote(gettext_fn),
-                msg,
-                unquote(bindings)
-              )
-          end
+          Web.gettext_switch(unquote(gettext_fn), unquote(msgid), unquote(bindings))
         end
       end
     end
   end
 
-  @spec gettext_switch({module, atom} | nil, String.t(), keyword) :: String.t()
+  @spec gettext_switch(
+          gettext_fn :: {module, atom} | nil,
+          msgid :: String.t(),
+          bindings :: keyword
+        ) :: String.t()
   @doc """
   If a translation function is provided, we call that, otherwise return the input untranslated.
   """
+  def gettext_switch(_gettext_fn, nil, _bindings), do: ""
+
   def gettext_switch({module, function}, msgid, bindings)
       when is_atom(module) and is_atom(function) do
     apply(module, function, [msgid, bindings])
@@ -97,7 +93,8 @@ defmodule AshAuthentication.Phoenix.Web do
   end
 
   def gettext_switch(invalid, _msgid, _bindings) do
-    raise "gettext_fn: #{inspect(invalid)} is invalid - specify `{module, function}` " <>
+    raise ArgumentError,
+          "gettext_fn: #{inspect(invalid)} is invalid - specify `{module, function}` " <>
             "for a function with a `gettext/2` like signature"
   end
 

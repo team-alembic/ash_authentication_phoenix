@@ -73,8 +73,16 @@ defmodule AshAuthentication.Phoenix.SignInTest do
   end
 
   test "sign_in routes liveview honours external gettext_fn", %{conn: conn} do
-    # Translator mock at AshAuthentication.Phoenix.Test.Helper.gettext
+    # Translator stub at AshAuthentication.Phoenix.Test.Gettext.translate_auth
     conn = get(conn, "/anmeldung")
+    assert {:ok, _view, html} = live(conn)
+    refute html =~ "Sign in"
+    assert html =~ "ever gonna"
+  end
+
+  test "sign_in routes liveview honours external gettext_backend", %{conn: conn} do
+    # Translator stub at AshAuthentication.Phoenix.Test.Gettext
+    conn = get(conn, "/anmeldung_backend")
     assert {:ok, _view, html} = live(conn)
     refute html =~ "Sign in"
     assert html =~ "ever gonna"
