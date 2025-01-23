@@ -66,11 +66,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     assigns =
       assigns
-      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
-
-    assigns =
-      assigns
       |> assign(:identity_field, identity_field)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:input_type, fn ->
         identity_field
         |> to_string()
@@ -130,11 +128,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     assigns =
       assigns
-      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
-
-    assigns =
-      assigns
       |> assign(:password_field, password_field)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_field) do
           override_for(assigns.overrides, :input_class_with_error)
@@ -183,11 +179,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     assigns =
       assigns
-      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
-
-    assigns =
-      assigns
       |> assign(:password_confirmation_field, password_confirmation_field)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:input_class, fn ->
         if has_error?(assigns.form, password_confirmation_field) do
           override_for(assigns.overrides, :input_class_with_error)
@@ -224,7 +218,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.  Required.
     * `form` - An `AshPhoenix.Form`.  Required.
-    * `action` - Either `:sign_in` or `:register`.  Required.
+    * `action` - Either `:sign_in`, `:register`, `:request_reset` or `:reset`.  Required.
     * `label` - The text to show in the submit label.  Generated from the
       configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
     * `overrides` - A list of override modules.
@@ -234,7 +228,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
-          required(:action) => :sign_in | :register,
+          required(:action) => :sign_in | :register | :request_reset | :reset,
           optional(:label) => String.t(),
           optional(:overrides) => [module],
           optional(:gettext_fn) => {module, atom}
@@ -243,6 +237,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     assigns =
       assigns
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:label, fn ->
         case assigns.action do
           :reset ->
@@ -308,6 +303,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     assigns =
       assigns
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:errors, fn ->
         assigns.form
         |> Form.errors()

@@ -141,6 +141,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       |> assign(:sign_in_enabled?, !is_nil(override_for(assigns.overrides, :sign_in_toggle_text)))
       |> assign(:reset_id, reset_id)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:live_action, fn -> :sign_in end)
       |> assign_new(:path, fn -> "/" end)
       |> assign_new(:reset_path, fn -> nil end)

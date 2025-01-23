@@ -57,6 +57,7 @@ end
 
 defmodule AshAuthentication.Phoenix.Test.Router do
   @moduledoc false
+  alias AshAuthentication.Phoenix.Test.ComponentsLive
   use Phoenix.Router
   import Phoenix.LiveView.Router
   use AshAuthentication.Phoenix.Router
@@ -79,6 +80,12 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     sign_out_route AuthController
     reset_route auth_routes_prefix: "/auth"
     auth_routes AuthController, Example.Accounts.User, path: "/auth"
+
+    # Custom LiveView for components testing
+    sign_in_route path: "/custom_lv",
+                  auth_routes_prefix: "/auth",
+                  live_view: ComponentsLive,
+                  as: :custom_lv
 
     # Gettext routes
     sign_in_route path: "/anmeldung",

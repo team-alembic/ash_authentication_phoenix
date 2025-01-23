@@ -44,6 +44,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
       assigns
       |> assign(:subject_name, Info.authentication_subject_name!(assigns.strategy.resource))
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     ~H"""

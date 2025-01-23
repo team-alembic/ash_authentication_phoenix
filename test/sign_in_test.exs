@@ -15,8 +15,14 @@ defmodule AshAuthentication.Phoenix.SignInTest do
 
   test "sign_in routes liveview renders the sign in page", %{conn: conn} do
     conn = get(conn, "/sign-in")
-    assert {:ok, _view, html} = live(conn)
-    assert html =~ "Sign in"
+    assert {:ok, view, _html} = live(conn)
+
+    assert element(
+             view,
+             "div#user-password-sign-in-with-password-wrapper:not(.hidden)",
+             "Sign in"
+           )
+           |> render()
   end
 
   test "sign_in routes allow a user to sign in", %{conn: conn} do

@@ -346,7 +346,7 @@ defmodule AshAuthentication.Phoenix.Router do
 
   @doc """
   Generates a generic, white-label password reset page using LiveView and the components in
-  `AshAuthentication.Phoenix.Components`. This is the page that allows a user to actually change his passowrd,
+  `AshAuthentication.Phoenix.Components`. This is the page that allows a user to actually change his password,
   after requesting a reset token via the sign-in (`/reset`) route.
 
   Available options are:
