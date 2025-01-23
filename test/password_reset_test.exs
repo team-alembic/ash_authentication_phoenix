@@ -19,8 +19,16 @@ defmodule AshAuthentication.Phoenix.PasswordResetTest do
   end
 
   test "reset_route routes liveview honours external gettext_fn", %{conn: conn} do
-    # Translator mock at AshAuthentication.Phoenix.Test.Helper.gettext
+    # Translator stub at AshAuthentication.Phoenix.Test.Gettext.translate_auth
     conn = get(conn, "/vergessen/meine_wertmarke_213")
+    assert {:ok, _view, html} = live(conn)
+    refute html =~ "Password reset"
+    assert html =~ "ever gonna"
+  end
+
+  test "reset_route routes liveview honours external gettext_backend", %{conn: conn} do
+    # Translator stub at AshAuthentication.Phoenix.Test.Gettext
+    conn = get(conn, "/vergessen_backend/meine_wertmarke_213")
     assert {:ok, _view, html} = live(conn)
     refute html =~ "Password reset"
     assert html =~ "ever gonna"

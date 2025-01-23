@@ -202,8 +202,11 @@ defmodule AshAuthentication.Phoenix.Router do
   * `otp_app` the otp app or apps to find authentication resources in. Pulls from the socket by default.
   * `overrides` specify any override modules for customisation.  See
     `AshAuthentication.Phoenix.Overrides` for more information.
-  * `gettext_fn` as a `{module, function}` tuple pointing to a `(msgid :: String.t(), bindings :: Keyword.t()) :: String.t()`
-    typed function that will be called to translate each output text of the live view.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
 
   All other options are passed to the generated `scope`.
   """
@@ -212,9 +215,10 @@ defmodule AshAuthentication.Phoenix.Router do
             {:path, String.t()}
             | {:live_view, module}
             | {:as, atom}
-            | {:overrides, [module]}
             | {:on_mount, [module]}
+            | {:overrides, [module]}
             | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -229,9 +233,13 @@ defmodule AshAuthentication.Phoenix.Router do
     {register_path, opts} = Keyword.pop(opts, :register_path)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
 
     opts =
       opts
@@ -312,6 +320,8 @@ defmodule AshAuthentication.Phoenix.Router do
           end
         end
       end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
     end
   end
 
@@ -348,8 +358,11 @@ defmodule AshAuthentication.Phoenix.Router do
     * `as` which is passed to the generated `live` route. Defaults to `:auth`.
     * `overrides` specify any override modules for customisation. See
       `AshAuthentication.Phoenix.Overrides` for more information.
-    * `gettext_fn` as a `{module, function}` tuple pointing to a `(msgid :: String.t(), bindings :: Keyword.t()) :: String.t()`
-      typed function that will be called to translate each output text of the live view.
+    * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+      `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+      each output text of the live view.
+    * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+      and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
 
   All other options are passed to the generated `scope`.
   """
@@ -360,6 +373,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:as, atom}
             | {:overrides, [module]}
             | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
             | {:on_mount, [module]}
             | {atom, any}
           ]
@@ -373,9 +387,13 @@ defmodule AshAuthentication.Phoenix.Router do
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
 
     opts =
       opts
@@ -429,6 +447,8 @@ defmodule AshAuthentication.Phoenix.Router do
           live("/:token", unquote(live_view), :reset, as: unquote(as))
         end
       end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
     end
   end
 
@@ -437,5 +457,40 @@ defmodule AshAuthentication.Phoenix.Router do
     session
     |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
     |> Map.put("context", Ash.PlugHelpers.get_context(conn))
+  end
+
+  # When using a `gettext_backend`, we generate a function in the caller's router module, involving the
+  # path as unique id for the function name
+  defp generate_gettext_fn(nil, _id), do: ""
+
+  defp generate_gettext_fn({module, domain}, id) do
+    if Code.ensure_loaded?(Gettext) do
+      quote do
+        # sobelow_skip ["DOS.BinToAtom"] - based on auth route
+        def unquote(:"__translate#{id}")(msgid, bindings) do
+          Gettext.dgettext(unquote(module), unquote(domain), msgid, bindings)
+        end
+      end
+    else
+      raise "gettext_backend: Gettext is not available"
+    end
+  end
+
+  defp maybe_generate_gettext_fn_pointer(nil, nil, _router_module, _id), do: nil
+
+  # Prefer gettext_fn over gettext_backend
+  defp maybe_generate_gettext_fn_pointer(gettext_fn, _ignore, _router_module, _id)
+       when is_tuple(gettext_fn),
+       do: gettext_fn
+
+  # Point to the "translate" function generated by `generate_gettext_fn`
+  defp maybe_generate_gettext_fn_pointer(_gettext_fn, {_module, _domain}, router_module, id),
+    # sobelow_skip ["DOS.BinToAtom"] - based on auth route
+    do: {router_module, :"__translate#{id}"}
+
+  defp maybe_generate_gettext_fn_pointer(_gettext_fn, invalid, _router_module, _id) do
+    raise ArgumentError,
+          "gettext_backend: #{inspect(invalid)} is invalid - specify " <>
+            "`{module :: module, domain :: String.t()}`"
   end
 end
