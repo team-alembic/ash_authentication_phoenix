@@ -51,13 +51,15 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `input_type` - Either `:text` or `:email`.
       If not set it will try and guess based on the name of the identity field.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
   """
   @spec identity_field(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
           optional(:input_type) => :text | :email,
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }) :: Rendered.t() | no_return
   def identity_field(assigns) do
     identity_field = assigns.strategy.identity_field
@@ -88,7 +90,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      {label(@form, @identity_field, override_for(@overrides, :identity_input_label),
+      {label(@form, @identity_field, _gettext(override_for(@overrides, :identity_input_label)),
         class: override_for(@overrides, :label_class)
       )}
       {text_input(@form, @identity_field,
@@ -114,12 +116,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       `AshAuthentication.authenticated_resources/1`.  Required.
     * `form` - An `AshPhoenix.Form`.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
   """
   @spec password_field(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }) :: Rendered.t() | no_return
   def password_field(assigns) do
     password_field = assigns.strategy.password_field
@@ -141,7 +145,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
 
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      {label(@form, @password_field, override_for(@overrides, :password_input_label),
+      {label(@form, @password_field, _gettext(override_for(@overrides, :password_input_label)),
         class: override_for(@overrides, :label_class)
       )}
       {password_input(@form, @password_field,
@@ -165,12 +169,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       `AshAuthentication.authenticated_resources/1`.  Required.
     * `form` - An `AshPhoenix.Form`.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
   """
   @spec password_confirmation_field(%{
           required(:socket) => Socket.t(),
           required(:strategy) => Strategy.t(),
           required(:form) => Form.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }) :: Rendered.t() | no_return
   def password_confirmation_field(assigns) do
     password_confirmation_field = assigns.strategy.password_confirmation_field
@@ -195,7 +201,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       {label(
         @form,
         @password_confirmation_field,
-        override_for(@overrides, :password_confirmation_input_label),
+        _gettext(override_for(@overrides, :password_confirmation_input_label)),
         class: override_for(@overrides, :label_class)
       )}
       {password_input(@form, @password_confirmation_field,
@@ -222,6 +228,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `label` - The text to show in the submit label.  Generated from the
       configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
   """
   @spec submit(%{
           required(:socket) => Socket.t(),
@@ -229,7 +236,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
           required(:form) => Form.t(),
           required(:action) => :sign_in | :register,
           optional(:label) => String.t(),
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }) :: Rendered.t() | no_return
   def submit(assigns) do
     assigns =
@@ -269,9 +277,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       |> assign_new(:disable_text, fn -> nil end)
 
     ~H"""
-    {submit(@label,
+    {submit(_gettext(@label),
       class: override_for(@overrides, :submit_class),
-      phx_disable_with: @disable_text
+      phx_disable_with: _gettext(@disable_text)
     )}
     """
   end
@@ -286,13 +294,15 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `form` - An `AshPhoenix.Form`.  Required.
     * `field` - The field for which to retrieve the errors.  Required.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
   """
   @spec error(%{
           required(:socket) => Socket.t(),
           required(:form) => Form.t(),
           required(:field) => atom,
           optional(:field_label) => String.Chars.t(),
-          optional(:errors) => [{atom, String.t()}]
+          optional(:errors) => [{atom, String.t()}],
+          optional(:gettext_fn) => {module, atom}
         }) :: Rendered.t() | no_return
   def error(assigns) do
     assigns =
@@ -310,7 +320,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       <ul class={override_for(@overrides, :error_ul)}>
         <%= for error <- @errors do %>
           <li class={override_for(@overrides, :error_li)} phx-feedback-for={input_name(@form, @field)}>
-            {error}
+            {_gettext(error)}
           </li>
         <% end %>
       </ul>

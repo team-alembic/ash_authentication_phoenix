@@ -18,6 +18,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
   ## Props
 
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -26,7 +27,8 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
   alias Phoenix.LiveView.Rendered
 
   @type props :: %{
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -61,12 +63,12 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
         <% {nil, nil} -> %>
         <% {nil, txt} -> %>
           <div class={override_for(@overrides, :text_class)}>
-            {txt}
+            {_gettext(txt)}
           </div>
         <% {hrf, txt} -> %>
           <div class={override_for(@overrides, :text_class)}>
             <a class={override_for(@overrides, :href_class)} href={hrf}>
-              {txt}
+              {_gettext(txt)}
             </a>
           </div>
       <% end %>

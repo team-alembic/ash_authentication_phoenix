@@ -184,25 +184,28 @@ defmodule AshAuthentication.Phoenix.Router do
 
   Available options are:
 
-  * `path` the path under which to mount the sign-in live-view. Defaults to `"/sign-in"` within the current router scope.
+  * `path` the path under which to mount the sign-in live-view. Defaults to `/sign-in` within the current router scope.
   * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
     Allows disabling `helpers: true`.
     If a tuple {:unscoped, path} is provided, the path prefix will not inherit the current route scope.
   * `register_path` - the path under which to mount the password strategy's registration live-view.
      If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
      If a tuple {:unscoped, path} is provided, the registration path will not inherit the current route scope.
-  * `reset_path` - the path under which to mount the password strategy's password reset live-view.
-    If not set, and password reset is supported, password reset will use a dynamic toggle and will not be routeable to.
-    If a tuple {:unscoped, path} is provided, the reset path will not inherit the current route scope.
+  * `reset_path` - the path under which to mount the password strategy's password reset live-view, for a user to
+    request a reset token by email. If not set, and password reset is supported, password reset will use a
+    dynamic toggle and will not be routeable to. If a tuple {:unscoped, path} is provided, the reset path
+    will not inherit the current route scope.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
-  * `auth_routes_prefix` the prefix to use for the auth routes. Defaults to `"/auth"`.
+  * `auth_routes_prefix` the prefix to use for the auth routes. Defaults to `/auth`.
   * `as` which is used to prefix the generated `live_session` and `live` route name. Defaults to `:auth`.
   * `otp_app` the otp app or apps to find authentication resources in. Pulls from the socket by default.
   * `overrides` specify any override modules for customisation.  See
     `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module, function}` tuple pointing to a `(msgid :: String.t(), bindings :: Keyword.t()) :: String.t()`
+    typed function that will be called to translate each output text of the live view.
 
-    all other options are passed to the generated `scope`.
+  All other options are passed to the generated `scope`.
   """
   @spec sign_in_route(
           opts :: [
@@ -211,6 +214,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:as, atom}
             | {:overrides, [module]}
             | {:on_mount, [module]}
+            | {:gettext_fn, {module, atom}}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -224,6 +228,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {reset_path, opts} = Keyword.pop(opts, :reset_path)
     {register_path, opts} = Keyword.pop(opts, :register_path)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -279,7 +284,8 @@ defmodule AshAuthentication.Phoenix.Router do
                  "otp_app" => unquote(otp_app),
                  "path" => sign_in_path,
                  "reset_path" => reset_path,
-                 "register_path" => register_path
+                 "register_path" => register_path,
+                 "gettext_fn" => unquote(gettext_fn)
                }
              ]},
           on_mount: on_mount
@@ -329,22 +335,23 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
-  Generates a generic, white-label password reset page using LiveView and the
-  components in `AshAuthentication.Phoenix.Components`.
+  Generates a generic, white-label password reset page using LiveView and the components in
+  `AshAuthentication.Phoenix.Components`. This is the page that allows a user to actually change his passowrd,
+  after requesting a reset token via the sign-in (`/reset`) route.
 
   Available options are:
 
     * `path` the path under which to mount the live-view. Defaults to
-      `"/password-reset"`.
+      `/password-reset`.
     * `live_view` the name of the live view to render. Defaults to
       `AshAuthentication.Phoenix.ResetLive`.
     * `as` which is passed to the generated `live` route. Defaults to `:auth`.
-    * `overrides` specify any override modules for customisation.  See
-      `AshAuthentication.Phoenix.Overrides` for more information. all other
-      options are passed to the generated `scope`.
+    * `overrides` specify any override modules for customisation. See
+      `AshAuthentication.Phoenix.Overrides` for more information.
+    * `gettext_fn` as a `{module, function}` tuple pointing to a `(msgid :: String.t(), bindings :: Keyword.t()) :: String.t()`
+      typed function that will be called to translate each output text of the live view.
 
-  This is completely optional, in particular, if the `reset_path` option is passed to the
-  `sign_in_route` helper, using the `reset_route` helper is redundant.
+  All other options are passed to the generated `scope`.
   """
   @spec reset_route(
           opts :: [
@@ -352,6 +359,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:live_view, module}
             | {:as, atom}
             | {:overrides, [module]}
+            | {:gettext_fn, {module, atom}}
             | {:on_mount, [module]}
             | {atom, any}
           ]
@@ -364,6 +372,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -400,6 +409,7 @@ defmodule AshAuthentication.Phoenix.Router do
                %{
                  "auth_routes_prefix" => auth_routes_prefix,
                  "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
                  "otp_app" => unquote(otp_app)
                }
              ]},

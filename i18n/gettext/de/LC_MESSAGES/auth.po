@@ -1,0 +1,63 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Already have an account?"
+msgstr "Bereit zum Anmelden?"
+
+msgid "Email or password was incorrect"
+msgstr "Email oder Passwort nicht korrekt"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Forgot your password?"
+msgstr "Passwort vergessen?"
+
+msgid "If this user exists in our database you will contacted with a sign-in link shortly."
+msgstr "Falls dieser Benutzer bekannt ist, wird jetzt eine Email mit Anmelde-Link versendet."
+
+msgid "If this user exists in our system, you will be contacted with reset instructions shortly."
+msgstr "Falls dieser Benutzer bekannt ist, wird jetzt eine Email mit einer Anleitung zum Zurücksetzen versendet."
+
+msgid "Need an account?"
+msgstr "Konto anlegen?"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Password Confirmation"
+msgstr "Passwort Wiederholung"
+
+msgid "Request magic link"
+msgstr "Magischen Link anfordern"
+
+msgid "Request password reset token"
+msgstr "Passwort zurücksetzen"
+
+msgid "Requesting ..."
+msgstr "Anfrage låuft..."
+
+msgid "Reset password with token"
+msgstr "Neues Passwort setzen"
+
+msgid "Sign in"
+msgstr "Anmelden"
+
+msgid "Signing in ..."
+msgstr "Anmelden..."
+
+msgid "Your password has successfully been reset"
+msgstr "Das Passwort wurde erfolgreich zurückgesetzt"

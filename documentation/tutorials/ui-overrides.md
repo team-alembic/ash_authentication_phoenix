@@ -4,6 +4,8 @@ Ash Authentication Phoenix provides a default UI implementation to get you start
 
 Each of our LiveView components has a number of hooks where you can override either the CSS styles, text or images.
 
+In addition you have the option to provide a `gettext/2` compatible function through which all output text will be run.
+
 ## Defining Overrides
 
 You override these components by defining an "overrides module", which you will then provide in your router when setting up your routes.
@@ -24,10 +26,30 @@ end
 
 You only need to define the overrides you want to change. Unspecified overrides will use their default value.
 
+## Internationalisation
+
+Plug in your own i18n library by providing a gettext-like function, for example in your Gettext backend module:
+
+```elixir
+defmodule MyAppWeb.Gettext do
+  use Gettext.Backend, otp_app: :my_app
+
+  def translate_auth(msgid, bindings \\ []), do: Gettext.dgettext(__MODULE__, "auth", msgid, bindings)
+end
+```
+
+The repository includes Gettext templates for the untranslated messages and a growing number of translations. You might want to
+
+```sh
+cp -rv deps/ash_authentication_phoenix/i18n/gettext/* priv/gettext
+```
+
 ## Telling AshAuthentication about your overrides
 
 To do this, you modify your `sign_in_route` calls to contain the `overrides` option. Be sure to put the
 `AshAuthentication.Phoenix.Overrides.Default` override last, as it contains the default values for all components!
+
+The same way you may add a `gettext_fn` option to specify your translation function as a `{module, function}` tuple.
 
 ```elixir
 defmodule MyAppWeb.Router do
@@ -37,7 +59,8 @@ defmodule MyAppWeb.Router do
   # ...
 
   scope "/", MyAppWeb do
-    sign_in_route(overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default])
+    sign_in_route overrides: [MyAppWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default],
+                  gettext_fn: {MyAppWeb.Gettext, :translate_auth}
   end
 end
 ```

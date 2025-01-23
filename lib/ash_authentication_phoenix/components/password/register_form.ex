@@ -27,6 +27,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       `AshAuthentication.Info.strategy/2`.  Required.
     * `socket` - Needed to infer the otp-app from the Phoenix endpoint.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -43,11 +44,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
-          optional(:overrides) => [module],
           optional(:live_action) => :sign_in | :register,
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t()
+          optional(:auth_routes_prefix) => String.t(),
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -111,11 +113,26 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
-        <Input.password_field strategy={@strategy} form={form} overrides={@overrides} />
+        <Input.identity_field
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
+        <Input.password_field
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
 
         <%= if @strategy.confirmation_required? do %>
-          <Input.password_confirmation_field strategy={@strategy} form={form} overrides={@overrides} />
+          <Input.password_confirmation_field
+            strategy={@strategy}
+            form={form}
+            overrides={@overrides}
+            gettext_fn={@gettext_fn}
+          />
         <% end %>
 
         <%= if @inner_block do %>
@@ -131,6 +148,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
           label={override_for(@overrides, :button_text)}
           disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
+          gettext_fn={@gettext_fn}
         />
       </.form>
     </div>

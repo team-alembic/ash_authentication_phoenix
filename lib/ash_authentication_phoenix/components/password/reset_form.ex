@@ -29,6 +29,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
       Set to `false` to disable.
     * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
@@ -45,10 +46,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
           optional(:label) => String.t() | false,
-          optional(:overrides) => [module],
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t()
+          optional(:auth_routes_prefix) => String.t(),
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
         }
 
   @doc false
@@ -102,7 +104,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field strategy={@strategy} form={form} overrides={@overrides} />
+        <Input.identity_field
+          strategy={@strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
 
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
@@ -117,6 +124,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
           label={override_for(@overrides, :button_text)}
           disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
+          gettext_fn={@gettext_fn}
         />
       </.form>
     </div>
@@ -170,7 +178,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     socket =
       if flash do
         socket
-        |> put_flash!(:info, flash)
+        |> put_flash!(:info, _gettext(flash))
       else
         socket
       end

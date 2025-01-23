@@ -77,8 +77,18 @@ defmodule AshAuthentication.Phoenix.Test.Router do
 
     sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth"
     sign_out_route AuthController
-    reset_route []
+    reset_route auth_routes_prefix: "/auth"
     auth_routes AuthController, Example.Accounts.User, path: "/auth"
+
+    sign_in_route path: "/anmeldung",
+                  auth_routes_prefix: "/auth",
+                  gettext_fn: {AshAuthentication.Phoenix.Test.Helper, :gettext},
+                  as: :gettext
+
+    reset_route path: "/vergessen",
+                auth_routes_prefix: "/auth",
+                gettext_fn: {AshAuthentication.Phoenix.Test.Helper, :gettext},
+                as: :gettext
   end
 
   scope "/nested", AshAuthentication.Phoenix.Test do

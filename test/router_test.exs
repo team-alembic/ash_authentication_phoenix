@@ -19,7 +19,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "overrides" => [AshAuthentication.Phoenix.Overrides.Default],
                   "path" => "/sign-in",
                   "register_path" => "/register",
-                  "reset_path" => "/reset"
+                  "reset_path" => "/reset",
+                  "gettext_fn" => nil
                 }
               ]}
   end
@@ -41,7 +42,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "overrides" => [AshAuthentication.Phoenix.Overrides.Default],
                   "path" => "/nested/sign-in",
                   "register_path" => "/nested/register",
-                  "reset_path" => "/nested/reset"
+                  "reset_path" => "/nested/reset",
+                  "gettext_fn" => nil
                 }
               ]}
   end
@@ -63,7 +65,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "overrides" => [AshAuthentication.Phoenix.Overrides.Default],
                   "path" => "/unscoped/sign-in",
                   "register_path" => "/register",
-                  "reset_path" => "/reset"
+                  "reset_path" => "/reset",
+                  "gettext_fn" => nil
                 }
               ]}
   end
