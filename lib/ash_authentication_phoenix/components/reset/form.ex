@@ -86,6 +86,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
       )
       |> assign_new(:label, fn -> humanize(resettable.password_reset_action_name) end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}

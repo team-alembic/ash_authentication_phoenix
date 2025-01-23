@@ -79,6 +79,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       socket
       |> assign(:strategies_by_resource, strategies_by_resource)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:live_action, fn -> :sign_in end)
       |> assign_new(:path, fn -> "/" end)
       |> assign_new(:reset_path, fn -> nil end)

@@ -38,6 +38,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
     assigns =
       assigns
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>

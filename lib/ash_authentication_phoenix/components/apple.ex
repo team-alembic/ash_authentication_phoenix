@@ -42,6 +42,7 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
       assigns
       |> assign(:subject_name, Info.authentication_subject_name!(assigns.strategy.resource))
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
