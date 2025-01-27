@@ -4,7 +4,6 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
     spacer_class: "CSS classes for space between the password input and submit elements.",
-    button_text: "Text for the submit button.",
     disable_button_text: "Text for the submit button when the request is happening."
 
   @moduledoc """
@@ -152,7 +151,6 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
           strategy={@strategy}
           form={form}
           action={:reset}
-          label={_gettext(override_for(@overrides, :button_text))}
           disable_text={_gettext(override_for(@overrides, :disable_button_text))}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
