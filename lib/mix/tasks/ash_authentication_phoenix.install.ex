@@ -101,6 +101,11 @@ if Code.ensure_loaded?(Igniter) do
         igniter
         |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
         |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
+        |> Igniter.Project.TaskAliases.add_alias(
+          "phx.routes",
+          ["phx.routes", "ash_authentication_phoenix.routes"],
+          if_exists: {:append, "ash_authentication_phoenix.routes"}
+        )
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
         |> use_authentication_phoenix_router(router)
