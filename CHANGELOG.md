@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.5...v2.4.6) (2025-01-27)
+
+
+
+
+### Improvements:
+
+* add `ash_authentication_phoenix.routes` to `phx.routes`
+
 ## [v2.4.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.4...v2.4.5) (2025-01-27)
 
 
