@@ -125,6 +125,8 @@ Generates sign in, registration and reset forms for a resource.
 
 Generates a default registration form.
 
+  * `:button_text` - Text for the submit button.
+
   * `:disable_button_text` - Text for the submit button when the request is happening.
 
   * `:form_class` - CSS class for the `form` element.
@@ -139,6 +141,8 @@ Generates a default registration form.
 ### `AshAuthentication.Phoenix.Components.Password.SignInForm`
 
 Generates a default sign in form.
+
+  * `:button_text` - Text for the submit button.
 
   * `:disable_button_text` - Text for the submit button when the request is happening.
 
@@ -190,6 +194,8 @@ Generates a default password reset form.
 ### `AshAuthentication.Phoenix.Components.Password.ResetForm`
 
 Generates a default password reset form.
+
+  * `:button_text` - Tex for the submit button.
 
   * `:disable_button_text` - Text for the submit button when the request is happening.
 

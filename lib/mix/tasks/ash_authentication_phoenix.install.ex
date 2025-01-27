@@ -102,7 +102,7 @@ if Code.ensure_loaded?(Igniter) do
         |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
         |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
         |> warn_on_missing_modules(options, argv, install?)
-        |> explain_tailwind_changes()
+        |> do_or_explain_tailwind_changes()
         |> use_authentication_phoenix_router(router)
         |> create_auth_controller()
         |> create_overrides_module(overrides)
@@ -341,6 +341,38 @@ if Code.ensure_loaded?(Igniter) do
       end)
     end
 
+    @tailwind_prefix """
+    module.exports = {
+      content: [
+    """
+
+    defp do_or_explain_tailwind_changes(igniter) do
+      if Igniter.exists?(igniter, "assets/tailwind.config.js") do
+        igniter = Igniter.include_glob(igniter, "assets/tailwind.config.js")
+        source = Rewrite.source!(igniter.rewrite, "assets/tailwind.config.js")
+        content = Rewrite.Source.get(source, :content)
+
+        case String.split(content, @tailwind_prefix, parts: 2) do
+          [prefix, suffix] ->
+            insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
+
+            source =
+              Rewrite.Source.update(
+                source,
+                :content,
+                prefix <> @tailwind_prefix <> insert <> suffix
+              )
+
+            %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+
+          _ ->
+            explain_tailwind_changes(igniter)
+        end
+      else
+        explain_tailwind_changes(igniter)
+      end
+    end
+
     defp explain_tailwind_changes(igniter) do
       Igniter.add_notice(igniter, """
       Modify your `tailwind.config.js` file, to add the ash_authentication_phoenix
@@ -351,7 +383,7 @@ if Code.ensure_loaded?(Igniter) do
             "./js/**/*.js",
             "../lib/*_web.ex",
             "../lib/*_web/**/*.*ex",
-            "../deps/ash_authentication_phoenix/**/*.*ex", // <-- Add this line
+            
           ],
           ...
         }
