@@ -5,6 +5,35 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.4...v2.4.5) (2025-01-27)
+
+
+
+
+### Bug Fixes:
+
+* duplicate border color CSS in defaults
+
+* Missing comma in igniter-generated Phoenix overrides (#556)
+
+### Improvements:
+
+* automatically add sources to assets/tailwind.config.js
+
+* gettext_backend convenience wrapper (#563)
+
+* i18n with a custom gettext function (#561)
+
+* factor out shared input field CSS
+
+* optional gettext, docs
+
+* Allow changing text of submit buttons (#562)
+
+* allow configurable AshAuthentication.Phoenix.StrategyRouter
+
+* set `yes_to_deps` when fetching dependencies
+
 ## [v2.4.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.3...v2.4.4) (2024-12-26)
 
 
