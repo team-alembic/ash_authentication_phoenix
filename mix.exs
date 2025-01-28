@@ -21,65 +21,67 @@ defmodule AshAuthentication.Phoenix.MixProject do
         plt_core_path: "priv/plts",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
-      docs: [
-        main: "readme",
-        extras: [
-          "README.md",
-          {"documentation/tutorials/get-started.md", title: "Get Started"},
-          {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
-          {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"}
-        ],
-        redirects: %{
-          "getting-started-with-ash-authentication-phoenix" => "get-started"
-        },
-        groups_for_extras: [
-          Tutorials: ~r'documentation/tutorials',
-          "How To": ~r'documentation/how_to',
-          Topics: ~r'documentation/topics',
-          DSLs: ~r'documentation/dsls'
-        ],
-        formatters: ["html"],
-        before_closing_head_tag: fn type ->
-          if type == :html do
-            """
-            <script>
-              if (location.hostname === "hexdocs.pm") {
-                var script = document.createElement("script");
-                script.src = "https://plausible.io/js/script.js";
-                script.setAttribute("defer", "defer")
-                script.setAttribute("data-domain", "ashhexdocs")
-                document.head.appendChild(script);
-              }
-            </script>
-            """
-          end
-        end,
-        filter_modules: fn module, _ ->
-          String.match?(to_string(module), ~r/^Elixir.AshAuthentication.Phoenix/) ||
-            String.match?(to_string(module), ~r/^Elixir.Mix.Tasks/)
-        end,
-        source_url_pattern:
-          "https://github.com/team-alembic/ash_authentication_phoenix/blob/main/%{path}#L%{line}",
-        groups_for_modules: [
-          Welcome: [
-            AshAuthentication.Phoenix
+      docs: fn ->
+        [
+          main: "readme",
+          extras: [
+            "README.md",
+            {"documentation/tutorials/get-started.md", title: "Get Started"},
+            {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
+            {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"}
           ],
-          "Routing and Controller": [
-            AshAuthentication.Phoenix.Controller,
-            AshAuthentication.Phoenix.Plug,
-            AshAuthentication.Phoenix.Router,
-            AshAuthentication.Phoenix.LiveSession
+          redirects: %{
+            "getting-started-with-ash-authentication-phoenix" => "get-started"
+          },
+          groups_for_extras: [
+            Tutorials: ~r'documentation/tutorials',
+            "How To": ~r'documentation/how_to',
+            Topics: ~r'documentation/topics',
+            DSLs: ~r'documentation/dsls'
           ],
-          Customisation: [
-            ~r/^AshAuthentication\.Phoenix\..+Live/,
-            ~r/^AshAuthentication\.Phoenix\.Overrides/,
-            ~r/^AshAuthentication\.Phoenix\.Components/
-          ],
-          Utilities: [
-            AshAuthentication.Phoenix.Utils.Flash
+          formatters: ["html"],
+          before_closing_head_tag: fn type ->
+            if type == :html do
+              """
+              <script>
+                if (location.hostname === "hexdocs.pm") {
+                  var script = document.createElement("script");
+                  script.src = "https://plausible.io/js/script.js";
+                  script.setAttribute("defer", "defer")
+                  script.setAttribute("data-domain", "ashhexdocs")
+                  document.head.appendChild(script);
+                }
+              </script>
+              """
+            end
+          end,
+          filter_modules: fn module, _ ->
+            String.match?(to_string(module), ~r/^Elixir.AshAuthentication.Phoenix/) ||
+              String.match?(to_string(module), ~r/^Elixir.Mix.Tasks/)
+          end,
+          source_url_pattern:
+            "https://github.com/team-alembic/ash_authentication_phoenix/blob/main/%{path}#L%{line}",
+          groups_for_modules: [
+            Welcome: [
+              AshAuthentication.Phoenix
+            ],
+            "Routing and Controller": [
+              AshAuthentication.Phoenix.Controller,
+              AshAuthentication.Phoenix.Plug,
+              AshAuthentication.Phoenix.Router,
+              AshAuthentication.Phoenix.LiveSession
+            ],
+            Customisation: [
+              ~r/^AshAuthentication\.Phoenix\..+Live/,
+              ~r/^AshAuthentication\.Phoenix\.Overrides/,
+              ~r/^AshAuthentication\.Phoenix\.Components/
+            ],
+            Utilities: [
+              AshAuthentication.Phoenix.Utils.Flash
+            ]
           ]
         ]
-      ]
+      end
     ]
   end
 
@@ -133,7 +135,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},
       {:ex_check, "~> 0.15", only: [:dev, :test]},
-      {:ex_doc, github: "elixir-lang/ex_doc", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.37-rc", only: [:dev, :test], runtime: false},
       {:faker, "~> 0.17", only: [:dev, :test]},
       {:git_ops, "~> 2.4", only: [:dev, :test], runtime: false},
       {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
