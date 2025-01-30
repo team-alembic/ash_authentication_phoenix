@@ -20,11 +20,14 @@ defmodule MyAppWeb.AuthOverrides do
   override AshAuthentication.Phoenix.Components.Banner do
     # include any number of properties you want to override
     set :image_url, "/images/rickroll.gif"
+    set :dark_image_url, "/images/rickroll-dark.gif"
   end
 end
 ```
 
 You only need to define the overrides you want to change. Unspecified overrides will use their default value.
+
+When overriding UI elements, remember to account for dark mode support. Some properties have dark mode variants (prefixed with `dark_`) that should be set alongside their light mode counterparts. For instance, if you override `image_url`, you should typically also set `dark_image_url` to ensure your UI looks good in both light and dark modes.
 
 ## Internationalisation
 
@@ -310,9 +313,9 @@ Renders a very simple banner at the top of the sign-in component.
 
   * `:href_url` - A URL for the banner image to link to. Set to `nil` to disable.
 
-  * `:image_class` - CSS class for the `img` tag.
+  * `:image_class` - CSS class for the `img` tag in light mode. When setting this, consider also setting `:dark_image_class` for dark mode support. 
 
-  * `:image_url` - A URL for the `img` `src` attribute. Set to `nil` to disable.
+  * `:image_url` - A URL for the `img` `src` attribute in light mode. Set to `nil` to disable. When setting this, consider also setting `:dark_image_url` for dark mode support. 
 
   * `:root_class` - CSS class for the root `div` element.
 
