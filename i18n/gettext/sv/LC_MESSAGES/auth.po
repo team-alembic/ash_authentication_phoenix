@@ -1,0 +1,60 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: sv\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Already have an account?"
+msgstr "Har du redan ett konto?"
+
+msgid "Email or password was incorrect"
+msgstr "E-postadress eller lösenord var inkorrekt"
+
+msgid "Email"
+msgstr "E-postadress"
+
+msgid "Forgot your password?"
+msgstr "Glömt ditt lösenord?"
+
+msgid "If this user exists in our database you will contacted with a sign-in link shortly."
+msgstr "Om den här användaren existerar i vår databas kommer du att få en inloggningslänk inom kort."
+
+msgid "If this user exists in our system, you will be contacted with reset instructions shortly."
+msgstr "Om den här användaren existerar i våra system kommer du att få instruktioner för återställning inom kort."
+
+msgid "Need an account?"
+msgstr "Behöver du ett konto?"
+
+msgid "Password"
+msgstr "Lösenord"
+
+msgid "Password Confirmation"
+msgstr "Lösenordsbekräftelse"
+
+msgid "Request magic link"
+msgstr "Begär magisk länk"
+
+msgid "Request password reset token"
+msgstr "Begär token för lösenordsåterställning"
+
+msgid "Requesting ..."
+msgstr "Begär..."
+
+msgid "Reset password with token"
+msgstr "Återställ lösenord med token"
+
+msgid "Sign in"
+msgstr "Logga in"
+
+msgid "Signing in ..."
+msgstr "Loggar in..."
+
+msgid "Your password has successfully been reset"
+msgstr "Ditt lösenord har återställts"
