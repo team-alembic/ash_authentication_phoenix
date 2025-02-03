@@ -313,9 +313,9 @@ Renders a very simple banner at the top of the sign-in component.
 
   * `:href_url` - A URL for the banner image to link to. Set to `nil` to disable.
 
-  * `:image_class` - CSS class for the `img` tag in light mode. When setting this, consider also setting `:dark_image_class` for dark mode support. 
+  * `:image_class` - CSS class for the `img` tag.
 
-  * `:image_url` - A URL for the `img` `src` attribute in light mode. Set to `nil` to disable. When setting this, consider also setting `:dark_image_url` for dark mode support. 
+  * `:image_url` - A URL for the `img` `src` attribute. Set to `nil` to disable.
 
   * `:root_class` - CSS class for the root `div` element.
 
