@@ -81,6 +81,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> Form.for_action(strategy.register_action_name,
         domain: domain,
         as: subject_name |> to_string(),
+        transform_errors: _transform_errors(),
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.register_action_name}"
           |> slugify(),
