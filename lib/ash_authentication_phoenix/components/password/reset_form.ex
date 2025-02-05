@@ -58,12 +58,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
-    form = blank_form(strategy, assigns[:context] || %{})
 
     socket =
       socket
       |> assign(assigns)
-      |> assign(form: form, subject_name: Info.authentication_subject_name!(strategy.resource))
+      |> assign(subject_name: Info.authentication_subject_name!(strategy.resource))
       |> assign_new(:label, fn -> strategy.request_password_reset_action_name end)
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
@@ -72,7 +71,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       |> assign_new(:context, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
-    {:ok, socket}
+    form = blank_form(strategy, assigns[:context] || %{}, socket)
+
+    {:ok, assign(socket, form: form)}
   end
 
   @doc false
@@ -174,7 +175,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
     socket =
       socket
-      |> assign(:form, blank_form(strategy, socket.assigns[:context] || %{}))
+      |> assign(:form, blank_form(strategy, socket.assigns[:context] || %{}, socket))
 
     socket =
       if flash do
@@ -197,7 +198,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     Map.get(params, param_key, %{})
   end
 
-  defp blank_form(%{resettable: resettable} = strategy, context) when not is_nil(resettable) do
+  defp blank_form(%{resettable: resettable} = strategy, context, socket)
+       when not is_nil(resettable) do
     domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
@@ -205,6 +207,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     |> Form.for_action(resettable.request_password_reset_action_name,
       domain: domain,
       as: subject_name |> to_string(),
+      transform_errors: _transform_errors(),
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.request_password_reset_action_name}"
         |> slugify(),

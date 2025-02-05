@@ -68,6 +68,22 @@ defmodule AshAuthentication.Phoenix.Web do
           Web.gettext_switch(unquote(gettext_fn), unquote(msgid), unquote(bindings))
         end
       end
+
+      defmacro _transform_errors() do
+        quote do
+          fn _source, error ->
+            if AshPhoenix.FormData.Error.impl_for(error) do
+              AshPhoenix.FormData.Error.to_form_error(error)
+              |> List.wrap()
+              |> Enum.map(fn {field, message, vars} ->
+                {field, _gettext(message, vars), vars}
+              end)
+            else
+              error
+            end
+          end
+        end
+      end
     end
   end
 

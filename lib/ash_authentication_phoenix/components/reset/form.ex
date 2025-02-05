@@ -64,22 +64,10 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
 
     resettable = strategy.resettable
 
-    form =
-      strategy.resource
-      |> Form.for_action(strategy.resettable.password_reset_action_name,
-        domain: domain,
-        as: subject_name |> to_string(),
-        id:
-          "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.password_reset_action_name}"
-          |> slugify(),
-        context: %{strategy: strategy, private: %{ash_authentication?: true}}
-      )
-
     socket =
       socket
       |> assign(assigns)
       |> assign(
-        form: form,
         trigger_action: false,
         subject_name: subject_name,
         resettable: resettable
@@ -88,6 +76,20 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+
+    form =
+      strategy.resource
+      |> Form.for_action(strategy.resettable.password_reset_action_name,
+        transform_errors: _transform_errors(),
+        domain: domain,
+        as: subject_name |> to_string(),
+        id:
+          "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.password_reset_action_name}"
+          |> slugify(),
+        context: %{strategy: strategy, private: %{ash_authentication?: true}}
+      )
+
+    socket = assign(socket, form: form)
 
     {:ok, socket}
   end
