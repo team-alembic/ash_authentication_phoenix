@@ -69,12 +69,15 @@ defmodule AshAuthentication.Phoenix.Web do
         end
       end
 
-      defmacro _transform_errors() do
+      defmacro _transform_errors do
         quote do
+          alias AshPhoenix.FormData.Error
+
           fn _source, error ->
-            if AshPhoenix.FormData.Error.impl_for(error) do
-              AshPhoenix.FormData.Error.to_form_error(error)
+            if Error.impl_for(error) do
+              Error.to_form_error(error)
               |> List.wrap()
+              # credo:disable-for-next-line Credo.Check.Refactor.Nesting
               |> Enum.map(fn {field, message, vars} ->
                 {field, _gettext(message, vars), vars}
               end)
