@@ -68,6 +68,25 @@ defmodule AshAuthentication.Phoenix.Web do
           Web.gettext_switch(unquote(gettext_fn), unquote(msgid), unquote(bindings))
         end
       end
+
+      defmacro _transform_errors do
+        quote do
+          alias AshPhoenix.FormData.Error
+
+          fn _source, error ->
+            if Error.impl_for(error) do
+              Error.to_form_error(error)
+              |> List.wrap()
+              # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+              |> Enum.map(fn {field, message, vars} ->
+                {field, _gettext(message, vars), vars}
+              end)
+            else
+              error
+            end
+          end
+        end
+      end
     end
   end
 

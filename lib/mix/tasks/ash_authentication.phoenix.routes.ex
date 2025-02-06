@@ -11,7 +11,7 @@ defmodule Mix.Tasks.AshAuthentication.Phoenix.Routes do
   Alternatively, you can modify your aliases task to run them back to back it.
 
   ```elixir
-  aliases: ["phx.routes": ["do", "phx.routes,", "ash_authentication.phx.routes"]]
+  aliases: ["phx.routes": ["do", "phx.routes,", "ash_authentication.phoenix.routes"]]
   ```
   """
 

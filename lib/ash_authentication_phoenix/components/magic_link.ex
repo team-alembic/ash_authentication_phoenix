@@ -184,6 +184,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}" |> slugify(),
       tenant: socket.assigns.current_tenant,
+      transform_errors: _transform_errors(),
       context:
         Ash.Helpers.deep_merge_maps(context, %{
           strategy: strategy,

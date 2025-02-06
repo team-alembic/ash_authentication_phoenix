@@ -62,6 +62,18 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
+    socket =
+      socket
+      |> assign(assigns)
+      |> assign(trigger_action: false, subject_name: subject_name)
+      |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
+      |> assign_new(:inner_block, fn -> nil end)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:context, fn -> %{} end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
+
     form =
       strategy.resource
       |> Form.for_action(strategy.sign_in_action_name,
@@ -71,6 +83,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
           |> slugify(),
         tenant: assigns[:current_tenant],
+        transform_errors: _transform_errors(),
         context:
           Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
             strategy: strategy,
@@ -78,17 +91,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           })
       )
 
-    socket =
-      socket
-      |> assign(assigns)
-      |> assign(form: form, trigger_action: false, subject_name: subject_name)
-      |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
-      |> assign_new(:inner_block, fn -> nil end)
-      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
-      |> assign_new(:gettext_fn, fn -> nil end)
-      |> assign_new(:current_tenant, fn -> nil end)
-      |> assign_new(:context, fn -> %{} end)
-      |> assign_new(:auth_routes_prefix, fn -> nil end)
+    socket = assign(socket, form: form, trigger_action: false, subject_name: subject_name)
 
     {:ok, socket}
   end

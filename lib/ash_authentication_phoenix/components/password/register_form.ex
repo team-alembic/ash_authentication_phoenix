@@ -61,22 +61,10 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
     domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
-    form =
-      strategy.resource
-      |> Form.for_action(strategy.register_action_name,
-        domain: domain,
-        as: subject_name |> to_string(),
-        id:
-          "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.register_action_name}"
-          |> slugify(),
-        context: %{strategy: strategy, private: %{ash_authentication?: true}}
-      )
-
     socket =
       socket
       |> assign(assigns)
       |> assign(
-        form: form,
         trigger_action: false,
         subject_name: subject_name
       )
@@ -87,6 +75,20 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+
+    form =
+      strategy.resource
+      |> Form.for_action(strategy.register_action_name,
+        domain: domain,
+        as: subject_name |> to_string(),
+        transform_errors: _transform_errors(),
+        id:
+          "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.register_action_name}"
+          |> slugify(),
+        context: %{strategy: strategy, private: %{ash_authentication?: true}}
+      )
+
+    socket = assign(socket, :form, form)
 
     {:ok, socket}
   end
