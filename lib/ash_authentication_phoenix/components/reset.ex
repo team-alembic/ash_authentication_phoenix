@@ -83,7 +83,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
             auth_routes_prefix={@auth_routes_prefix}
             strategy={strategy}
             token={@token}
-            id="reset-form"
+            id={"#{strategy.name}-reset-form"}
             label={false}
             overrides={@overrides}
             gettext_fn={@gettext_fn}
