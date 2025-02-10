@@ -103,8 +103,8 @@ if Code.ensure_loaded?(Igniter) do
         |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
         |> Igniter.Project.TaskAliases.add_alias(
           "phx.routes",
-          ["phx.routes", "ash_authentication_phoenix.routes"],
-          if_exists: {:append, "ash_authentication_phoenix.routes"}
+          ["phx.routes", "ash_authentication.phoenix.routes"],
+          if_exists: {:append, "ash_authentication.phoenix.routes"}
         )
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
