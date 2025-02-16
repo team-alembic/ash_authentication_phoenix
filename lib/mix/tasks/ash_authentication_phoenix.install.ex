@@ -66,7 +66,7 @@ if Code.ensure_loaded?(Igniter) do
         |> module_option(:token)
 
       install? =
-        !Igniter.Project.Deps.get_dependency_declaration(igniter, :ash_authentication)
+        !match?({:ok, _}, Igniter.Project.Deps.get_dep(igniter, :ash_authentication))
 
       igniter =
         if install? do

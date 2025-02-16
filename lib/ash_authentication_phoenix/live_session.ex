@@ -45,25 +45,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       end
 
     quote generated: true do
-      on_mount = [LiveSession]
-
       opts = unquote(opts)
-
-      session = {LiveSession, :generate_session, [opts[:otp_app], List.wrap(opts[:session])]}
-
-      opts =
-        opts
-        |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
-        |> Keyword.put(:session, session)
-
-      {otp_app, opts} = Keyword.pop(opts, :otp_app)
-
-      opts =
-        if otp_app do
-          Keyword.update!(opts, :on_mount, &[{LiveSession, {:set_otp_app, otp_app}} | &1])
-        else
-          opts
-        end
+      opts = LiveSession.opts(opts)
 
       require Phoenix.LiveView.Router
 
@@ -78,6 +61,38 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     do: Macro.expand(alias, %{env | function: {:mount, 3}})
 
   defp expand_alias(other, _env), do: other
+
+  @doc """
+  Get options that should be passed to `live_session`.
+
+  This is useful for integrating with other tools that require a custom `live_session`,
+  like `beacon_live_admin`. For example:
+
+  ```elixir
+  beacon_live_admin AshAuthentication.Phoenix.LiveSession.opts(beacon: :opts) do
+    ...
+  end
+  ```
+  """
+  def opts(custom_opts \\ []) do
+    on_mount = [LiveSession]
+
+    session =
+      {__MODULE__, :generate_session, [custom_opts[:otp_app], List.wrap(custom_opts[:session])]}
+
+    opts =
+      custom_opts
+      |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
+      |> Keyword.put(:session, session)
+
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+
+    if otp_app do
+      Keyword.update!(opts, :on_mount, &[{LiveSession, {:set_otp_app, otp_app}} | &1])
+    else
+      opts
+    end
+  end
 
   @doc """
   Inspects the incoming session for any subject_name -> subject values and loads
