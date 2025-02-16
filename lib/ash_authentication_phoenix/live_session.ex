@@ -69,7 +69,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   like `beacon_live_admin`. For example:
 
   ```elixir
-  beacon_live_admin AshAuthentication.Phoenix.LiveSession.opts(beacon: :opts) do
+  beacon_live_admin AshAuthentication.Phoenix.LiveSession.opts(...beacon_opts) do
     ...
   end
   ```
