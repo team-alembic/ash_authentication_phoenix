@@ -154,22 +154,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
     socket.assigns.form
     |> Form.validate(params)
-    |> Form.submit(
-      params: params,
-      before_submit: fn
-        input when is_struct(input, Ash.ActionInput) ->
-          input
-          |> Ash.ActionInput.set_tenant(socket.assigns.current_tenant)
-
-        changeset when is_struct(changeset, Ash.Changeset) ->
-          changeset
-          |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
-
-        query when is_struct(query, Ash.Query) ->
-          query
-          |> Ash.Query.set_tenant(socket.assigns.current_tenant)
-      end
-    )
+    |> Form.submit(params: params)
 
     flash = override_for(socket.assigns.overrides, :reset_flash_text)
 
@@ -208,6 +193,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       domain: domain,
       as: subject_name |> to_string(),
       transform_errors: _transform_errors(),
+      tenant: socket.assigns.current_tenant,
       id:
         "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.request_password_reset_action_name}"
         |> slugify(),

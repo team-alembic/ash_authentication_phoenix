@@ -33,6 +33,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
   @type props :: %{
           required(:token) => String.t(),
           optional(:overrides) => [module],
+          optional(:current_tenant) => term(),
           optional(:gettext_fn) => {module, atom}
         }
 
@@ -56,6 +57,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
       |> assign(strategies: strategies)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
@@ -81,6 +83,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
           <.live_component
             module={Components.Reset.Form}
             auth_routes_prefix={@auth_routes_prefix}
+            current_tenant={@current_tenant}
             strategy={strategy}
             token={@token}
             id={"#{strategy.name}-reset-form"}

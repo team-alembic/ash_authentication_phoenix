@@ -74,6 +74,19 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
+    context =
+      Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
+        strategy: strategy,
+        private: %{ash_authentication?: true}
+      })
+
+    context =
+      if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
+        Map.put(context, :token_type, :sign_in)
+      else
+        context
+      end
+
     form =
       strategy.resource
       |> Form.for_action(strategy.sign_in_action_name,
@@ -84,11 +97,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           |> slugify(),
         tenant: assigns[:current_tenant],
         transform_errors: _transform_errors(),
-        context:
-          Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
-            strategy: strategy,
-            private: %{ash_authentication?: true}
-          })
+        context: context
       )
 
     socket = assign(socket, form: form, trigger_action: false, subject_name: subject_name)
@@ -173,12 +182,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
       case Form.submit(socket.assigns.form,
              params: params,
-             read_one?: true,
-             before_submit: fn changeset ->
-               changeset
-               |> Ash.Changeset.set_context(%{token_type: :sign_in})
-               |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
-             end
+             read_one?: true
            ) do
         {:ok, user} ->
           validate_sign_in_token_path =

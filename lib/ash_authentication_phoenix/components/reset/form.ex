@@ -51,6 +51,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
           optional(:label) => String.t() | false,
           optional(:auth_routes_prefix) => String.t(),
           optional(:overrides) => [module],
+          optional(:current_tenant) => term(),
           optional(:gettext_fn) => {module, atom}
         }
 
@@ -75,6 +76,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
       |> assign_new(:label, fn -> humanize(resettable.password_reset_action_name) end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
+      |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     form =
@@ -83,6 +85,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
         transform_errors: _transform_errors(),
         domain: domain,
         as: subject_name |> to_string(),
+        tenant: socket.assigns.current_tenant,
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{resettable.password_reset_action_name}"
           |> slugify(),
