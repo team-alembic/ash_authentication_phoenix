@@ -107,7 +107,15 @@ defmodule AshAuthentication.Phoenix.Web do
 
   def gettext_switch(nil, msgid, bindings) do
     for {key, value} <- bindings, reduce: msgid do
-      acc -> String.replace(acc, "%{#{key}}", to_string(value))
+      acc ->
+        value =
+          if is_list(value) do
+            Enum.map_join(value, ", ", &to_string/1)
+          else
+            value
+          end
+
+        String.replace(acc, "%{#{key}}", to_string(value))
     end
   end
 
