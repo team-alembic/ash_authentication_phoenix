@@ -5,6 +5,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.4.8](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.7...v2.4.8) (2025-02-25)
+
+
+
+
+### Bug Fixes:
+
+* ensure all forms set current_tenant
+
+* properly stringify lists of atoms in gettext
+
+### Improvements:
+
+* add `LiveSession.opts/1` for compatibility
+
 ## [v2.4.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.6...v2.4.7) (2025-02-11)
 
 
