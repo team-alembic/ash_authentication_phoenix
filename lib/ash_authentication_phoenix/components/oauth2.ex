@@ -53,8 +53,13 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
         href={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request)}
         class={override_for(@overrides, :link_class)}
       >
-        <.icon icon={@strategy.icon} overrides={@overrides} />
-        {_gettext("Sign in with #{strategy_name(@strategy)}")}
+        <%= case @strategy.icon do %>
+          <% :google -> %>
+            <.icon icon={@strategy.icon} overrides={@overrides} />
+          <% _ -> %>
+            <.icon icon={@strategy.icon} overrides={@overrides} />
+            {_gettext("Sign in with #{strategy_name(@strategy)}")}
+        <% end %>
       </a>
     </div>
     """
