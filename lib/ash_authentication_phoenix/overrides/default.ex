@@ -10,7 +10,6 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
-    set :strategy_display_order, :forms_first
   end
 
   override ResetLive do
@@ -45,6 +44,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :authentication_error_container_class, "text-black dark:text-white text-center"
     set :authentication_error_text_class, ""
+    set :strategy_display_order, :forms_first
   end
 
   override Components.Banner do

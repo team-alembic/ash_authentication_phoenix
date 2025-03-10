@@ -3,10 +3,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     root_class: "CSS class for the root `div` element.",
     strategy_class: "CSS class for a `div` surrounding each strategy component.",
     show_banner: "Whether or not to show the banner.",
-    strategy_display_order: "Whether to show first form strategies or link strategies.",
     authentication_error_container_class:
       "CSS class for the container for the text of the authentication error.",
-    authentication_error_text_class: "CSS class for the authentication error text."
+    authentication_error_text_class: "CSS class for the authentication error text.",
+    strategy_display_order: "Whether to show first form strategies or link strategies."
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
