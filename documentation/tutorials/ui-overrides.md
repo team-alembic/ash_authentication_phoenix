@@ -99,6 +99,8 @@ Renders sign in mark-up for an authenticated resource.
 
   * `:strategy_class` - CSS class for a `div` surrounding each strategy component.
 
+  * `:strategy_display_order` - Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`.
+
 
 ## Password Sign-in
 ### `AshAuthentication.Phoenix.Components.Password`

@@ -5,7 +5,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     show_banner: "Whether or not to show the banner.",
     authentication_error_container_class:
       "CSS class for the container for the text of the authentication error.",
-    authentication_error_text_class: "CSS class for the authentication error text."
+    authentication_error_text_class: "CSS class for the authentication error text.",
+    strategy_display_order: "Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`."
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
@@ -107,23 +108,20 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       <% end %>
 
       <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
-        <%= if Enum.any?(strategies.form) do %>
-          <%= for strategy <- strategies.form do %>
-            <.strategy
-              component={component_for_strategy(strategy)}
-              live_action={@live_action}
-              strategy={strategy}
-              path={@path}
-              auth_routes_prefix={@auth_routes_prefix}
-              reset_path={@reset_path}
-              register_path={@register_path}
-              overrides={@overrides}
-              current_tenant={@current_tenant}
-              context={@context}
-              gettext_fn={@gettext_fn}
-            />
-          <% end %>
-        <% end %>
+        <% [top_strategies, bottom_strategies] = ordered_strategies(@overrides, strategies) %>
+
+        <.strategies
+          live_action={@live_action}
+          strategies={top_strategies}
+          path={@path}
+          auth_routes_prefix={@auth_routes_prefix}
+          reset_path={@reset_path}
+          register_path={@register_path}
+          overrides={@overrides}
+          current_tenant={@current_tenant}
+          context={@context}
+          gettext_fn={@gettext_fn}
+        />
 
         <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>
           <.live_component
@@ -133,50 +131,57 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           />
         <% end %>
 
-        <%= if Enum.any?(strategies.link) do %>
-          <%= for strategy <- strategies.link do %>
-            <.strategy
-              component={component_for_strategy(strategy)}
-              live_action={@live_action}
-              strategy={strategy}
-              auth_routes_prefix={@auth_routes_prefix}
-              path={@path}
-              reset_path={@reset_path}
-              register_path={@register_path}
-              overrides={@overrides}
-              current_tenant={@current_tenant}
-              context={@context}
-              gettext_fn={@gettext_fn}
-            />
-          <% end %>
-        <% end %>
+        <.strategies
+          live_action={@live_action}
+          strategies={bottom_strategies}
+          auth_routes_prefix={@auth_routes_prefix}
+          path={@path}
+          reset_path={@reset_path}
+          register_path={@register_path}
+          overrides={@overrides}
+          current_tenant={@current_tenant}
+          context={@context}
+          gettext_fn={@gettext_fn}
+        />
       <% end %>
     </div>
     """
   end
 
-  defp strategy(assigns) do
+  defp strategies(assigns) do
     ~H"""
-    <div class={override_for(@overrides, :strategy_class)}>
-      <.live_component
-        module={@component}
-        id={strategy_id(@strategy)}
-        strategy={@strategy}
-        auth_routes_prefix={@auth_routes_prefix}
-        path={@path}
-        reset_path={@reset_path}
-        register_path={@register_path}
-        live_action={@live_action}
-        overrides={@overrides}
-        current_tenant={@current_tenant}
-        context={@context}
-        gettext_fn={@gettext_fn}
-      />
-    </div>
+    <%= if Enum.any?(@strategies) do %>
+      <div :for={strategy <- @strategies} class={override_for(@overrides, :strategy_class)}>
+        <.live_component
+          module={component_for_strategy(strategy)}
+          id={strategy_id(strategy)}
+          strategy={strategy}
+          auth_routes_prefix={@auth_routes_prefix}
+          path={@path}
+          reset_path={@reset_path}
+          register_path={@register_path}
+          live_action={@live_action}
+          overrides={@overrides}
+          current_tenant={@current_tenant}
+          context={@context}
+          gettext_fn={@gettext_fn}
+        />
+      </div>
+    <% end %>
     """
   end
 
   defp sort_strategies_by_name(strategies), do: Enum.sort_by(strategies, & &1.name)
+
+  defp ordered_strategies(overrides, strategy_group) do
+    case override_for(overrides, :strategy_display_order, :forms_first) do
+      :links_first ->
+        [strategy_group.link, strategy_group.form]
+
+      _ ->
+        [strategy_group.form, strategy_group.link]
+    end
+  end
 
   defp strategy_id(strategy) do
     subject_name =
