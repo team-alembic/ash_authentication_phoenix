@@ -3,6 +3,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     root_class: "CSS class for the root `div` element.",
     strategy_class: "CSS class for a `div` surrounding each strategy component.",
     show_banner: "Whether or not to show the banner.",
+    strategy_display_order: "Whether to show first form strategies or link strategies.",
     authentication_error_container_class:
       "CSS class for the container for the text of the authentication error.",
     authentication_error_text_class: "CSS class for the authentication error text."
@@ -107,23 +108,18 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       <% end %>
 
       <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
-        <%= if Enum.any?(strategies.form) do %>
-          <%= for strategy <- strategies.form do %>
-            <.strategy
-              component={component_for_strategy(strategy)}
-              live_action={@live_action}
-              strategy={strategy}
-              path={@path}
-              auth_routes_prefix={@auth_routes_prefix}
-              reset_path={@reset_path}
-              register_path={@register_path}
-              overrides={@overrides}
-              current_tenant={@current_tenant}
-              context={@context}
-              gettext_fn={@gettext_fn}
-            />
-          <% end %>
-        <% end %>
+        <.strategies
+          live_action={@live_action}
+          strategies={strategies.form}
+          path={@path}
+          auth_routes_prefix={@auth_routes_prefix}
+          reset_path={@reset_path}
+          register_path={@register_path}
+          overrides={@overrides}
+          current_tenant={@current_tenant}
+          context={@context}
+          gettext_fn={@gettext_fn}
+        />
 
         <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>
           <.live_component
@@ -133,46 +129,43 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           />
         <% end %>
 
-        <%= if Enum.any?(strategies.link) do %>
-          <%= for strategy <- strategies.link do %>
-            <.strategy
-              component={component_for_strategy(strategy)}
-              live_action={@live_action}
-              strategy={strategy}
-              auth_routes_prefix={@auth_routes_prefix}
-              path={@path}
-              reset_path={@reset_path}
-              register_path={@register_path}
-              overrides={@overrides}
-              current_tenant={@current_tenant}
-              context={@context}
-              gettext_fn={@gettext_fn}
-            />
-          <% end %>
-        <% end %>
+        <.strategies
+          live_action={@live_action}
+          strategies={strategies.link}
+          auth_routes_prefix={@auth_routes_prefix}
+          path={@path}
+          reset_path={@reset_path}
+          register_path={@register_path}
+          overrides={@overrides}
+          current_tenant={@current_tenant}
+          context={@context}
+          gettext_fn={@gettext_fn}
+        />
       <% end %>
     </div>
     """
   end
 
-  defp strategy(assigns) do
+  defp strategies(assigns) do
     ~H"""
-    <div class={override_for(@overrides, :strategy_class)}>
-      <.live_component
-        module={@component}
-        id={strategy_id(@strategy)}
-        strategy={@strategy}
-        auth_routes_prefix={@auth_routes_prefix}
-        path={@path}
-        reset_path={@reset_path}
-        register_path={@register_path}
-        live_action={@live_action}
-        overrides={@overrides}
-        current_tenant={@current_tenant}
-        context={@context}
-        gettext_fn={@gettext_fn}
-      />
-    </div>
+    <%= if Enum.any?(@strategies) do %>
+      <div :for={strategy <- @strategies} class={override_for(@overrides, :strategy_class)}>
+        <.live_component
+          module={component_for_strategy(strategy)}
+          id={strategy_id(strategy)}
+          strategy={strategy}
+          auth_routes_prefix={@auth_routes_prefix}
+          path={@path}
+          reset_path={@reset_path}
+          register_path={@register_path}
+          live_action={@live_action}
+          overrides={@overrides}
+          current_tenant={@current_tenant}
+          context={@context}
+          gettext_fn={@gettext_fn}
+        />
+      </div>
+    <% end %>
     """
   end
 

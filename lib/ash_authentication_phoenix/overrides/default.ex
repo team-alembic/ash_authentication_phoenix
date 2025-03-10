@@ -10,6 +10,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+    set :strategy_display_order, :forms_first
   end
 
   override ResetLive do
