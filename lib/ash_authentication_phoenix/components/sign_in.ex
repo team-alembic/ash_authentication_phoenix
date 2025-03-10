@@ -110,7 +110,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
         <.strategies
           live_action={@live_action}
-          strategies={strategies.form}
+          strategies={top_strategies(@overrides, strategies)}
           path={@path}
           auth_routes_prefix={@auth_routes_prefix}
           reset_path={@reset_path}
@@ -131,7 +131,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
         <.strategies
           live_action={@live_action}
-          strategies={strategies.link}
+          strategies={bottom_strategies(@overrides, strategies)}
           auth_routes_prefix={@auth_routes_prefix}
           path={@path}
           reset_path={@reset_path}
@@ -170,6 +170,26 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   end
 
   defp sort_strategies_by_name(strategies), do: Enum.sort_by(strategies, & &1.name)
+
+  defp top_strategies(overrides, strategy_group) do
+    case override_for(overrides, :strategy_display_order, :forms_first) do
+      :links_first ->
+        strategy_group.link
+
+      _ ->
+        strategy_group.form
+    end
+  end
+
+  defp bottom_strategies(overrides, strategy_group) do
+    case override_for(overrides, :strategy_display_order, :forms_first) do
+      :links_first ->
+        strategy_group.form
+
+      _ ->
+        strategy_group.link
+    end
+  end
 
   defp strategy_id(strategy) do
     subject_name =
