@@ -6,7 +6,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     authentication_error_container_class:
       "CSS class for the container for the text of the authentication error.",
     authentication_error_text_class: "CSS class for the authentication error text.",
-    strategy_display_order: "Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`."
+    strategy_display_order:
+      "Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`."
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
