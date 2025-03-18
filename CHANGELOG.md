@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.5.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.8...v2.5.0) (2025-03-18)
+
+
+
+
+### Features:
+
+* Display order for strategies in sign in page (#591)
+
 ## [v2.4.8](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.7...v2.4.8) (2025-02-25)
 
 
