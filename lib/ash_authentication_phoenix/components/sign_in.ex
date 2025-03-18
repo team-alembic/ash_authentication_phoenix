@@ -55,6 +55,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
           optional(:overrides) => [module],
+          optional(:resources) => [module],
           optional(:gettext_fn) => {module, atom}
         }
 
@@ -65,9 +66,12 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     socket = assign(socket, assigns)
 
     strategies_by_resource =
-      socket
-      |> otp_app_from_socket()
-      |> AshAuthentication.authenticated_resources()
+      socket.assigns[:resources]
+      |> Kernel.||(
+        socket
+        |> otp_app_from_socket()
+        |> AshAuthentication.authenticated_resources()
+      )
       |> Enum.sort_by(&Info.authentication_subject_name!/1)
       |> Enum.map(fn resource ->
         resource
