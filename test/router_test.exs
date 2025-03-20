@@ -20,7 +20,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "path" => "/sign-in",
                   "register_path" => "/register",
                   "reset_path" => "/reset",
-                  "gettext_fn" => nil
+                  "gettext_fn" => nil,
+                  "resources" => nil
                 }
               ]}
   end
@@ -43,7 +44,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "path" => "/nested/sign-in",
                   "register_path" => "/nested/register",
                   "reset_path" => "/nested/reset",
-                  "gettext_fn" => nil
+                  "gettext_fn" => nil,
+                  "resources" => nil
                 }
               ]}
   end
@@ -66,7 +68,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "path" => "/unscoped/sign-in",
                   "register_path" => "/register",
                   "reset_path" => "/reset",
-                  "gettext_fn" => nil
+                  "gettext_fn" => nil,
+                  "resources" => nil
                 }
               ]}
   end
