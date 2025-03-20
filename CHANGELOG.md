@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.5.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.0...v2.5.1) (2025-03-20)
+
+
+
+
+### Bug Fixes:
+
+* use `tenant` and `context` options when building sign in form
+
 ## [v2.5.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.4.8...v2.5.0) (2025-03-18)
 
 
