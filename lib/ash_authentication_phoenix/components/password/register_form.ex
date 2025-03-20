@@ -76,16 +76,34 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
+    context =
+      socket.assigns[:context]
+      |> Kernel.||(%{})
+      |> then(fn context ->
+        if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
+          Map.put(context, :token_type, :sign_in)
+        else
+          context
+        end
+      end)
+      |> Map.put(:strategy, strategy)
+      |> Map.update(
+        :private,
+        %{ash_authentication?: true},
+        &Map.put(&1, :ash_authentication?, true)
+      )
+
     form =
       strategy.resource
       |> Form.for_action(strategy.register_action_name,
         domain: domain,
         as: subject_name |> to_string(),
         transform_errors: _transform_errors(),
+        tenant: socket.assigns[:current_tenant],
+        context: context,
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.register_action_name}"
-          |> slugify(),
-        context: %{strategy: strategy, private: %{ash_authentication?: true}}
+          |> slugify()
       )
 
     socket = assign(socket, :form, form)
@@ -179,13 +197,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
     if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
       case Form.submit(socket.assigns.form,
              params: params,
-             read_one?: true,
-             before_submit: fn changeset ->
-               changeset
-               |> Ash.Changeset.set_context(%{token_type: :sign_in})
-               |> Ash.Changeset.set_context(socket.assigns[:context] || %{})
-               |> Ash.Changeset.set_tenant(socket.assigns.current_tenant)
-             end
+             read_one?: true
            ) do
         {:ok, user} ->
           validate_sign_in_token_path =
