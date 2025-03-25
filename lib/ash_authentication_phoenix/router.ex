@@ -195,6 +195,8 @@ defmodule AshAuthentication.Phoenix.Router do
     request a reset token by email. If not set, and password reset is supported, password reset will use a
     dynamic toggle and will not be routeable to. If a tuple {:unscoped, path} is provided, the reset path
     will not inherit the current route scope.
+  * `resources` - Which resources should have their sign in UIs rendered. Defaults to all resources
+    that use `AshAuthentication`.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
   * `auth_routes_prefix` the prefix to use for the auth routes. Defaults to `/auth`.
@@ -227,6 +229,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignInLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {resources, opts} = Keyword.pop(opts, :resources)
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
     {reset_path, opts} = Keyword.pop(opts, :reset_path)
@@ -290,6 +293,7 @@ defmodule AshAuthentication.Phoenix.Router do
                  "overrides" => unquote(overrides),
                  "auth_routes_prefix" => auth_routes_prefix,
                  "otp_app" => unquote(otp_app),
+                 "resources" => unquote(resources),
                  "path" => sign_in_path,
                  "reset_path" => reset_path,
                  "register_path" => register_path,
