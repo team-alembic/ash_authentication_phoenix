@@ -233,9 +233,11 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     defp create_live_user_auth(igniter, web_module) do
+      live_user_auth = Igniter.Libs.Phoenix.web_module_name(igniter, "LiveUserAuth")
+
       Igniter.Project.Module.create_module(
         igniter,
-        Igniter.Libs.Phoenix.web_module_name(igniter, "LiveUserAuth"),
+        live_user_auth,
         """
         @moduledoc \"\"\"
         Helpers for authenticating users in LiveViews.
@@ -243,6 +245,13 @@ if Code.ensure_loaded?(Igniter) do
 
         import Phoenix.Component
         use #{inspect(web_module)}, :verified_routes
+
+        # This is used for nested liveviews to fetch the current user.
+        # To use, place the following at the top of that liveview:
+        # on_mount {#{inspect(live_user_auth)}, :current_user}
+        def on_mount(:current_user, _params, session, socket) do
+          {:cont, AshAuthentication.Phoenix.LiveSession.assign_new_resources(socket, session)}
+        end
 
         def on_mount(:live_user_optional, _params, _session, socket) do
           if socket.assigns[:current_user] do

@@ -23,6 +23,32 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   alias Phoenix.LiveView.Socket
 
   @doc """
+  Assigns all subjects from their equivalent sessions, if they are not already assigned.
+
+  This exists to power nested liveviews, which have the session available but
+  do not automatically inherit any assigns.
+
+  This does verify the token and confirm that it is not expired, but it
+  bypasses the check for the token's presence in the token resource, even if
+  you have configured AshAuthentication to
+  `require_token_presence_for_authentication?`. This is because nested live views
+  do not need to check *again* for this, as the `:load_from_session` plug already
+  does this.
+  """
+  @spec assign_new_resources(socket :: Phoenix.Socket.t(), session :: map()) :: Phoenix.Socket.t()
+  def assign_new_resources(socket, session, opts \\ []) do
+    otp_app =
+      opts[:otp_app] || AshAuthentication.Phoenix.Components.Helpers.otp_app_from_socket(socket)
+
+    AshAuthentication.Plug.Helpers.assign_new_resources(
+      socket,
+      session,
+      &Phoenix.Component.assign_new/3,
+      Keyword.put_new(opts, :otp_app, otp_app)
+    )
+  end
+
+  @doc """
   Generate a live session wherein all subject assigns are copied from the conn
   into the socket.
 
