@@ -5,6 +5,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.5.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.1...v2.5.2) (2025-03-28)
+
+
+
+
+### Improvements:
+
+* `AshAuthentication.Phoenix.LiveSession.assign_new_resources/3` (#596)
+
+* allow setting a subset of resources on sign in (#593)
+
 ## [v2.5.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.0...v2.5.1) (2025-03-20)
 
 
