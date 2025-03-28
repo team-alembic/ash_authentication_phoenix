@@ -1,6 +1,7 @@
 # credo:disable-for-this-file Credo.Check.Design.AliasUsage
 defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
   use ExUnit.Case
+  @moduletag :igniter
 
   import Igniter.Test
 
