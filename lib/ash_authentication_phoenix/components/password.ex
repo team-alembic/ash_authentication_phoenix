@@ -215,7 +215,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         >
           <.live_component
             :let={form}
-            module={Password.RegisterForm}
+            module={override_for(@overrides, :register_form_module) || Password.RegisterForm}
             auth_routes_prefix={@auth_routes_prefix}
             id={@register_id}
             strategy={@strategy}
@@ -261,7 +261,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         <div id={"#{@reset_id}-wrapper"} class={if @show == :reset, do: nil, else: @hide_class}>
           <.live_component
             :let={form}
-            module={override_for(@overrides, :reset_form_module) || Password.ResetForm}
+            module={Password.ResetForm}
             auth_routes_prefix={@auth_routes_prefix}
             id={@reset_id}
             strategy={@strategy}
