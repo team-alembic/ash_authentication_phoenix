@@ -113,6 +113,9 @@ defmodule ExampleWeb.AuthController do
 end
 ```
 
+Note that `failure` will not necessarily ever be called. For example, `Components.Password.SignInForm` will handle
+failures internally as long as `sign_in_tokens_enabled?` is true (which is the default).
+
 <!-- tabs-close -->
 
 ## Generated routes
