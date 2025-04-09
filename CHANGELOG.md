@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.5.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.2...v2.5.3) (2025-04-09)
+
+
+
+
+### Improvements:
+
+* support tailwind 4 config
+
 ## [v2.5.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.1...v2.5.2) (2025-03-28)
 
 
