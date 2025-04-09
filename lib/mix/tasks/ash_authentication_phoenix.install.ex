@@ -361,46 +361,79 @@ if Code.ensure_loaded?(Igniter) do
     """
 
     defp do_or_explain_tailwind_changes(igniter) do
-      if Igniter.exists?(igniter, "assets/tailwind.config.js") do
-        igniter = Igniter.include_glob(igniter, "assets/tailwind.config.js")
-        source = Rewrite.source!(igniter.rewrite, "assets/tailwind.config.js")
-        content = Rewrite.Source.get(source, :content)
+      cond do
+        Igniter.exists?(igniter, "assets/tailwind.config.js") ->
+          igniter = Igniter.include_glob(igniter, "assets/tailwind.config.js")
+          source = Rewrite.source!(igniter.rewrite, "assets/tailwind.config.js")
+          content = Rewrite.Source.get(source, :content)
 
-        case String.split(content, @tailwind_prefix, parts: 2) do
-          [prefix, suffix] ->
-            insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
+          case String.split(content, @tailwind_prefix, parts: 2) do
+            [prefix, suffix] ->
+              insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
 
-            source =
-              Rewrite.Source.update(
-                source,
-                :content,
-                prefix <> @tailwind_prefix <> insert <> suffix
-              )
+              source =
+                Rewrite.Source.update(
+                  source,
+                  :content,
+                  prefix <> @tailwind_prefix <> insert <> suffix
+                )
 
+              %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+
+            _ ->
+              explain_tailwind_changes(igniter)
+          end
+
+        Igniter.exists?(igniter, "assets/css/app.css") ->
+          igniter = Igniter.include_glob(igniter, "assets/css/app.css")
+          source = Rewrite.source!(igniter.rewrite, "assets/css/app.css")
+          content = Rewrite.Source.get(source, :content)
+
+          with true <- String.contains?(content, "@import \"tailwindcss\""),
+               [head, after_import] <-
+                 String.split(content, "@import \"tailwindcss\"", parts: 2),
+               [import_stuff, after_import] <- String.split(after_import, "\n", parts: 2) do
+            updated_content =
+              head <>
+                "@import \"tailwindcss\"#{import_stuff}\n" <>
+                "@source \"../deps/ash_authentication_phoenix\";\n" <> after_import
+
+            source = Rewrite.Source.update(source, :content, updated_content)
             %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+          else
+            _ ->
+              explain_tailwind_changes(igniter)
+          end
 
-          _ ->
-            explain_tailwind_changes(igniter)
-        end
-      else
-        explain_tailwind_changes(igniter)
+        true ->
+          explain_tailwind_changes(igniter)
       end
     end
 
     defp explain_tailwind_changes(igniter) do
       Igniter.add_notice(igniter, """
-      Modify your `tailwind.config.js` file, to add the ash_authentication_phoenix
-      files to the `content` option.
+      AshAuthenticationPhoenix:
 
-        module.exports = {
-          content: [
-            "./js/**/*.js",
-            "../lib/*_web.ex",
-            "../lib/*_web/**/*.*ex",
-            "../deps/ash_authentication_phoenix/**/*.*ex", // <-- Add this line
-          ],
-          ...
-        }
+      If you are using tailwind 3 or lower:
+
+        Modify your `tailwind.config.js` file, to add the ash_authentication_phoenix
+        files to the `content` option.
+
+          module.exports = {
+            content: [
+              "./js/**/*.js",
+              "../lib/*_web.ex",
+              "../lib/*_web/**/*.*ex",
+              "../deps/ash_authentication_phoenix/**/*.*ex", // <-- Add this line
+            ],
+            ...
+          }
+
+      If you are using tailwind 4 or higher:
+
+        Add the following to your app.css file.
+
+          @source "../deps/ash_authentication_phoenix"
       """)
     end
 
