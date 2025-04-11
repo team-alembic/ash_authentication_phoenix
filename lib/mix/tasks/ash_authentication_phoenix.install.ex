@@ -108,9 +108,26 @@ if Code.ensure_loaded?(Igniter) do
         )
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
-        |> use_authentication_phoenix_router(router)
         |> create_auth_controller()
         |> create_overrides_module(overrides)
+        |> add_auth_routes(overrides, options, router, web_module)
+        |> create_live_user_auth(web_module)
+      else
+        igniter
+        |> Igniter.add_warning("""
+        AshAuthenticationPhoenix installer could not find a Phoenix router. Skipping installation.
+
+        Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
+        """)
+      end
+    end
+
+    defp add_auth_routes(igniter, overrides, options, router, web_module) do
+      with {_, _source, zipper} <- Igniter.Project.Module.find_module!(igniter, router),
+           {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper),
+           :error <- Igniter.Code.Module.move_to_use(zipper, AshAuthentication.Phoenix.Router) do
+        igniter
+        |> use_authentication_phoenix_router(router)
         |> Igniter.Libs.Phoenix.append_to_pipeline(:browser, "plug :load_from_session",
           router: router
         )
@@ -137,14 +154,10 @@ if Code.ensure_loaded?(Igniter) do
           arg2: Igniter.Libs.Phoenix.web_module(igniter),
           router: router
         )
-        |> setup_live_view(router, web_module)
+        |> add_live_session_scopes(web_module, router)
       else
-        igniter
-        |> Igniter.add_warning("""
-        AshAuthenticationPhoenix installer could not find a Phoenix router. Skipping installation.
-
-        Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
-        """)
+        _ ->
+          igniter
       end
     end
 
@@ -184,12 +197,6 @@ if Code.ensure_loaded?(Igniter) do
       #  set :show_banner, false
       # end
       """)
-    end
-
-    defp setup_live_view(igniter, router, web_module) do
-      igniter
-      |> create_live_user_auth(web_module)
-      |> add_live_session_scopes(web_module, router)
     end
 
     defp add_live_session_scopes(igniter, web_module, router) do
@@ -351,6 +358,9 @@ if Code.ensure_loaded?(Igniter) do
 
            import AshAuthentication.Plug.Helpers
            """)}
+        else
+          _ ->
+            {:ok, zipper}
         end
       end)
     end
@@ -367,21 +377,25 @@ if Code.ensure_loaded?(Igniter) do
           source = Rewrite.source!(igniter.rewrite, "assets/tailwind.config.js")
           content = Rewrite.Source.get(source, :content)
 
-          case String.split(content, @tailwind_prefix, parts: 2) do
-            [prefix, suffix] ->
-              insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
+          if String.contains?(content, "ash_authentication_phoenix") do
+            igniter
+          else
+            case String.split(content, @tailwind_prefix, parts: 2) do
+              [prefix, suffix] ->
+                insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
 
-              source =
-                Rewrite.Source.update(
-                  source,
-                  :content,
-                  prefix <> @tailwind_prefix <> insert <> suffix
-                )
+                source =
+                  Rewrite.Source.update(
+                    source,
+                    :content,
+                    prefix <> @tailwind_prefix <> insert <> suffix
+                  )
 
-              %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+                %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
 
-            _ ->
-              explain_tailwind_changes(igniter)
+              _ ->
+                explain_tailwind_changes(igniter)
+            end
           end
 
         Igniter.exists?(igniter, "assets/css/app.css") ->
@@ -389,20 +403,24 @@ if Code.ensure_loaded?(Igniter) do
           source = Rewrite.source!(igniter.rewrite, "assets/css/app.css")
           content = Rewrite.Source.get(source, :content)
 
-          with true <- String.contains?(content, "@import \"tailwindcss\""),
-               [head, after_import] <-
-                 String.split(content, "@import \"tailwindcss\"", parts: 2),
-               [import_stuff, after_import] <- String.split(after_import, "\n", parts: 2) do
-            updated_content =
-              head <>
-                "@import \"tailwindcss\"#{import_stuff}\n" <>
-                "@source \"../deps/ash_authentication_phoenix\";\n" <> after_import
-
-            source = Rewrite.Source.update(source, :content, updated_content)
-            %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+          if String.contains?(content, "ash_authentication_phoenix") do
+            igniter
           else
-            _ ->
-              explain_tailwind_changes(igniter)
+            with true <- String.contains?(content, "@import \"tailwindcss\""),
+                 [head, after_import] <-
+                   String.split(content, "@import \"tailwindcss\"", parts: 2),
+                 [import_stuff, after_import] <- String.split(after_import, "\n", parts: 2) do
+              updated_content =
+                head <>
+                  "@import \"tailwindcss\"#{import_stuff}\n" <>
+                  "@source \"../../deps/ash_authentication_phoenix\";\n" <> after_import
+
+              source = Rewrite.Source.update(source, :content, updated_content)
+              %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+            else
+              _ ->
+                explain_tailwind_changes(igniter)
+            end
           end
 
         true ->

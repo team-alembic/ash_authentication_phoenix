@@ -35,6 +35,14 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     [igniter: igniter]
   end
 
+  test "installation is idempotent", %{igniter: igniter} do
+    igniter
+    |> Igniter.compose_task("ash_authentication_phoenix.install")
+    |> apply_igniter!()
+    |> Igniter.compose_task("ash_authentication_phoenix.install")
+    |> assert_unchanged()
+  end
+
   test "installation modifies the .formatter.exs", %{igniter: igniter} do
     igniter
     |> Igniter.compose_task("ash_authentication_phoenix.install")
