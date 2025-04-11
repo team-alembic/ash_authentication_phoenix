@@ -351,14 +351,15 @@ if Code.ensure_loaded?(Igniter) do
 
     defp use_authentication_phoenix_router(igniter, router) do
       Igniter.Project.Module.find_and_update_module!(igniter, router, fn zipper ->
-        with {:ok, zipper} <- Igniter.Libs.Phoenix.move_to_router_use(igniter, zipper) do
-          {:ok,
-           Igniter.Code.Common.add_code(zipper, """
-           use AshAuthentication.Phoenix.Router
+        case Igniter.Libs.Phoenix.move_to_router_use(igniter, zipper) do
+          {:ok, zipper} ->
+            {:ok,
+             Igniter.Code.Common.add_code(zipper, """
+             use AshAuthentication.Phoenix.Router
 
-           import AshAuthentication.Plug.Helpers
-           """)}
-        else
+             import AshAuthentication.Plug.Helpers
+             """)}
+
           _ ->
             {:ok, zipper}
         end
