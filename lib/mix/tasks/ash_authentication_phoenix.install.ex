@@ -380,22 +380,7 @@ if Code.ensure_loaded?(Igniter) do
           if String.contains?(content, "ash_authentication_phoenix") do
             igniter
           else
-            case String.split(content, @tailwind_prefix, parts: 2) do
-              [prefix, suffix] ->
-                insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
-
-                source =
-                  Rewrite.Source.update(
-                    source,
-                    :content,
-                    prefix <> @tailwind_prefix <> insert <> suffix
-                  )
-
-                %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
-
-              _ ->
-                explain_tailwind_changes(igniter)
-            end
+            do_tailwind_v3_changes(igniter, content, source)
           end
 
         Igniter.exists?(igniter, "assets/css/app.css") ->
@@ -406,24 +391,47 @@ if Code.ensure_loaded?(Igniter) do
           if String.contains?(content, "ash_authentication_phoenix") do
             igniter
           else
-            with true <- String.contains?(content, "@import \"tailwindcss\""),
-                 [head, after_import] <-
-                   String.split(content, "@import \"tailwindcss\"", parts: 2),
-                 [import_stuff, after_import] <- String.split(after_import, "\n", parts: 2) do
-              updated_content =
-                head <>
-                  "@import \"tailwindcss\"#{import_stuff}\n" <>
-                  "@source \"../../deps/ash_authentication_phoenix\";\n" <> after_import
-
-              source = Rewrite.Source.update(source, :content, updated_content)
-              %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
-            else
-              _ ->
-                explain_tailwind_changes(igniter)
-            end
+            do_tailwind_v4_changes(igniter, content, source)
           end
 
         true ->
+          explain_tailwind_changes(igniter)
+      end
+    end
+
+    defp do_tailwind_v3_changes(igniter, content, source) do
+      case String.split(content, @tailwind_prefix, parts: 2) do
+        [prefix, suffix] ->
+          insert = "    \"../deps/ash_authentication_phoenix/**/*.*ex\",\n"
+
+          source =
+            Rewrite.Source.update(
+              source,
+              :content,
+              prefix <> @tailwind_prefix <> insert <> suffix
+            )
+
+          %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+
+        _ ->
+          explain_tailwind_changes(igniter)
+      end
+    end
+
+    defp do_tailwind_v4_changes(igniter, content, source) do
+      with true <- String.contains?(content, "@import \"tailwindcss\""),
+           [head, after_import] <-
+             String.split(content, "@import \"tailwindcss\"", parts: 2),
+           [import_stuff, after_import] <- String.split(after_import, "\n", parts: 2) do
+        updated_content =
+          head <>
+            "@import \"tailwindcss\"#{import_stuff}\n" <>
+            "@source \"../../deps/ash_authentication_phoenix\";\n" <> after_import
+
+        source = Rewrite.Source.update(source, :content, updated_content)
+        %{igniter | rewrite: Rewrite.update!(igniter.rewrite, source)}
+      else
+        _ ->
           explain_tailwind_changes(igniter)
       end
     end
