@@ -160,6 +160,50 @@ Generates a default sign in form.
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
 
+## Confirmation
+### `AshAuthentication.Phoenix.ConfirmLive`
+
+A generic, white-label confirmation page.
+
+  * `:confirm_id` - Element ID for the `Reset` LiveComponent.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.Confirm`
+
+Renders a confirmation button.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:show_banner` - Whether or not to show the banner.
+
+  * `:strategy_class` - CSS class for a `div` surrounding each strategy component.
+
+
+### `AshAuthentication.Phoenix.Components.Confirm.Form`
+
+Generates a default confirmation form.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.Confirm.Input`
+
+Function components for dealing with form input during password
+authentication.
+
+  * `:submit_class` - CSS class for the form submit `input` element.
+
+  * `:submit_label` - A function that takes the strategy and returns text for the confirm button, or a string.
+
+
 ## Password Reset
 ### `AshAuthentication.Phoenix.ResetLive`
 

@@ -99,6 +99,7 @@ defmodule Example.Accounts.User do
     add_ons do
       confirmation :confirm do
         monitor_fields([:email])
+        require_interaction? true
 
         sender(fn user, token, _ ->
           Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")

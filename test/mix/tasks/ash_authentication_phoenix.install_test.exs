@@ -249,6 +249,12 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |      auth_routes_prefix: "/auth",
     + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
     + |    )
+    + |
+    + |    # Remove this if you do not use the confirmation strategy
+    + |    confirm_route(Test.Accounts.User, :confirm_new_user,
+    + |      auth_routes_prefix: "/auth",
+    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |    )
     + |  end
     """)
   end
