@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.5.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.4...v2.5.5) (2025-04-14)
+
+
+
+
+### Improvements:
+
+* companion for `AshAuthentication` confirmation security fix (#606)
+
 ## [v2.5.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.3...v2.5.4) (2025-04-11)
 
 
