@@ -63,7 +63,6 @@ defmodule AshAuthentication.Phoenix.Components.Confirm.Form do
       socket
       |> assign(assigns)
       |> assign(
-        action: "/fake_action",
         trigger_action: false,
         subject_name: subject_name,
         strategy: strategy
