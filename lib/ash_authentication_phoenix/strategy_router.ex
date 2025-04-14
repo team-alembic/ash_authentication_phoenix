@@ -17,7 +17,11 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
       fn {resource, strategy, path, phase}, {:not_found, conn} ->
         strategy_path_split = Path.split(String.trim_leading(path, "/"))
 
-        if paths_match?(strategy_path_split, conn.path_info) do
+        if paths_match?(strategy_path_split, conn.path_info) &&
+             conn.method ==
+               String.upcase(
+                 to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))
+               ) do
           {:halt, {:found, resource, strategy, path, phase}}
         else
           {:cont, {:not_found, conn}}

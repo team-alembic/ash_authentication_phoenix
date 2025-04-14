@@ -118,7 +118,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 4.1"},
+      {:ash_authentication, "~> 4.7"},
       {:ash_phoenix, "~> 2.0"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},

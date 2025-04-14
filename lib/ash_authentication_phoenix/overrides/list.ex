@@ -11,6 +11,12 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.Password.RegisterForm,
       AshAuthentication.Phoenix.Components.Password.SignInForm
     ],
+    Confirmation: [
+      AshAuthentication.Phoenix.ConfirmLive,
+      AshAuthentication.Phoenix.Components.Confirm,
+      AshAuthentication.Phoenix.Components.Confirm.Form,
+      AshAuthentication.Phoenix.Components.Confirm.Input
+    ],
     "Password Reset": [
       AshAuthentication.Phoenix.ResetLive,
       AshAuthentication.Phoenix.Components.Reset,
