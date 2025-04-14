@@ -7,7 +7,11 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ## [v2.6.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.4...v2.6.0) (2025-04-14)
 
+### Improvements:
 
+* mitigate medium-sev security issue for confirmation emails
+
+For more information see the security advisory: https://github.com/team-alembic/ash_authentication/security/advisories/GHSA-3988-q8q7-p787
 
 
 ## [v2.5.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.5.3...v2.5.4) (2025-04-11)
