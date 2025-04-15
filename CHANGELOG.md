@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.6.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.1...v2.6.2) (2025-04-15)
+
+
+
+
+### Bug Fixes:
+
+* add parens around confirm_route/2-3
+
 ## [v2.6.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.0...v2.6.1) (2025-04-15)
 
 
