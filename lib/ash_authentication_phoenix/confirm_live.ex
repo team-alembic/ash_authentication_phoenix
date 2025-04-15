@@ -39,8 +39,8 @@ defmodule AshAuthentication.Phoenix.ConfirmLive do
   @doc false
   @impl true
   @spec handle_params(map, String.t(), Socket.t()) :: {:noreply, Socket.t()}
-  def handle_params(%{"token" => token}, _uri, socket) do
-    {:noreply, assign(socket, :token, token)}
+  def handle_params(params, _uri, socket) do
+    {:noreply, assign(socket, :token, params["token"] || params["confirm"])}
   end
 
   @doc false
