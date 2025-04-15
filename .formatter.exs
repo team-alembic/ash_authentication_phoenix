@@ -9,6 +9,8 @@ locals_without_parens = [
   auth_routes_for: 1,
   auth_routes_for: 2,
   auth_routes_for: 3,
+  confirm_route: 2,
+  confirm_route: 3,
   auth_routes: 1,
   auth_routes: 2,
   auth_routes: 3,
