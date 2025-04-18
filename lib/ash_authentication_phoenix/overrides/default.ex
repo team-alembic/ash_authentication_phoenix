@@ -99,7 +99,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :form_class, nil
 
     set :request_flash_text,
-        "If this user exists in our database you will contacted with a sign-in link shortly."
+        "If this user exists in our database, you will be contacted with a sign-in link shortly."
 
     set :disable_button_text, "Requesting ..."
   end
@@ -142,7 +142,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :disable_button_text, "Requesting ..."
 
     set :reset_flash_text,
-        "If this user exists in our system, you will be contacted with reset instructions shortly."
+        "If this user exists in our system, you will be contacted with password reset instructions shortly."
   end
 
   override Components.Password.Input do
