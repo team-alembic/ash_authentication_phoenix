@@ -125,6 +125,8 @@ Generates sign in, registration and reset forms for a resource.
 
   * `:toggler_class` - CSS class for the toggler `a` element.
 
+  * `:register_form_module` - A Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.Password.RegisterForm`.
+
 
 ### `AshAuthentication.Phoenix.Components.Password.RegisterForm`
 
