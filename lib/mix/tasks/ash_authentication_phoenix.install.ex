@@ -447,7 +447,8 @@ if Code.ensure_loaded?(Igniter) do
       Igniter.add_notice(igniter, """
       AshAuthenticationPhoenix:
 
-      If you are using tailwind 3 or lower:
+      If you are configuring Tailwind with a `tailwind.config.js` file
+      (Tailwind 3 and below, maybe Tailwind 4):
 
         Modify your `tailwind.config.js` file, to add the ash_authentication_phoenix
         files to the `content` option.
@@ -462,11 +463,11 @@ if Code.ensure_loaded?(Igniter) do
             ...
           }
 
-      If you are using tailwind 4 or higher:
+      If you are configuring Tailwind with CSS (Tailwind 4):
 
         Add the following to your app.css file.
 
-          @source "../deps/ash_authentication_phoenix"
+          @source "../../deps/ash_authentication_phoenix";
       """)
     end
 
