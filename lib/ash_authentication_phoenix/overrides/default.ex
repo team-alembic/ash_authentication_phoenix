@@ -158,7 +158,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :input_class,
         @base_input_class <>
           """
-          border-gray-300 focus:ring-blue-pale-500 focus:border-blue-pale-500
+          border-gray-300 focus:ring-blue-500 focus:border-blue-500
           """
 
     set :input_class_with_error,
