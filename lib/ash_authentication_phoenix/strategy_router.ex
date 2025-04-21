@@ -43,6 +43,21 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
     end
   end
 
+  if Code.ensure_loaded?(Phoenix.Router) &&
+       function_exported?(Phoenix.Router, :__formatted_routes__, 1) do
+    @behaviour Phoenix.VerifiedRoutes
+
+    @impl Phoenix.VerifiedRoutes
+    def formatted_routes(opts) do
+      AshAuthentication.Phoenix.StrategyRouter.__formatted_routes__(opts)
+    end
+
+    @impl Phoenix.VerifiedRoutes
+    def verified_route?(opts, path) do
+      AshAuthentication.Phoenix.StrategyRouter.__verified_route__?(opts, path)
+    end
+  end
+
   defp not_found(conn, opts) do
     if plug = opts[:not_found_plug] do
       plug.call(conn, opts)
@@ -84,5 +99,57 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
     |> Stream.map(fn {path, phase} ->
       {resource, strategy, path, phase}
     end)
+  end
+
+  @doc false
+  def __formatted_routes__(opts) do
+    opts
+    |> routes()
+    |> Enum.map(fn {resource, strategy, path, phase} ->
+      %{
+        verb:
+          String.upcase(to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))),
+        path: path,
+        label: "#{inspect(resource)}.#{strategy.name} #{inspect(phase)}"
+      }
+    end)
+  end
+
+  @doc false
+  def __verified_route__?(opts, path) do
+    opts
+    |> routes()
+    |> Enum.map(&elem(&1, 2))
+    |> Enum.map(fn route ->
+      case Path.split(route) do
+        ["/" | rest] -> rest
+        path -> path
+      end
+    end)
+    |> Enum.any?(&match_path?(&1, path))
+  end
+
+  defp match_path?([], []), do: true
+  defp match_path?([], _), do: false
+  defp match_path?(_, []), do: false
+
+  defp match_path?([":" <> _ | rest_route], [_ | rest_path]) do
+    match_path?(rest_route, rest_path)
+  end
+
+  defp match_path?(["_" <> _ | rest_route], [_ | rest_path]) do
+    match_path?(rest_route, rest_path)
+  end
+
+  defp match_path?(["*" <> _], _) do
+    true
+  end
+
+  defp match_path?([same | rest_path], [same | rest_route]) do
+    match_path?(rest_path, rest_route)
+  end
+
+  defp match_path?(_, _) do
+    false
   end
 end

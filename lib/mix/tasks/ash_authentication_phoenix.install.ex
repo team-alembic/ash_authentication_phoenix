@@ -101,11 +101,7 @@ if Code.ensure_loaded?(Igniter) do
         igniter
         |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
         |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
-        |> Igniter.Project.TaskAliases.add_alias(
-          "phx.routes",
-          ["phx.routes", "ash_authentication.phoenix.routes"],
-          if_exists: {:append, "ash_authentication.phoenix.routes"}
-        )
+        |> setup_routes_alias()
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
         |> create_auth_controller()
@@ -119,6 +115,28 @@ if Code.ensure_loaded?(Igniter) do
 
         Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
         """)
+      end
+    end
+
+    def setup_routes_alias(igniter) do
+      # if `Phoenix.Router` is not loaded we don't
+      # know what version they are using and conservatively
+      # do not add an alias that will cause an error
+      if Code.ensure_loaded?(Phoenix.Router) do
+        # Phoenix >= 1.8 uses the new formatted routes feature and
+        # so we do not need this alias
+        if function_exported?(Phoenix.Router, :__formatted_routes__, 1) do
+          igniter
+        else
+          Igniter.Project.TaskAliases.add_alias(
+            igniter,
+            "phx.routes",
+            ["phx.routes", "ash_authentication.phoenix.routes"],
+            if_exists: {:append, "ash_authentication.phoenix.routes"}
+          )
+        end
+      else
+        igniter
       end
     end
 
