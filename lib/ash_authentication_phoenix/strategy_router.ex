@@ -47,14 +47,16 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
        function_exported?(Phoenix.Router, :__formatted_routes__, 1) do
     @behaviour Phoenix.VerifiedRoutes
 
+    alias AshAuthentication.Phoenix.StrategyRouter
+
     @impl Phoenix.VerifiedRoutes
     def formatted_routes(opts) do
-      AshAuthentication.Phoenix.StrategyRouter.__formatted_routes__(opts)
+      StrategyRouter.__formatted_routes__(opts)
     end
 
     @impl Phoenix.VerifiedRoutes
     def verified_route?(opts, path) do
-      AshAuthentication.Phoenix.StrategyRouter.__verified_route__?(opts, path)
+      StrategyRouter.__verified_route__?(opts, path)
     end
   end
 
