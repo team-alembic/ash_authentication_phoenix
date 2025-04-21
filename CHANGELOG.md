@@ -5,6 +5,25 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.6.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.2...v2.6.3) (2025-04-21)
+
+
+
+
+### Bug Fixes:
+
+* Fields with errors should keep their red border on focus, instead of going back to the default blue
+
+* Replace `blue-pale` classes in styles with plain `blue`
+
+* Use correct path to deps in post-install message for Tailwind 4
+
+* Fixed grammar and improved clarity in default messages (#610)
+
+### Improvements:
+
+* support phoenix 1.8 verified routes behaviour
+
 ## [v2.6.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.1...v2.6.2) (2025-04-15)
 
 
