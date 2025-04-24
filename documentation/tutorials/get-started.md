@@ -34,7 +34,12 @@ Phoenix routes for you. For that you need to add 6 lines in the router module or
 defmodule ExampleWeb.Router do
   use ExampleWeb, :router
 
-  use AshAuthentication.Phoenix.Router # <-------- Add this line
+ # add these lines -->
+  use AshAuthentication.Phoenix.Router
+
+  import AshAuthentication.Plug.Helpers
+
+  # <-- add these lines
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -48,7 +53,11 @@ defmodule ExampleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :load_from_bearer # <--------- Add this line
+
+    # add these lines -->
+    plug :load_from_bearer
+    plug :set_actor, :user
+    # <-- add these lines
   end
 
   scope "/", ExampleWeb do
@@ -115,6 +124,43 @@ end
 
 Note that `failure` will not necessarily ever be called. For example, `Components.Password.SignInForm` will handle
 failures internally as long as `sign_in_tokens_enabled?` is true (which is the default).
+
+#### Update formatter config
+
+Add `ash_authentication_phoenix` to .formatter.exs for auto_formatting
+**.formatter.exs**
+
+```elixir
+[
+  import_deps: [
+    :ash_authentication_phoenix, # <-------- Add this line
+    :ash_authentication,
+    :ash_postgres,
+    :ash,
+    :ecto,
+    :ecto_sql,
+    :phoenix
+  ],
+  subdirectories: ["priv/*/migrations"],
+  plugins: [Spark.Formatter, Phoenix.LiveView.HTMLFormatter],
+  inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}", "priv/*/seeds.exs"]
+]
+```
+
+#### Override mix phx.routes alias
+
+Override phx.routes alias in the mix.ex file to include `ash_authentication_phoenix` routes.
+**mix.exs**
+
+```elixir
+defp aliases do
+  [
+    setup: ["deps.get", "ash.setup", "assets.setup", "assets.build", "run priv/repo/seeds.exs"],
+    ...
+    "phx.routes": ["phx.routes", "ash_authentication.phoenix.routes"] # <-------- Add this line
+  ]
+end
+```
 
 <!-- tabs-close -->
 
