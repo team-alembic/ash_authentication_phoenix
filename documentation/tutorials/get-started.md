@@ -147,7 +147,7 @@ Add `ash_authentication_phoenix` to .formatter.exs for auto_formatting
 ]
 ```
 
-#### Override mix phx.routes alias
+#### Override mix phx.routes alias (only for phoenix <= 1.7)
 
 Override phx.routes alias in the mix.ex file to include `ash_authentication_phoenix` routes.
 **mix.exs**
@@ -161,6 +161,8 @@ defp aliases do
   ]
 end
 ```
+
+Note that this is only for `phoenix <= 1.7` as `phoenix 1.8` removes the need for it.
 
 <!-- tabs-close -->
 
