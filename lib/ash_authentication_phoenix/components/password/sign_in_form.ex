@@ -91,7 +91,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       strategy.resource
       |> Form.for_action(strategy.sign_in_action_name,
         domain: domain,
-        as: subject_name |> to_string(),
+        as: subject_name |> to_string() |> slugify(),
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
           |> slugify(),
