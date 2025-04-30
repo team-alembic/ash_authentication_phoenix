@@ -75,13 +75,13 @@ defmodule AshAuthentication.Phoenix.Components.Confirm.Form do
 
     form =
       strategy.resource
-      |> Form.for_action(strategy.sign_in_action_name,
+      |> Form.for_action(strategy.confirm_action_name,
         transform_errors: _transform_errors(),
         domain: domain,
         as: subject_name |> to_string(),
         tenant: socket.assigns.current_tenant,
         id:
-          "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
+          "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.confirm_action_name}"
           |> slugify(),
         context: %{strategy: strategy, private: %{ash_authentication?: true}}
       )

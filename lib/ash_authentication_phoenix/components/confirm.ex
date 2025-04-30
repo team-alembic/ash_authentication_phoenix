@@ -10,7 +10,7 @@ defmodule AshAuthentication.Phoenix.Components.Confirm do
   ## Component hierarchy
 
   Children:
-    * `AshAuthentication.Phoenix.Components.ConfirmForm.confirm_form/1`
+    * `AshAuthentication.Phoenix.Components.ConfirmForm`
 
   ## Props
 
@@ -63,7 +63,7 @@ defmodule AshAuthentication.Phoenix.Components.Confirm do
       <%= if override_for(@overrides, :show_banner, true) do %>
         <.live_component
           module={Components.Banner}
-          id="sign-in-banner"
+          id="confirm-banner"
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
