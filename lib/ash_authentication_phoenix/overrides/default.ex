@@ -113,6 +113,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :reset_toggle_text, "Forgot your password?"
     set :show_first, :sign_in
     set :hide_class, "hidden"
+    set :register_form_module, AshAuthentication.Phoenix.Components.Password.RegisterForm
   end
 
   override Components.Password.SignInForm do

@@ -12,6 +12,8 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     reset_toggle_text:
       "Toggle text to display when the reset form is not showing (or `nil` to disable).",
     toggler_class: "CSS class for the toggler `a` element.",
+    register_form_module:
+      "The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.Password.RegisterForm`.",
     slot_class: "CSS class for the `div` surrounding the slot."
 
   @moduledoc """
@@ -214,7 +216,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         >
           <.live_component
             :let={form}
-            module={Password.RegisterForm}
+            module={override_for(@overrides, :register_form_module) || Password.RegisterForm}
             auth_routes_prefix={@auth_routes_prefix}
             id={@register_id}
             strategy={@strategy}
