@@ -144,6 +144,7 @@ defmodule Example.Accounts.User do
 
       magic_link do
         identity_field :email
+        require_interaction? true
 
         sender(fn user, token, _ ->
           Logger.debug("Magic link request for #{user.email} with token #{inspect(token)}")

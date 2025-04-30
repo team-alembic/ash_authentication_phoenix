@@ -27,7 +27,11 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.Password.Input
     ],
     "Magic Link": [
-      AshAuthentication.Phoenix.Components.MagicLink
+      AshAuthentication.Phoenix.MagicSignInLive,
+      AshAuthentication.Phoenix.Components.MagicLink,
+      AshAuthentication.Phoenix.Components.MagicLink.SignIn,
+      AshAuthentication.Phoenix.Components.MagicLink.Form,
+      AshAuthentication.Phoenix.Components.MagicLink.Input
     ],
     OAuth2: [
       AshAuthentication.Phoenix.Components.Apple,

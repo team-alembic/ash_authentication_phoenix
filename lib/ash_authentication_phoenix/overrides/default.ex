@@ -6,7 +6,14 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   """
 
   use AshAuthentication.Phoenix.Overrides
-  alias AshAuthentication.Phoenix.{Components, ConfirmLive, ResetLive, SignInLive}
+
+  alias AshAuthentication.Phoenix.{
+    Components,
+    ConfirmLive,
+    MagicSignInLive,
+    ResetLive,
+    SignInLive
+  }
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
@@ -93,6 +100,10 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :text, "or"
   end
 
+  override MagicSignInLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
   override Components.MagicLink do
     set :root_class, "mt-4 mb-4"
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
@@ -102,6 +113,15 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
         "If this user exists in our database, you will be contacted with a sign-in link shortly."
 
     set :disable_button_text, "Requesting ..."
+  end
+
+  override Components.MagicLink.Input do
+    set :submit_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    mt-4 mb-4
+    """
   end
 
   override Components.Password do

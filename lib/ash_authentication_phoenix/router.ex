@@ -574,6 +574,123 @@ defmodule AshAuthentication.Phoenix.Router do
     end
   end
 
+  @doc """
+  Generates a genric, white-label magic link sign in page using LiveView and the components in `AshAuthentication.Phoenix.Components`.
+
+  This is used when `require_interaction?` is set to `true` on a magic link strategy.
+
+  Available options are:
+
+    * `path` the path under which to mount the live-view. Defaults to
+      "/<strategy>".
+    * `token_as_route_param?` whether to use the token as a route parameter. i.e `<path>/:token`. Defaults to `true`.
+    * `live_view` the name of the live view to render. Defaults to
+      `AshAuthentication.Phoenix.MagicSignInLive`.
+    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+    * `overrides` specify any override modules for customisation. See
+      `AshAuthentication.Phoenix.Overrides` for more information.
+    * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+      `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+      each output text of the live view.
+    * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+      and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+
+  All other options are passed to the generated `scope`.
+  """
+  @spec magic_sign_in_route(
+          resource :: Ash.Resource.t(),
+          strategy :: atom(),
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
+            | {:on_mount, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro magic_sign_in_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/#{strategy}")
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.MagicSignInLive)
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts =
+      opts
+      |> Keyword.put_new(:alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          [
+            AshAuthentication.Phoenix.Router.OnLiveViewMount,
+            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+          ]
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "resource" => unquote(resource),
+                 "strategy" => unquote(strategy),
+                 "otp_app" => unquote(otp_app)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_magic_sign_in", live_session_opts do
+          if unquote(Keyword.get(opts, :token_as_route_param?, true)) do
+            live("/:token", unquote(live_view), :sign_in, as: unquote(as))
+          else
+            live("/", unquote(live_view), :sign_in, as: unquote(as))
+          end
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
   @doc false
   def generate_session(conn, session) do
     session

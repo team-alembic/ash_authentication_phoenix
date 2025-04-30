@@ -33,6 +33,11 @@ defmodule DevWeb.Router do
     sign_out_route(AuthController, "/sign-out")
     reset_route(auth_routes_prefix: "/auth")
 
+    magic_sign_in_route(Example.Accounts.User, :magic_link,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
+
     sign_in_route(
       path: "/sign-in",
       overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default],
