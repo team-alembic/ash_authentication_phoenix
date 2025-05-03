@@ -45,8 +45,9 @@ if Code.ensure_loaded?(Igniter) do
       }
     end
 
-    def igniter(igniter, argv) do
-      options = options!(argv)
+    def igniter(igniter) do
+      options = igniter.args.options
+      argv = igniter.args.argv
 
       options =
         Keyword.put_new_lazy(options, :accounts, fn ->

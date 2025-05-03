@@ -17,7 +17,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   ```
   """
 
-  import Phoenix.Component, only: [assign: 2, assign: 3, assign_new: 3]
+  import Phoenix.Component, only: [assign: 3, assign_new: 3]
   import AshAuthentication.Phoenix.Components.Helpers
   alias AshAuthentication.{Info, Phoenix.LiveSession}
   alias Phoenix.LiveView.Socket
@@ -140,9 +140,15 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   end
 
   def on_mount(:default, _params, session, socket) do
-    tenant = session["tenant"]
+    tenant = socket.assigns[:current_tenant] || session["tenant"]
 
-    socket = assign(socket, current_tenant: tenant)
+    socket =
+      if tenant do
+        assign_new(socket, :current_tenant, fn -> tenant end)
+      else
+        socket
+      end
+
     context = session["context"] || %{}
 
     socket =
