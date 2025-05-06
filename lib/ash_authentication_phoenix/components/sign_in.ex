@@ -156,9 +156,12 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategies(assigns) do
     ~H"""
     <%= if Enum.any?(@strategies) do %>
-      <div :for={strategy <- @strategies} class={override_for(@overrides, :strategy_class)}>
+      <div
+        :for={{strategy, module} <- components(@strategies)}
+        class={override_for(@overrides, :strategy_class)}
+      >
         <.live_component
-          module={component_for_strategy(strategy)}
+          module={module}
           id={strategy_id(strategy)}
           strategy={strategy}
           auth_routes_prefix={@auth_routes_prefix}
@@ -174,6 +177,18 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       </div>
     <% end %>
     """
+  end
+
+  defp components(strategies) do
+    Enum.flat_map(strategies, fn strategy ->
+      component = component_for_strategy(strategy)
+
+      if Code.ensure_loaded?(component) do
+        [{strategy, component}]
+      else
+        []
+      end
+    end)
   end
 
   defp sort_strategies_by_name(strategies), do: Enum.sort_by(strategies, & &1.name)
