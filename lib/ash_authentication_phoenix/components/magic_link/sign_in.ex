@@ -1,22 +1,22 @@
-defmodule AshAuthentication.Phoenix.Components.Confirm do
+defmodule AshAuthentication.Phoenix.Components.MagicLink.SignIn do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
-    strategy_class: "CSS class for a `div` surrounding each strategy component.",
-    show_banner: "Whether or not to show the banner."
+    strategy_class: "CSS class for the `div` surrounding each strategy component.",
+    show_banner: "Whether or not to show the banner"
 
   @moduledoc """
-  Renders a confirmation button.
+  Renders a magic sign in button.
 
-  ## Component hierarchy
+  ## Component heirarchy
 
   Children:
-    * `AshAuthentication.Phoenix.Components.ConfirmForm`
+    * `AshAuthentication.Phoenix.Components.MagicLink.Form`.
 
   ## Props
 
-    * `token` - The confirmation token.
-    * `resource` - The resource to confirm.
-    * `strategy` - The strategy to confirm.
+    * `token` - The magic link token.
+    * `resource` - The resource to sign into.
+    * `strategy` - The magic link strategy.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
     * `otp_app` - The otp app to look for authenticated resources in
@@ -28,19 +28,11 @@ defmodule AshAuthentication.Phoenix.Components.Confirm do
   alias AshAuthentication.{Info, Phoenix.Components}
   alias Phoenix.LiveView.{Rendered, Socket}
 
-  @type props :: %{
-          required(:token) => String.t(),
-          optional(:overrides) => [module],
-          optional(:current_tenant) => term(),
-          optional(:gettext_fn) => {module, atom}
-        }
-
   @doc false
   @impl true
-  @spec update(props, Socket.t()) :: {:ok, Socket.t()}
+  @spec update(map, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     socket = assign(socket, assigns)
-
     strategy = Info.strategy!(assigns.resource, assigns.strategy)
 
     socket =
@@ -60,22 +52,22 @@ defmodule AshAuthentication.Phoenix.Components.Confirm do
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <%= if override_for(@overrides, :show_banner, true) do %>
-        <.live_component
-          module={Components.Banner}
-          id="confirm-banner"
-          overrides={@overrides}
-          gettext_fn={@gettext_fn}
-        />
-      <% end %>
+      <.live_component
+        :if={override_for(@overrides, :show_banner, true)}
+        module={Components.Banner}
+        id="magic-sign-in-banner"
+        overrides={@overrides}
+        gettext_fn={@gettext_fn}
+      />
+
       <div class={override_for(@overrides, :strategy_class)}>
         <.live_component
-          module={Components.Confirm.Form}
+          module={Components.MagicLink.Form}
           auth_routes_prefix={@auth_routes_prefix}
           current_tenant={@current_tenant}
           strategy={@strategy}
           token={@token}
-          id={"#{@strategy.name}-confirm-form"}
+          id={"#{@strategy.name}-sign-in-form"}
           label={false}
           overrides={@overrides}
           gettext_fn={@gettext_fn}

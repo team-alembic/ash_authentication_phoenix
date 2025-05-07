@@ -255,6 +255,12 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |      auth_routes_prefix: "/auth",
     + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
     + |    )
+    + |
+    + |    # Remove this if you do not use the magic link strategy.
+    + |    magic_sign_in_route(Test.Accounts.User, :magic_link,
+    + |      auth_routes_prefix: "/auth",
+    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |    )
     + |  end
     """)
   end

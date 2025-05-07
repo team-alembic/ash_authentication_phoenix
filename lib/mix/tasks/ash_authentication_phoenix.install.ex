@@ -174,6 +174,12 @@ if Code.ensure_loaded?(Igniter) do
             :confirm_new_user,
             auth_routes_prefix: "/auth",
             overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+
+          # Remove this if you do not use the magic link strategy.
+          magic_sign_in_route #{inspect(options[:user])},
+            :magic_link,
+            auth_routes_prefix: "/auth",
+            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
           """,
           with_pipelines: [:browser],
           arg2: Igniter.Libs.Phoenix.web_module(igniter),

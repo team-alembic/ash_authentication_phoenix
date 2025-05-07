@@ -293,6 +293,15 @@ authentication.
 
 
 ## Magic Link
+### `AshAuthentication.Phoenix.MagicSignInLive`
+
+A generic, white-label confirmation page.
+
+  * `:magic_sign_in_id` - Element ID for the `MagicSignIn` LiveComponent.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
 ### `AshAuthentication.Phoenix.Components.MagicLink`
 
 Generates a sign-in for for a resource using the "Magic link" strategy.
@@ -306,6 +315,39 @@ Generates a sign-in for for a resource using the "Magic link" strategy.
   * `:request_flash_text` - Text for the flash message when a request is received.  Set to `nil` to disable.
 
   * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.MagicLink.SignIn`
+
+Renders a magic sign in button.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:show_banner` - Whether or not to show the banner
+
+  * `:strategy_class` - CSS class for the `div` surrounding each strategy component.
+
+
+### `AshAuthentication.Phoenix.Components.MagicLink.Form`
+
+Generates a default magic sign in form.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:root_class` - CSS class for root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.MagicLink.Input`
+
+Function components for dealing with form input during magic link sign in.
+
+  * `:submit_class` - CSS class for the form submit `input` element.
+
+  * `:submit_label` - A function that takes the strategy and returns text for the sign in button, or a string.
 
 
 ## OAuth2
