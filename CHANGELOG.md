@@ -5,6 +5,31 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.8.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.7.0...v2.8.0) (2025-05-15)
+
+
+
+
+### Features:
+
+* Add override option for register form (#602)
+
+### Bug Fixes:
+
+* Confirm: Small tweaks to confirmation.
+
+* only render real strategy components (#618)
+
+* don't set current_tenant if no tenant is in session
+
+* Password.SignInForm: Slugify the form param to match what AA expects. (#614)
+
+### Improvements:
+
+* MagicLink: Support `require_interaction?` in magic links. (#615)
+
+* MagicLink: Support `require_interaction?` in magic links.
+
 ## [v2.7.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.3...v2.7.0) (2025-05-07)
 
 
