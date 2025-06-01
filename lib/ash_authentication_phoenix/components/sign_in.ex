@@ -74,12 +74,24 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       )
       |> Enum.sort_by(&Info.authentication_subject_name!/1)
       |> Enum.map(fn resource ->
-        resource
-        |> Info.authentication_strategies()
+        resource_strategies =
+          resource
+          |> Info.authentication_strategies()
+
+        remember_me_strategy =
+          resource_strategies
+          |> Enum.find(fn
+            %Strategy.RememberMe{} -> true
+            _ -> false
+          end)
+
+        resource_strategies
         |> Enum.group_by(&strategy_style/1)
         |> Map.update(:form, [], &sort_strategies_by_name/1)
         |> Map.update(:link, [], &sort_strategies_by_name/1)
+        |> Map.put(:remember_me, remember_me_strategy)
       end)
+
 
     socket =
       socket
@@ -118,6 +130,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         <.strategies
           live_action={@live_action}
           strategies={top_strategies}
+          remember_me_strategy={strategies.remember_me}
           path={@path}
           auth_routes_prefix={@auth_routes_prefix}
           reset_path={@reset_path}
@@ -139,6 +152,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         <.strategies
           live_action={@live_action}
           strategies={bottom_strategies}
+          remember_me_strategy={strategies.remember_me}
           auth_routes_prefix={@auth_routes_prefix}
           path={@path}
           reset_path={@reset_path}
@@ -164,6 +178,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           module={module}
           id={strategy_id(strategy)}
           strategy={strategy}
+          remember_me_strategy={@remember_me_strategy}
           auth_routes_prefix={@auth_routes_prefix}
           path={@path}
           reset_path={@reset_path}
@@ -215,6 +230,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategy_style(%AshAuthentication.AddOn.Confirmation{}), do: nil
   defp strategy_style(%Strategy.Password{}), do: :form
   defp strategy_style(%Strategy.MagicLink{}), do: :link
+  defp strategy_style(%Strategy.RememberMe{}), do: nil
   defp strategy_style(_), do: :link
 
   defp component_for_strategy(%{strategy_module: Strategy.Apple}), do: Components.Apple

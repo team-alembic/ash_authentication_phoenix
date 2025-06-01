@@ -139,12 +139,19 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
-
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
             {render_slot(@inner_block, form)}
           </div>
         <% end %>
+
+        <Password.Input.remember_me_field
+          strategy={@remember_me_strategy}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+          :if={@remember_me_strategy}
+        />
 
         <Password.Input.submit
           strategy={@strategy}

@@ -291,6 +291,14 @@ authentication.
 
   * `:submit_class` - CSS class for the form submit `input` element.
 
+  * `:remember_me_class` - CSS class for the `div` element surrounding the remember me field.
+
+  * `:remember_me_input_label` - Label for remember me field.
+
+  * `:checkbox_class` - CSS class for the `input` element of the remember me field.
+
+  * `:checkbox_label_class` - CSS class for the `label` element of the remember me field.
+
 
 ## Magic Link
 ### `AshAuthentication.Phoenix.MagicSignInLive`
