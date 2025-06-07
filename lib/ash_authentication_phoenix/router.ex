@@ -209,6 +209,7 @@ defmodule AshAuthentication.Phoenix.Router do
     each output text of the live view.
   * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
     and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+  * `on_mount_prepend` - Same as `on_mount`, but for hooks that need to be run before AshAuthenticationPhoenix's hooks.
 
   All other options are passed to the generated `scope`.
   """
@@ -221,9 +222,11 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:overrides, [module]}
             | {:gettext_fn, {module, atom}}
             | {:gettext_backend, {module, String.t()}}
+            | {:on_mount_prepend, [module]}
             | {atom, any}
           ]
         ) :: Macro.t()
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defmacro sign_in_route(opts \\ []) do
     {path, opts} = Keyword.pop(opts, :path, "/sign-in")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignInLive)
@@ -237,6 +240,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
     {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -252,11 +256,18 @@ defmodule AshAuthentication.Phoenix.Router do
       scope "/", unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
+        on_mount_prepend =
+          case unquote(on_mount_prepend) do
+            nil -> []
+            value -> List.wrap(value)
+          end
+
         on_mount =
-          [
-            AshAuthentication.Phoenix.Router.OnLiveViewMount,
-            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
-          ]
+          (on_mount_prepend ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
           |> Enum.uniq_by(fn
             {mod, _} -> mod
             mod -> mod

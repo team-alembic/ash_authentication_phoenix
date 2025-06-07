@@ -54,6 +54,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   Options:
     * `:otp_app` - Set the otp app in which to search for authenticated resources.
+    * `:on_mount_prepend` - Same as `:on_mount`, but for hooks that need to be
+      run before AshAuthenticationPhoenix's hooks.
 
   All other options are passed through to `live_session`, but with session and on_mount hooks
   added to set assigns for authenticated resources. Unlike `live_session`, this supports
@@ -113,8 +115,17 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
 
-    if otp_app do
-      Keyword.update!(opts, :on_mount, &[{LiveSession, {:set_otp_app, otp_app}} | &1])
+    opts =
+      if otp_app do
+        Keyword.update!(opts, :on_mount, &[{LiveSession, {:set_otp_app, otp_app}} | &1])
+      else
+        opts
+      end
+
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+
+    if on_mount_prepend do
+      Keyword.update!(opts, :on_mount, &(List.wrap(on_mount_prepend) ++ &1))
     else
       opts
     end
