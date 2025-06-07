@@ -192,6 +192,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
              read_one?: true
            ) do
         {:ok, user} ->
+          auth_path_params =
+            %{token: user.__metadata__.token}
+            |> Enum.reject(fn {_k, v} -> is_nil(v) end)
+            |> Map.new()
+
           validate_sign_in_token_path =
             auth_path(
               socket,
@@ -199,7 +204,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
               socket.assigns.auth_routes_prefix,
               socket.assigns.strategy,
               :sign_in_with_token,
-              token: user.__metadata__.token
+              auth_path_params
             )
 
           {:noreply, redirect(socket, to: validate_sign_in_token_path)}
