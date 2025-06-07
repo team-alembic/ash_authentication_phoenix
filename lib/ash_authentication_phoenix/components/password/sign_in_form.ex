@@ -193,7 +193,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
            ) do
         {:ok, user} ->
           auth_path_params =
-            %{token: user.__metadata__.token}
+            %{token: user.__metadata__.token, remember_me: Map.get(params, "remember_me")}
             |> Enum.reject(fn {_k, v} -> is_nil(v) end)
             |> Map.new()
 
