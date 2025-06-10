@@ -121,7 +121,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
 
   defp icon_svg(:google, class),
     do: ~s"""
-    <svg width="175" height="40" viewBox="0 0 175 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="175" height="40" viewBox="0 0 175 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="#{class}">
     <rect x="0.5" y="0.5" width="174" height="39" rx="3.5" fill="white"/>
     <g clip-path="url(#clip0_710_6235)">
     <path d="M31.6 20.2273C31.6 19.5182 31.5364 18.8364 31.4182 18.1818H22V22.05H27.3818C27.15 23.3 26.4455 24.3591 25.3864 25.0682V27.5773H28.6182C30.5091 25.8364 31.6 23.2727 31.6 20.2273Z" fill="#4285F4"/>
