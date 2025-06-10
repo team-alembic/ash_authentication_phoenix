@@ -5,6 +5,23 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.8.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.7.0...v2.8.0) (2025-06-10)
+
+
+
+
+### Features:
+
+* google strategy uses official button svg (#626) by [@modellurgist](https://github.com/modellurgist)
+
+### Bug Fixes:
+
+* conditionally render button text, for :google strategy by [@modellurgist](https://github.com/modellurgist)
+
+### Improvements:
+
+* add on_mount_prepend option (#629) by aidalgol
+
 ## [v2.7.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.3...v2.7.0) (2025-05-07)
 
 
