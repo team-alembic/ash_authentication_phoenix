@@ -256,14 +256,8 @@ defmodule AshAuthentication.Phoenix.Router do
       scope "/", unquote(opts) do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
-        on_mount_prepend =
-          case unquote(on_mount_prepend) do
-            nil -> []
-            value -> List.wrap(value)
-          end
-
         on_mount =
-          (on_mount_prepend ++
+          (List.wrap(unquote(on_mount_prepend)) ++
              [
                AshAuthentication.Phoenix.Router.OnLiveViewMount,
                AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
@@ -390,6 +384,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:gettext_fn, {module, atom}}
             | {:gettext_backend, {module, String.t()}}
             | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -400,6 +395,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
     {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
@@ -426,10 +422,11 @@ defmodule AshAuthentication.Phoenix.Router do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
         on_mount =
-          [
-            AshAuthentication.Phoenix.Router.OnLiveViewMount,
-            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
-          ]
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
           |> Enum.uniq_by(fn
             {mod, _} -> mod
             mod -> mod
@@ -502,6 +499,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:gettext_fn, {module, atom}}
             | {:gettext_backend, {module, String.t()}}
             | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -512,6 +510,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
     {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
@@ -538,10 +537,11 @@ defmodule AshAuthentication.Phoenix.Router do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
         on_mount =
-          [
-            AshAuthentication.Phoenix.Router.OnLiveViewMount,
-            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
-          ]
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
           |> Enum.uniq_by(fn
             {mod, _} -> mod
             mod -> mod
@@ -619,6 +619,7 @@ defmodule AshAuthentication.Phoenix.Router do
             | {:gettext_fn, {module, atom}}
             | {:gettext_backend, {module, String.t()}}
             | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
             | {atom, any}
           ]
         ) :: Macro.t()
@@ -629,6 +630,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
     {layout, opts} = Keyword.pop(opts, :layout)
     {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
     {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
@@ -655,10 +657,11 @@ defmodule AshAuthentication.Phoenix.Router do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
         on_mount =
-          [
-            AshAuthentication.Phoenix.Router.OnLiveViewMount,
-            AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
-          ]
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
           |> Enum.uniq_by(fn
             {mod, _} -> mod
             mod -> mod
