@@ -133,7 +133,6 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
     <rect x="0.5" y="0.5" width="174" height="39" rx="3.5" stroke="#747775"/>
     <defs>
     <clipPath id="clip0_710_6235">
-    <rect width="20" height="20" fill="white" transform="translate(12 10)"/>
     </clipPath>
     </defs>
     </svg>
