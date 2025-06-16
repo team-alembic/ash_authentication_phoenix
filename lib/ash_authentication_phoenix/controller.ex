@@ -77,6 +77,7 @@ defmodule AshAuthentication.Phoenix.Controller do
   """
 
   alias AshAuthentication.Plug.Dispatcher
+  alias AshAuthentication.Plug.Helpers
   alias Plug.Conn
 
   @type t :: module
@@ -107,7 +108,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       @behaviour AshAuthentication.Phoenix.Controller
       @behaviour AshAuthentication.Plug
       import Phoenix.Controller
-      import Plug.Conn
+      import Plug.Conn, except: [clear_session: 1]
       import AshAuthentication.Phoenix.Plug
       import AshAuthentication.Phoenix.Controller
 
@@ -135,15 +136,6 @@ defmodule AshAuthentication.Phoenix.Controller do
         conn
         |> put_status(401)
         |> render("failure.html")
-      end
-
-      @doc false
-      @impl true
-      @spec sign_out(Conn.t(), map) :: Conn.t()
-      def sign_out(conn, _params) do
-        conn
-        |> clear_session()
-        |> render("sign_out.html")
       end
 
       @doc false
@@ -203,7 +195,36 @@ defmodule AshAuthentication.Phoenix.Controller do
         end
       end
 
-      defoverridable success: 4, failure: 3, sign_out: 2
+      defoverridable success: 4, failure: 3
     end
+  end
+
+  defmacro clear_session(_conn) do
+    raise """
+    Using clear_session/1 in your `auth_controller` is deprecated. Please use `clear_session/2` instead,
+    passing the conn and the otp_app.
+
+    For example:
+
+        conn
+        |> clear_session(conn, :my_app)
+
+
+    This ensures that session tokens & bearer tokens are revoked on logout.
+
+    If you wish to retain the old behavior (not advised), call `Plug.Conn.clear_session/1` directly.
+    """
+  end
+
+  @doc """
+  Clears the session and revokes bearer and session tokens.
+
+  This ensures that session tokens & bearer tokens are revoked on logout.
+  """
+  def clear_session(conn, otp_app) do
+    conn
+    |> Helpers.revoke_bearer_tokens(otp_app)
+    |> Helpers.revoke_session_tokens(otp_app)
+    |> Plug.Conn.clear_session()
   end
 end

@@ -26,7 +26,7 @@ defmodule AshAuthentication.Phoenix.Test.AuthController do
   @impl true
   def sign_out(conn, _params) do
     conn
-    |> clear_session()
+    |> clear_session(:ash_authentication_phoenix)
     |> render(:signed_out)
   end
 end
