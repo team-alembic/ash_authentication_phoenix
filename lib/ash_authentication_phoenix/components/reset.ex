@@ -86,7 +86,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
             current_tenant={@current_tenant}
             strategy={strategy}
             token={@token}
-            id={"#{strategy.name}-reset-form"}
+            id={"#{Info.authentication_subject_name!(@strategy.resource)}-#{strategy.name}-reset-form"}
             label={false}
             overrides={@overrides}
             gettext_fn={@gettext_fn}
