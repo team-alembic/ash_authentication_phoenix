@@ -96,6 +96,8 @@ defmodule Example.Accounts.User do
   end
 
   authentication do
+    session_identifier(:jti)
+
     add_ons do
       confirmation :confirm do
         monitor_fields([:email])

@@ -142,7 +142,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
         return_to = get_session(conn, :return_to) || ~p"/"
 
         conn
-        |> clear_session()
+        |> clear_session(:test)
         |> put_flash(:info, "You are now signed out")
         |> redirect(to: return_to)
       end

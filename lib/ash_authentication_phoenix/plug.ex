@@ -50,6 +50,18 @@ defmodule AshAuthentication.Phoenix.Plug do
   end
 
   @doc """
+  Revoke all token(s) in the session.
+
+  A wrapper around `AshAuthentication.Plug.Helpers.revoke_session_tokens/2` with
+  the `otp_app` as extracted from the endpoint.
+  """
+  @spec revoke_session_tokens(Conn.t(), any) :: Conn.t()
+  def revoke_session_tokens(conn, _opts) do
+    otp_app = conn.private.phoenix_endpoint.config(:otp_app)
+    Helpers.revoke_session_tokens(conn, otp_app)
+  end
+
+  @doc """
   Store the actor in the connections' session.
   """
   @spec store_in_session(Conn.t(), Ash.Resource.record()) :: Conn.t()
