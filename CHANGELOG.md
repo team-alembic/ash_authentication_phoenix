@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.9.0...v2.10.0) (2025-06-17)
+
+
+
+
+### Bug Fixes:
+
+* set subject name into forms for unique ids by [@zachdaniel](https://github.com/zachdaniel)
+
+### Improvements:
+
+* revoke stored sessions on log out (#634) by Zach Daniel
+
 ## [v2.9.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.8.0...v2.9.0) (2025-06-12)
 
 
