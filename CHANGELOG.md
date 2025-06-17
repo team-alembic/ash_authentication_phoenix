@@ -18,6 +18,9 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 * revoke stored sessions on log out (#634) by Zach Daniel
 
+More information is available here: https://github.com/team-alembic/ash_authentication_phoenix/security/advisories/GHSA-f7gq-h8jv-h3cq
+
+
 ## [v2.9.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.8.0...v2.9.0) (2025-06-12)
 
 
