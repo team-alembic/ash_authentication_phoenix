@@ -42,7 +42,7 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
 
       {:ok, conn} =
         lv
-        |> form(~s{[action="/auth/user/password/register?"]},
+        |> form(~s{[action="/auth/user/password/register"]},
           user: %{
             strategy.identity_field => email,
             strategy.password_field => password,
@@ -89,7 +89,7 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
 
     {:ok, conn} =
       lv
-      |> form(~s{[action="/auth/user/password/sign_in?"]},
+      |> form(~s{[action="/auth/user/password/sign_in"]},
         user: %{
           strategy.identity_field => email,
           strategy.password_field => password

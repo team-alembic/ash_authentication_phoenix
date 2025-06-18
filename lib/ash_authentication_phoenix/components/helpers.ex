@@ -25,7 +25,13 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
       |> Enum.find(&(elem(&1, 1) == phase))
       |> elem(0)
       |> URI.parse()
-      |> Map.put(:query, URI.encode_query(params))
+      |> then(fn query ->
+        if params && params != %{} do
+          Map.put(query, :query, URI.encode_query(params))
+        else
+          query
+        end
+      end)
       |> Map.update!(:path, &Path.join(auth_routes_prefix, &1))
       |> URI.to_string()
     else
