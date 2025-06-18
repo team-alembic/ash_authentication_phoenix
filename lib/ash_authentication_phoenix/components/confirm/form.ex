@@ -147,7 +147,7 @@ defmodule AshAuthentication.Phoenix.Components.Confirm.Form do
     socket =
       socket
       |> assign(:form, form)
-      |> assign(:trigger_action, form.valid?)
+      |> assign(:trigger_action, true)
 
     {:noreply, socket}
   end
