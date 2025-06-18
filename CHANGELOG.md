@@ -5,6 +5,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.0...v2.10.1) (2025-06-18)
+
+
+
+
+### Bug Fixes:
+
+* trigger action regardless of form validity by [@zachdaniel](https://github.com/zachdaniel)
+
+* Google sign in (#635) by [@vasspilka](https://github.com/vasspilka)
+
+### Improvements:
+
+* don't add dangling ? at the end of URLs by [@zachdaniel](https://github.com/zachdaniel)
+
 ## [v2.10.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.9.0...v2.10.0) (2025-06-17)
 
 
