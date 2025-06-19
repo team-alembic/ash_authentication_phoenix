@@ -11,6 +11,7 @@ jobs:
     uses: ash-project/ash/.github/workflows/ash-ci.yml@main
     with:
       doctor: true
+      spark-formatter: false
       community-files: false
       conventional-commit: true
     permissions:
