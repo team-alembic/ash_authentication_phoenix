@@ -73,6 +73,36 @@ And we can use this as follows:
   end
   # ...
 ```
+Or, if we want to match a specific user attribute like :role we can use the `on_mount` hook to check it:
+```elixir
+def on_mount([required_role: role], _params, _session, socket) do
+  if socket.assigns[:current_user] && socket.assigns[:current_user].role == role do
+    {:cont, socket}
+  else
+    {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+  end
+end
+```
+Or muliple roles:
+```elixir
+def on_mount([required_roles: roles], _params, _session, socket) do
+  if socket.assigns[:current_user] && Enum.any?(roles, &(socket.assigns[:current_user].role == &1)) do
+    {:cont, socket}
+  else
+    {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+  end
+end
+```
+And use it in a on_mount call in a LiveView:
+```elixir
+on_mount {MyAppWeb.LiveUserAuth, [required_role: :admin]}
+```
+Or
+```elixir
+on_mount {MyAppWeb.LiveUserAuth, [required_roles: [:admin, :staff]]}
+```
+
+
 
 You can also use this to prevent users from visiting the auto generated `sign_in` route:
 
