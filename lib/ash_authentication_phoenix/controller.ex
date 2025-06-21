@@ -31,7 +31,7 @@ defmodule AshAuthentication.Phoenix.Controller do
     def sign_out(conn, _params) do
       conn
       |> clear_session()
-      |> clear_remember_me()
+      |> delete_all_remember_me_cookies()
       |> render("sign_out.html")
     end
 
@@ -138,6 +138,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       import Plug.Conn
       import AshAuthentication.Phoenix.Plug
       import AshAuthentication.Phoenix.Controller
+      alias AshAuthentication.Strategy.RememberMe
 
       @doc false
       @impl true
@@ -171,7 +172,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       def sign_out(conn, _params) do
         conn
         |> clear_session()
-        |> clear_remember_me()
+        |> delete_all_remember_me_cookies()
         |> render("sign_out.html")
       end
 
@@ -213,31 +214,6 @@ defmodule AshAuthentication.Phoenix.Controller do
         |> call(:failure)
       end
 
-      @remember_me_cookie_options [
-        http_only: true, # prevents the cookie from being accessed by JavaScript
-        secure: true, # only send the cookie over HTTPS
-        same_site: "Lax" # prevents the cookie from being sent with cross-site requests
-      ]
-
-      @doc false
-      @impl true
-      @spec put_remember_me(Conn.t(), String.t(), Map.t()) :: Conn.t()
-      def put_remember_me(conn, cookie_name, %{token: token, max_age: max_age}) do
-        cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, max_age)
-        conn
-        |> put_resp_cookie(cookie_name, token, cookie_options)
-      end
-
-      @doc false
-      @impl true
-      @spec delete_remember_me(Conn.t(), String.t()) :: Conn.t()
-      def delete_remember_me(conn, cookie_name) do
-        cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, 0)
-
-        conn
-        |> delete_resp_cookie(cookie_name, cookie_options)
-      end
-
       @doc false
       @spec action(Conn.t(), any) :: Conn.t()
       def action(conn, opts) do
@@ -257,23 +233,22 @@ defmodule AshAuthentication.Phoenix.Controller do
         end
       end
 
-      # TODO: Move to AshAuthentication.Plug.Helpers
       @doc false
-      @spec clear_remember_me(Conn.t()) :: Conn.t()
-      def clear_remember_me(conn) do
-        conn
-        |> get_cookies()
-        |> Enum.reduce(conn, fn {key, _}, conn ->
-          if String.starts_with?(key, AshAuthentication.Strategy.RememberMe.Cookie.prefix()) do
-            delete_remember_me(conn, key)
-          else
-            conn
-          end
-        end)
-      end
+      @impl true
+      @spec put_remember_me_cookie(Conn.t(), String.t(), Map.t()) :: Conn.t()
+      def put_remember_me_cookie(conn, cookie_name, remember_me_options), do: RememberMe.Plug.Helpers.put_remember_me_cookie(conn, cookie_name, remember_me_options)
 
       @doc false
-      defoverridable success: 4, failure: 3, sign_out: 2, put_remember_me: 3, delete_remember_me: 2
+      @impl true
+      @spec delete_remember_me_cookie(Conn.t(), String.t()) :: Conn.t()
+      def delete_remember_me_cookie(conn, cookie_name), do: RememberMe.Plug.Helpers.delete_remember_me_cookie(conn, cookie_name)
+
+      @doc false
+      @spec delete_all_remember_me_cookies(Conn.t()) :: Conn.t()
+      def delete_all_remember_me_cookies(conn), do: RememberMe.Plug.Helpers.delete_all_remember_me_cookies(conn)
+
+      @doc false
+      defoverridable success: 4, failure: 3, sign_out: 2, put_remember_me_cookie: 3, delete_remember_me_cookie: 2, delete_all_remember_me_cookies: 1
     end
   end
 end
