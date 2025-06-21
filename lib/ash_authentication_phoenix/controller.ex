@@ -124,7 +124,7 @@ defmodule AshAuthentication.Phoenix.Controller do
   @doc """
   Called when a request is made to set a remember me cookie.
   """
-  @callback put_remember_me_cookie(Conn.t(), String.t(), String.t(), integer()) :: Conn.t()
+  @callback put_remember_me_cookie(Conn.t(), String.t(), Map.t()) :: Conn.t()
 
   @doc """
   Called when a request is made to delete a remember me cookie.
@@ -257,6 +257,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       def delete_remember_me_cookie(conn, cookie_name), do: RememberMe.Plug.Helpers.delete_remember_me_cookie(conn, cookie_name)
 
       @doc false
+      @impl true
       @spec delete_all_remember_me_cookies(Conn.t()) :: Conn.t()
       def delete_all_remember_me_cookies(conn), do: RememberMe.Plug.Helpers.delete_all_remember_me_cookies(conn)
 
