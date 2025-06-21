@@ -75,7 +75,7 @@ And we can use this as follows:
 ```
 If you want to allow access to a live_view based on users role or some other condition:
 ```elixir
-def on_mount([required_role: role], _params, _session, socket) do
+def on_mount({:required_role, role}, _params, _session, socket) do
   if socket.assigns[:current_user] && socket.assigns[:current_user].role == role do
     {:cont, socket}
   else
@@ -85,7 +85,7 @@ end
 ```
 You can also match multiple roles:
 ```elixir
-def on_mount([required_roles: roles], _params, _session, socket) do
+def on_mount({:required_roles, roles}, _params, _session, socket) do
   if socket.assigns[:current_user] && Enum.any?(roles, &(socket.assigns[:current_user].role == &1)) do
     {:cont, socket}
   else
@@ -95,11 +95,11 @@ end
 ```
 Use it in a on_mount call in a LiveView:
 ```elixir
-on_mount {MyAppWeb.LiveUserAuth, [required_role: :admin]}
+on_mount {MyAppWeb.LiveUserAuth, {:required_role: :admin}}
 ```
 
 ```elixir
-on_mount {MyAppWeb.LiveUserAuth, [required_roles: [:admin, :staff]]}
+on_mount {MyAppWeb.LiveUserAuth, {:required_roles: [:admin, :staff]}}
 ```
 
 
