@@ -225,7 +225,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       def put_remember_me(conn, cookie_name, %{token: token, max_age: max_age}) do
         cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, max_age)
         conn
-        |> put_resp_cookie(cookie_name, cookie_value, cookie_options)
+        |> put_resp_cookie(cookie_name, token, cookie_options)
       end
 
       @doc false
@@ -273,7 +273,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       end
 
       @doc false
-      defoverridable success: 4, failure: 3, sign_out: 2, put_remember_me: 4, delete_remember_me: 2
+      defoverridable success: 4, failure: 3, sign_out: 2, put_remember_me: 3, delete_remember_me: 2
     end
   end
 end
