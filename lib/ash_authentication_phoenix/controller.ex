@@ -40,16 +40,24 @@ defmodule AshAuthentication.Phoenix.Controller do
       secure: true, # only send the cookie over HTTPS
       same_site: "Lax" # prevents the cookie from being sent with cross-site requests
     ]
-    def remember_me(conn, cookie_name, cookie_value, max_age) do
+    def put_remember_me_cookie(conn, cookie_name, cookie_value, max_age) do
       cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, max_age)
       conn
       |> put_resp_cookie(cookie_name, cookie_value, cookie_options)
     end
 
-    def delete_remember_me(conn, cookie_name) do
+    def delete_remember_me_cookie(conn, cookie_name) do
       cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, 0)
       conn
       |> delete_resp_cookie(cookie_name, cookie_options)
+    end
+
+    def delete_all_remember_me_cookies(conn) do
+      conn
+      |> get_cookies()
+      |> Enum.reduce(conn, fn {key, _}, conn ->
+        if String.starts_with?(key, AshAuthentication.Strategy.RememberMe.Cookie.prefix()) do
+          delete_remember_me_cookie(conn, key)
     end
   end
   ```
@@ -116,12 +124,17 @@ defmodule AshAuthentication.Phoenix.Controller do
   @doc """
   Called when a request is made to set a remember me cookie.
   """
-  @callback put_remember_me(Conn.t(), String.t(), String.t(), integer()) :: Conn.t()
+  @callback put_remember_me_cookie(Conn.t(), String.t(), String.t(), integer()) :: Conn.t()
 
   @doc """
   Called when a request is made to delete a remember me cookie.
   """
-  @callback delete_remember_me(Conn.t(), String.t()) :: Conn.t()
+  @callback delete_remember_me_cookie(Conn.t(), String.t()) :: Conn.t()
+
+  @doc """
+  Called when a request is made to delete all remember me cookies.
+  """
+  @callback delete_all_remember_me_cookies(Conn.t()) :: Conn.t()
 
   @doc """
   Called when a request to sign out is received.
