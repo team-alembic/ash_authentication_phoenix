@@ -73,7 +73,7 @@ And we can use this as follows:
   end
   # ...
 ```
-Or, if we want to match a specific user attribute like :role we can use the `on_mount` hook to check it:
+If you want to match a specific user attribute like :role for allowing access you can use the `on_mount` hook to check it:
 ```elixir
 def on_mount([required_role: role], _params, _session, socket) do
   if socket.assigns[:current_user] && socket.assigns[:current_user].role == role do
@@ -83,7 +83,7 @@ def on_mount([required_role: role], _params, _session, socket) do
   end
 end
 ```
-Or muliple roles:
+You can also match multiple roles:
 ```elixir
 def on_mount([required_roles: roles], _params, _session, socket) do
   if socket.assigns[:current_user] && Enum.any?(roles, &(socket.assigns[:current_user].role == &1)) do
@@ -93,11 +93,11 @@ def on_mount([required_roles: roles], _params, _session, socket) do
   end
 end
 ```
-And use it in a on_mount call in a LiveView:
+Use it in a on_mount call in a LiveView:
 ```elixir
 on_mount {MyAppWeb.LiveUserAuth, [required_role: :admin]}
 ```
-Or
+
 ```elixir
 on_mount {MyAppWeb.LiveUserAuth, [required_roles: [:admin, :staff]]}
 ```
