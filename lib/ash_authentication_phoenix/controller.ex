@@ -221,8 +221,8 @@ defmodule AshAuthentication.Phoenix.Controller do
 
       @doc false
       @impl true
-      @spec put_remember_me(Conn.t(), String.t(), String.t(), integer()) :: Conn.t()
-      def put_remember_me(conn, cookie_name, cookie_value, max_age) do
+      @spec put_remember_me(Conn.t(), String.t(), Map.t()) :: Conn.t()
+      def put_remember_me(conn, cookie_name, %{token: token, max_age: max_age}) do
         cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, max_age)
         conn
         |> put_resp_cookie(cookie_name, cookie_value, cookie_options)
@@ -257,6 +257,7 @@ defmodule AshAuthentication.Phoenix.Controller do
         end
       end
 
+      # TODO: Move to AshAuthentication.Plug.Helpers
       @doc false
       @spec clear_remember_me(Conn.t()) :: Conn.t()
       def clear_remember_me(conn) do
