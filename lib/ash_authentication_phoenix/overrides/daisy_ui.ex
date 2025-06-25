@@ -1,7 +1,7 @@
 defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   @moduledoc """
   This is the daisyUI overrides for our component UI.
-  Copied from the AshAuthentication.Phoenix.Overrides.Default module with color classes adjusted.
+  Copied from the AshAuthentication.Phoenix.Overrides.Default module with tweaks.
 
   The CSS styles are based on [daisyUI](https://daisyui.com/).
   """
