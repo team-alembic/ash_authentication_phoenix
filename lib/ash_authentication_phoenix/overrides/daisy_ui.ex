@@ -85,14 +85,11 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   end
 
   override Components.HorizontalRule do
-    set :root_class, "relative my-2"
-    set :hr_outer_class, "absolute inset-0 flex items-center"
-    set :hr_inner_class, "w-full border-t border-base-300"
-    set :text_outer_class, "relative flex justify-center text-sm"
-
-    set :text_inner_class,
-        "px-2 bg-base-100 text-base-content/60 font-medium"
-
+    set :root_class, "divider my-2"
+    set :hr_outer_class, "hidden"
+    set :hr_inner_class, "hidden"
+    set :text_outer_class, "contents"
+    set :text_inner_class, "contents"
     set :text, "or"
   end
 
@@ -118,7 +115,10 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   override Components.Password do
     set :root_class, "mt-4 mb-4"
     set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
-    set :toggler_class, "flex-none text-primary hover:text-primary-focus px-2 first:pl-0 last:pr-0"
+
+    set :toggler_class,
+        "flex-none text-primary hover:text-primary-focus px-2 first:pl-0 last:pr-0"
+
     set :sign_in_toggle_text, "Already have an account?"
     set :register_toggle_text, "Need an account?"
     set :reset_toggle_text, "Forgot your password?"
