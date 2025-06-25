@@ -34,12 +34,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   end
 
   override Components.Confirm.Input do
-    set :submit_class, """
-    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
-    shadow-sm text-sm font-medium text-primary-content bg-primary hover:bg-primary-focus
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
-    mt-4 mb-4
-    """
+    set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
   end
 
   override ResetLive do
@@ -117,12 +112,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   end
 
   override Components.MagicLink.Input do
-    set :submit_class, """
-    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
-    shadow-sm text-sm font-medium text-primary-content bg-primary hover:bg-primary-focus
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
-    mt-4 mb-4
-    """
+    set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
   end
 
   override Components.Password do
@@ -189,12 +179,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
           border-error focus:border-error focus:ring-error
           """
 
-    set :submit_class, """
-    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
-    shadow-sm text-sm font-medium text-primary-content bg-primary hover:bg-primary-focus
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
-    mt-4 mb-4
-    """
+    set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
 
     set :password_input_label, "Password"
     set :password_confirmation_input_label, "Password Confirmation"
@@ -208,12 +193,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   override Components.OAuth2 do
     set :root_class, "w-full mt-2 mb-4"
 
-    set :link_class, """
-    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
-    shadow-sm text-sm font-medium text-base-content bg-base-200 hover:bg-base-300
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
-    inline-flex items-center
-    """
+    set :link_class, "btn btn-outline btn-block"
 
     set :icon_class, "-ml-0.4 mr-2 h-4 w-4"
   end
@@ -221,11 +201,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   override Components.Apple do
     set :root_class, "w-full mt-2 mb-4"
 
-    set :link_class, """
-    w-full flex justify-center px-4 border border-transparent rounded-md
-    shadow-sm text-sm font-medium text-neutral-content bg-neutral focus:outline-none
-    focus:ring-2 focus:ring-offset-2 focus:ring-neutral inline-flex items-center
-    """
+    set :link_class, "btn btn-neutral btn-block"
 
     set :icon_class, ""
   end
