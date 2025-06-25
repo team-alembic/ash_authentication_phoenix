@@ -14,6 +14,10 @@ defmodule AshAuthentication.Phoenix.Components.Password do
     toggler_class: "CSS class for the toggler `a` element.",
     register_form_module:
       "The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.Password.RegisterForm`.",
+    sign_in_form_module:
+      "The Phoenix component to be used for the sign in form. Defaults to `AshAuthentication.Phoenix.Components.Password.SignInForm`.",
+    reset_form_module:
+      "The Phoenix component to be used for the reset form. Defaults to `AshAuthentication.Phoenix.Components.Password.ResetForm`.",
     slot_class: "CSS class for the `div` surrounding the slot."
 
   @moduledoc """
@@ -167,7 +171,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       <div id={"#{@sign_in_id}-wrapper"} class={if @show == :sign_in, do: nil, else: @hide_class}>
         <.live_component
           :let={form}
-          module={Password.SignInForm}
+          module={override_for(@overrides, :sign_in_form_module) || Password.SignInForm}
           auth_routes_prefix={@auth_routes_prefix}
           id={@sign_in_id}
           strategy={@strategy}
@@ -262,7 +266,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
         <div id={"#{@reset_id}-wrapper"} class={if @show == :reset, do: nil, else: @hide_class}>
           <.live_component
             :let={form}
-            module={Password.ResetForm}
+            module={override_for(@overrides, :reset_form_module) || Password.ResetForm}
             auth_routes_prefix={@auth_routes_prefix}
             id={@reset_id}
             strategy={@strategy}

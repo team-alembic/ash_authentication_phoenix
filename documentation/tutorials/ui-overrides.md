@@ -113,6 +113,10 @@ Generates sign in, registration and reset forms for a resource.
 
   * `:register_form_module` - The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.Password.RegisterForm`.
 
+  * `:sign_in_form_module` - The Phoenix component to be used for the sign in form. Defaults to `AshAuthentication.Phoenix.Components.Password.SignInForm`.
+
+  * `:reset_form_module` - The Phoenix component to be used for the reset form. Defaults to `AshAuthentication.Phoenix.Components.Password.ResetForm`.
+
   * `:register_toggle_text` - Toggle text to display when the register form is not showing (or `nil` to disable).
 
   * `:reset_toggle_text` - Toggle text to display when the reset form is not showing (or `nil` to disable).
