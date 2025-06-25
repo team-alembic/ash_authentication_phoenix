@@ -161,23 +161,11 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :field_class, "mt-2 mb-2"
     set :label_class, "block text-sm font-medium text-base-content mb-1"
 
-    @base_input_class """
-    appearance-none block w-full px-3 py-2 border rounded-md
-    shadow-sm placeholder-base-content/60 focus:outline-none sm:text-sm
-    text-base-content bg-base-100
-    """
+    @base_input_class "input w-full"
 
-    set :input_class,
-        @base_input_class <>
-          """
-          border-base-300 focus:ring-primary focus:border-primary
-          """
+    set :input_class, @base_input_class
 
-    set :input_class_with_error,
-        @base_input_class <>
-          """
-          border-error focus:border-error focus:ring-error
-          """
+    set :input_class_with_error, @base_input_class <> " input-error"
 
     set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
 
