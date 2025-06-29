@@ -2,7 +2,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "2.7.0"
+  @version "2.10.1"
 
   def project do
     [
@@ -118,7 +118,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 4.8"},
+      {:ash_authentication, "~> 4.9 and >= 4.9.1"},
       {:ash_phoenix, "~> 2.0"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},

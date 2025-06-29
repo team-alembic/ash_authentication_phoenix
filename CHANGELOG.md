@@ -5,6 +5,73 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.0...v2.10.1) (2025-06-18)
+
+
+
+
+### Bug Fixes:
+
+* trigger action regardless of form validity by [@zachdaniel](https://github.com/zachdaniel)
+
+* Google sign in (#635) by [@vasspilka](https://github.com/vasspilka)
+
+### Improvements:
+
+* don't add dangling ? at the end of URLs by [@zachdaniel](https://github.com/zachdaniel)
+
+## [v2.10.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.9.0...v2.10.0) (2025-06-17)
+
+
+
+
+### Bug Fixes:
+
+* set subject name into forms for unique ids by [@zachdaniel](https://github.com/zachdaniel)
+
+### Improvements:
+
+* revoke stored sessions on log out (#634) by Zach Daniel
+
+More information is available here: https://github.com/team-alembic/ash_authentication_phoenix/security/advisories/GHSA-f7gq-h8jv-h3cq
+
+
+## [v2.9.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.8.0...v2.9.0) (2025-06-12)
+
+
+
+
+### Features:
+
+* google strategy uses official button svg (#626) by [@modellurgist](https://github.com/modellurgist)
+
+### Bug Fixes:
+
+* conditionally render button text, for :google strategy by [@modellurgist](https://github.com/modellurgist)
+
+### Improvements:
+
+* support `on_mount_prepend` in all route helpers by [@zachdaniel](https://github.com/zachdaniel)
+
+* add on_mount_prepend option (#629) by aidalgol
+
+## [v2.8.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.7.0...v2.8.0) (2025-06-10)
+
+
+
+
+### Features:
+
+* google strategy uses official button svg (#626) by [@modellurgist](https://github.com/modellurgist)
+
+### Bug Fixes:
+
+* conditionally render button text, for :google strategy by [@modellurgist](https://github.com/modellurgist)
+
+### Improvements:
+
+* add on_mount_prepend option (#629) by aidalgol
+
 ## [v2.7.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.6.3...v2.7.0) (2025-05-07)
 
 

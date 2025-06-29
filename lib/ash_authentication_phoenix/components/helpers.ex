@@ -25,7 +25,7 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
       |> Enum.find(&(elem(&1, 1) == phase))
       |> elem(0)
       |> URI.parse()
-      |> Map.put(:query, URI.encode_query(params))
+      |> set_query(params)
       |> Map.update!(:path, &Path.join(auth_routes_prefix, &1))
       |> URI.to_string()
     else
@@ -42,6 +42,14 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
         Must configure the `auth_routes_prefix`, or enable router helpers.
         """
       end
+    end
+  end
+
+  defp set_query(uri, params) do
+    if params && params != %{} do
+      Map.put(uri, :query, URI.encode_query(params))
+    else
+      uri
     end
   end
 

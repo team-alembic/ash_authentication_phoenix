@@ -98,6 +98,7 @@ if Code.ensure_loaded?(Igniter) do
       if router do
         web_module = Igniter.Libs.Phoenix.web_module(igniter)
         overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+        otp_app = Igniter.Project.Application.app_name(igniter)
 
         igniter
         |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
@@ -105,7 +106,7 @@ if Code.ensure_loaded?(Igniter) do
         |> setup_routes_alias()
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
-        |> create_auth_controller()
+        |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
         |> add_auth_routes(overrides, options, router, web_module)
         |> create_live_user_auth(web_module)
@@ -318,7 +319,7 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
-    defp create_auth_controller(igniter) do
+    defp create_auth_controller(igniter, otp_app) do
       Igniter.Project.Module.create_module(
         igniter,
         Igniter.Libs.Phoenix.web_module_name(igniter, "AuthController"),
@@ -372,7 +373,7 @@ if Code.ensure_loaded?(Igniter) do
           return_to = get_session(conn, :return_to) || ~p"/"
 
           conn
-          |> clear_session()
+          |> clear_session(:#{otp_app})
           |> put_flash(:info, "You are now signed out")
           |> redirect(to: return_to)
         end

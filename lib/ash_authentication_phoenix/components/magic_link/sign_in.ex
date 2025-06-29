@@ -67,7 +67,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.SignIn do
           current_tenant={@current_tenant}
           strategy={@strategy}
           token={@token}
-          id={"#{@strategy.name}-sign-in-form"}
+          id={"#{Info.authentication_subject_name!(@strategy.resource)}-#{@strategy.name}-sign-in-form"}
           label={false}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
