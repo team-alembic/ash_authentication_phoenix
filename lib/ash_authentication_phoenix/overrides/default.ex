@@ -122,6 +122,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
     mt-4 mb-4
     """
+
+    set :submit_label, "Sign in"
   end
 
   override Components.Password do
