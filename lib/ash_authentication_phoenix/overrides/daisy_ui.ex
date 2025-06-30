@@ -125,6 +125,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :show_first, :sign_in
     set :hide_class, "hidden"
     set :register_form_module, AshAuthentication.Phoenix.Components.Password.RegisterForm
+    set :sign_in_form_module, AshAuthentication.Phoenix.Components.Password.SignInForm
+    set :reset_form_module, AshAuthentication.Phoenix.Components.Password.ResetForm
   end
 
   override Components.Password.SignInForm do
