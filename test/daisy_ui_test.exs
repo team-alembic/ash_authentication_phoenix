@@ -1,7 +1,8 @@
 defmodule AshAuthentication.Phoenix.DaisyUITest do
   use ExUnit.Case
 
-  alias AshAuthentication.Phoenix.Overrides.{Default, DaisyUI}
+  alias AshAuthentication.Phoenix.Overrides.DaisyUI
+  alias AshAuthentication.Phoenix.Overrides.Default
 
   describe "daisyUI overrides" do
     test "has all blocks + keys" do
