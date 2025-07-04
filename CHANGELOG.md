@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.1...v2.10.2) (2025-07-02)
+
+
+
+
+### Improvements:
+
+* Add override options to reset and sign in forms (#641) by [@jaeyson](https://github.com/jaeyson)
+
 ## [v2.10.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.0...v2.10.1) (2025-06-18)
 
 
