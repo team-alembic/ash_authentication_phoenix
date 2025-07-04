@@ -181,7 +181,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           context={@context}
           gettext_fn={@gettext_fn}
         >
-
           <%= if @sign_in_extra do %>
             <div class={override_for(@overrides, :slot_class)}>
               {render_slot(@sign_in_extra, form)}

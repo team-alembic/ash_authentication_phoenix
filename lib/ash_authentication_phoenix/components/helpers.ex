@@ -2,8 +2,9 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   @moduledoc """
   Helpers which are commonly needed inside the various components.
   """
+  alias Ash.Resource.Info
+  alias AshAuthentication.{Strategy, Strategy.RememberMe}
   alias Phoenix.LiveView.Socket
-  alias AshAuthentication.Strategy.RememberMe
 
   @doc """
   The LiveView `Socket` contains a reference to the Phoenix endpoint, and from
@@ -70,11 +71,18 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   """
   @spec remember_me_field(Strategy.t()) :: atom | nil
   def remember_me_field(strategy) do
-    with sign_in_action when not is_nil(sign_in_action) <- Ash.Resource.Info.action(strategy.resource, strategy.sign_in_action_name),
-    prep_opts when not is_nil(prep_opts) <- Enum.find_value(sign_in_action.preparations, fn
-      %Ash.Resource.Preparation{preparation: {RememberMe.MaybeGenerateTokenPreparation, opts}} -> opts
-      _ -> nil
-    end) do
+    with sign_in_action when not is_nil(sign_in_action) <-
+           Info.action(strategy.resource, strategy.sign_in_action_name),
+         prep_opts when not is_nil(prep_opts) <-
+           Enum.find_value(sign_in_action.preparations, fn
+             %Ash.Resource.Preparation{
+               preparation: {RememberMe.MaybeGenerateTokenPreparation, opts}
+             } ->
+               opts
+
+             _ ->
+               nil
+           end) do
       Keyword.get(prep_opts, :arguments, :remember_me)
     else
       _ -> nil

@@ -149,11 +149,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         <% end %>
 
         <Password.Input.remember_me_field
+          :if={@remember_me_field}
           name={@remember_me_field}
           form={form}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
-          :if={@remember_me_field}
         />
 
         <Password.Input.submit
@@ -195,10 +195,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
              read_one?: true
            ) do
         {:ok, user} ->
-          auth_path_params =
-            %{token: user.__metadata__.token, remember_me: Map.get(params, "remember_me")}
-            |> Enum.reject(fn {_k, v} -> is_nil(v) end)
-            |> Map.new()
+          auth_path_params = get_auth_path_params(params, user)
 
           validate_sign_in_token_path =
             auth_path(
@@ -225,6 +222,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         |> assign(:trigger_action, form.valid?)
 
       {:noreply, socket}
+    end
+  end
+
+  defp get_auth_path_params(params, user) do
+    case Map.get(params, "remember_me") do
+      nil -> %{token: user.__metadata__.token}
+      remember_me -> %{token: user.__metadata__.token, remember_me: remember_me}
     end
   end
 

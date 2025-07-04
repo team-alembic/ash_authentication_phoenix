@@ -81,7 +81,6 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         |> Map.update(:link, [], &sort_strategies_by_name/1)
       end)
 
-
     socket =
       socket
       |> assign(:strategies_by_resource, strategies_by_resource)

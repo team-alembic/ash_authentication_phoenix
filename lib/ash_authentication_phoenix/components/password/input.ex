@@ -212,7 +212,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     """
   end
 
-
   @doc """
   Generate a form field for the remember me field.
 
@@ -223,42 +222,43 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.  Required.
     * `form` - An `AshPhoenix.Form`.  Required.
+    * `name` - The name of the field.  Defaults to `:remember_me`.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
   """
   @spec remember_me_field(%{
-    required(:socket) => Socket.t(),
-    required(:strategy) => Strategy.t(),
-    required(:form) => Form.t(),
-    optional(:name) => atom,
-    optional(:overrides) => [module],
-    optional(:gettext_fn) => {module, atom}
-  }) :: Rendered.t() | no_return
-def remember_me_field(assigns) do
-assigns =
-assigns
-|> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
-|> assign_new(:gettext_fn, fn -> nil end)
-|> assign_new(:checkbox_class, fn -> override_for(assigns.overrides, :checkbox_class) end)
-|> assign_new(:label_class, fn -> override_for(assigns.overrides, :label_class) end)
+          required(:socket) => Socket.t(),
+          required(:strategy) => Strategy.t(),
+          required(:form) => Form.t(),
+          optional(:name) => atom,
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
+        }) :: Rendered.t() | no_return
+  def remember_me_field(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:name, fn -> :remember_me end)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
+      |> assign_new(:checkbox_class, fn -> override_for(assigns.overrides, :checkbox_class) end)
+      |> assign_new(:label_class, fn -> override_for(assigns.overrides, :label_class) end)
 
-~H"""
-<div class={override_for(@overrides, :remember_me_class)}>
-  {checkbox(@form, @name,
-    class: @checkbox_class,
-    value: input_value(@form, @name),
-    phx_debounce: override_for(@overrides, :input_debounce)
-  )}
-  {label(
-    @form,
-    @name,
-    _gettext(override_for(@overrides, :remember_me_input_label)),
-    class: override_for(@overrides, :checkbox_label_class)
-  )}
-</div>
-"""
-end
-
+    ~H"""
+    <div class={override_for(@overrides, :remember_me_class)}>
+      {checkbox(@form, @name,
+        class: @checkbox_class,
+        value: input_value(@form, @name),
+        phx_debounce: override_for(@overrides, :input_debounce)
+      )}
+      {label(
+        @form,
+        @name,
+        _gettext(override_for(@overrides, :remember_me_input_label)),
+        class: override_for(@overrides, :checkbox_label_class)
+      )}
+    </div>
+    """
+  end
 
   @doc """
   Generate an form submit button.

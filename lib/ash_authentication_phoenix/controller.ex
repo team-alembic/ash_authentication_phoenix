@@ -124,7 +124,7 @@ defmodule AshAuthentication.Phoenix.Controller do
   @doc """
   Called when a request is made to set a remember me cookie.
   """
-  @callback put_remember_me_cookie(Conn.t(), String.t(), Map.t()) :: Conn.t()
+  @callback put_remember_me_cookie(Conn.t(), String.t(), map) :: Conn.t()
 
   @doc """
   Called when a request is made to delete a remember me cookie.
@@ -233,21 +233,28 @@ defmodule AshAuthentication.Phoenix.Controller do
 
       @doc false
       @impl true
-      @spec put_remember_me_cookie(Conn.t(), String.t(), Map.t()) :: Conn.t()
-      def put_remember_me_cookie(conn, cookie_name, remember_me_options), do: RememberMe.Plug.Helpers.put_remember_me_cookie(conn, cookie_name, remember_me_options)
+      @spec put_remember_me_cookie(Conn.t(), String.t(), map) :: Conn.t()
+      def put_remember_me_cookie(conn, cookie_name, remember_me_options),
+        do: RememberMe.Plug.Helpers.put_remember_me_cookie(conn, cookie_name, remember_me_options)
 
       @doc false
       @impl true
       @spec delete_remember_me_cookie(Conn.t(), String.t()) :: Conn.t()
-      def delete_remember_me_cookie(conn, cookie_name), do: RememberMe.Plug.Helpers.delete_remember_me_cookie(conn, cookie_name)
+      def delete_remember_me_cookie(conn, cookie_name),
+        do: RememberMe.Plug.Helpers.delete_remember_me_cookie(conn, cookie_name)
 
       @doc false
       @impl true
       @spec delete_all_remember_me_cookies(Conn.t()) :: Conn.t()
-      def delete_all_remember_me_cookies(conn), do: RememberMe.Plug.Helpers.delete_all_remember_me_cookies(conn)
+      def delete_all_remember_me_cookies(conn),
+        do: RememberMe.Plug.Helpers.delete_all_remember_me_cookies(conn)
 
       @doc false
-      defoverridable success: 4, failure: 3, put_remember_me_cookie: 3, delete_remember_me_cookie: 2, delete_all_remember_me_cookies: 1
+      defoverridable success: 4,
+                     failure: 3,
+                     put_remember_me_cookie: 3,
+                     delete_remember_me_cookie: 2,
+                     delete_all_remember_me_cookies: 1
 
       @doc """
       Clears the session and revokes bearer and session tokens.
