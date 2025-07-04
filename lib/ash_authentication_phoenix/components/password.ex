@@ -175,7 +175,6 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           auth_routes_prefix={@auth_routes_prefix}
           id={@sign_in_id}
           strategy={@strategy}
-          remember_me_strategy={@remember_me_strategy}
           label={false}
           overrides={@overrides}
           current_tenant={@current_tenant}

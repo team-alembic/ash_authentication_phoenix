@@ -1,4 +1,6 @@
 defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
+  alias AshAuthentication.Phoenix.Components.Helpers
+
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -73,6 +75,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+      |> assign_new(:remember_me_field, fn -> Helpers.remember_me_field(assigns.strategy) end)
 
     context =
       Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
@@ -146,11 +149,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         <% end %>
 
         <Password.Input.remember_me_field
-          strategy={@remember_me_strategy}
+          name={@remember_me_field}
           form={form}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
-          :if={@remember_me_strategy}
+          :if={@remember_me_field}
         />
 
         <Password.Input.submit
