@@ -30,8 +30,7 @@ defmodule AshAuthentication.Phoenix.Controller do
 
     def sign_out(conn, _params) do
       conn
-      |> clear_session()
-      |> delete_all_remember_me_cookies()
+      |> clear_session(:my_otp_app)
       |> render("sign_out.html")
     end
 
@@ -137,11 +136,6 @@ defmodule AshAuthentication.Phoenix.Controller do
   """
   @callback delete_all_remember_me_cookies(Conn.t()) :: Conn.t()
 
-  @doc """
-  Called when a request to sign out is received.
-  """
-  @callback sign_out(Conn.t(), params :: map) :: Conn.t()
-
   @doc false
   @spec __using__(any) :: Macro.t()
   defmacro __using__(_opts) do
@@ -178,16 +172,6 @@ defmodule AshAuthentication.Phoenix.Controller do
         conn
         |> put_status(401)
         |> render("failure.html")
-      end
-
-      @doc false
-      @impl true
-      @spec sign_out(Conn.t(), map) :: Conn.t()
-      def sign_out(conn, _params) do
-        conn
-        |> clear_session()
-        |> delete_all_remember_me_cookies()
-        |> render("sign_out.html")
       end
 
       @doc false
@@ -263,7 +247,20 @@ defmodule AshAuthentication.Phoenix.Controller do
       def delete_all_remember_me_cookies(conn), do: RememberMe.Plug.Helpers.delete_all_remember_me_cookies(conn)
 
       @doc false
-      defoverridable success: 4, failure: 3, sign_out: 2, put_remember_me_cookie: 3, delete_remember_me_cookie: 2, delete_all_remember_me_cookies: 1
+      defoverridable success: 4, failure: 3, put_remember_me_cookie: 3, delete_remember_me_cookie: 2, delete_all_remember_me_cookies: 1
+
+      @doc """
+      Clears the session and revokes bearer and session tokens.
+
+      This ensures that session tokens & bearer tokens are revoked on logout.
+      """
+      def clear_session(conn, otp_app) do
+        conn
+        |> delete_all_remember_me_cookies()
+        |> Helpers.revoke_bearer_tokens(otp_app)
+        |> Helpers.revoke_session_tokens(otp_app)
+        |> Plug.Conn.clear_session()
+      end
     end
   end
 
@@ -282,17 +279,5 @@ defmodule AshAuthentication.Phoenix.Controller do
 
     If you wish to retain the old behavior (not advised), call `Plug.Conn.clear_session/1` directly.
     """
-  end
-
-  @doc """
-  Clears the session and revokes bearer and session tokens.
-
-  This ensures that session tokens & bearer tokens are revoked on logout.
-  """
-  def clear_session(conn, otp_app) do
-    conn
-    |> Helpers.revoke_bearer_tokens(otp_app)
-    |> Helpers.revoke_session_tokens(otp_app)
-    |> Plug.Conn.clear_session()
   end
 end

@@ -234,11 +234,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     optional(:gettext_fn) => {module, atom}
   }) :: Rendered.t() | no_return
 def remember_me_field(assigns) do
-remember_me_field = assigns.strategy.remember_me_field
-
 assigns =
 assigns
-|> assign(:remember_me_field, remember_me_field)
+|> assign(:input_name, :remember_me)
 |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
 |> assign_new(:gettext_fn, fn -> nil end)
 |> assign_new(:checkbox_class, fn -> override_for(assigns.overrides, :checkbox_class) end)
@@ -246,14 +244,14 @@ assigns
 
 ~H"""
 <div class={override_for(@overrides, :remember_me_class)}>
-  {checkbox(@form, @remember_me_field,
+  {checkbox(@form, @input_name,
     class: @checkbox_class,
-    value: input_value(@form, @remember_me_field),
+    value: input_value(@form, @input_name),
     phx_debounce: override_for(@overrides, :input_debounce)
   )}
   {label(
     @form,
-    @remember_me_field,
+    @input_name,
     _gettext(override_for(@overrides, :remember_me_input_label)),
     class: override_for(@overrides, :checkbox_label_class)
   )}
