@@ -110,6 +110,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
 
   override Components.MagicLink.Input do
     set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
+    set :submit_label, "Sign in"
   end
 
   override Components.Password do
