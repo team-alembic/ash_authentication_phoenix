@@ -23,7 +23,6 @@ defmodule DevWeb.AuthController do
   end
 
   @doc false
-  @impl true
   def sign_out(conn, _params) do
     conn
     |> clear_session(:ash_authentication_phoenix)

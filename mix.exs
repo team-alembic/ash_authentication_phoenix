@@ -118,7 +118,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 4.9 and >= 4.9.1"},
+      # {:ash_authentication, "~> 4.9 and >= 4.9.1"},
+      {:ash_authentication, github: "rgraff/ash_authentication", branch: "remember-me-strategy"},
       {:ash_phoenix, "~> 2.0"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},
