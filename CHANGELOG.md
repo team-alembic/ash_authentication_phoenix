@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.2...v2.10.3) (2025-07-09)
+
+
+
+
+### Bug Fixes:
+
+* add missing override for magic link input submit_label (#644) by skanderm
+
 ## [v2.10.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.1...v2.10.2) (2025-07-02)
 
 
