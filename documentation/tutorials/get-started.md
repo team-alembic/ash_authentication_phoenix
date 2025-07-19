@@ -267,13 +267,15 @@ sign_in_route register_path: "/register",
               overrides: [AshAuthentication.Phoenix.Overrides.DaisyUI]
 ```
 
-To enable dark theme support for header images, add this to your `app.css`:
+To enable dark theme support for header images, make sure this is in your `app.css`:
 
 ```css
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 ```
 
 This allows the `dark:hidden` and `dark:block` classes to work with daisyUI's theme system instead of just system dark mode.
+
+It's configured by default in new Phoenix applications since Phoenix 1.8.0-rc.4.
 
 ## Example home.html.heex
 
