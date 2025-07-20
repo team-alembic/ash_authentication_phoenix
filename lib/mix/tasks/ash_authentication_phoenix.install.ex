@@ -165,22 +165,22 @@ if Code.ensure_loaded?(Igniter) do
 
           # Remove these if you'd like to use your own authentication views
           sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
-            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.DaisyUI]
 
           # Remove this if you do not want to use the reset password feature
-          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.DaisyUI]
 
           # Remove this if you do not use the confirmation strategy
           confirm_route #{inspect(options[:user])},
             :confirm_new_user,
             auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.DaisyUI]
 
           # Remove this if you do not use the magic link strategy.
           magic_sign_in_route #{inspect(options[:user])},
             :magic_link,
             auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.DaisyUI]
           """,
           with_pipelines: [:browser],
           arg2: Igniter.Libs.Phoenix.web_module(igniter),
