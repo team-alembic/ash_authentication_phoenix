@@ -30,8 +30,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Input do
     * `strategy` - The configuration map as per
       `AshAuthentication.authenticated_resources/1`.  Required.
     * `form` - An `AshPhoenix.Form`.  Required.
-    * `submit_label` - The text to show in the submit label.  Generated from the
-      configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
+    * `submit_label` - The text to show in the submit label.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
   """
@@ -47,7 +46,9 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Input do
       assigns
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
-      |> assign_new(:submit_label, fn -> fn _ -> "Sign in" end end)
+      |> assign_new(:submit_label, fn ->
+        fn _ -> override_for(assigns.overrides, :submit_label) end
+      end)
       |> assign_new(:disable_text, fn -> nil end)
       |> update(:submit_label, fn submit_label ->
         if is_function(submit_label) do

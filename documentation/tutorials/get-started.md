@@ -194,7 +194,9 @@ If you would like to use your own layout file instead, you can specify this as a
 reset_route(layout: {MyAppWeb, :live}, auth_routes_prefix: "/auth")
 ```
 
-## Tailwind
+## Styling
+
+### Tailwind
 
 If you plan on using our default [Tailwind](https://tailwindcss.com/)-based
 components without overriding them you will need to modify your
@@ -252,6 +254,28 @@ module.exports = {
   ],
 };
 ```
+
+### daisyUI
+
+If you're using [daisyUI](https://daisyui.com/), you can use the daisyUI-specific overrides instead of the default Tailwind ones. Replace `AshAuthentication.Phoenix.Overrides.Default` with `AshAuthentication.Phoenix.Overrides.DaisyUI` in your router:
+
+```elixir
+sign_in_route register_path: "/register",
+              reset_path: "/reset",
+              auth_routes_prefix: "/auth",
+              on_mount: [{ExampleWeb.LiveUserAuth, :live_no_user}],
+              overrides: [AshAuthentication.Phoenix.Overrides.DaisyUI]
+```
+
+To enable dark theme support for header images, make sure this is in your `app.css`:
+
+```css
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+```
+
+This allows the `dark:hidden` and `dark:block` classes to work with daisyUI's theme system instead of just system dark mode.
+
+It's configured by default in new Phoenix applications since Phoenix 1.8.0-rc.4.
 
 ## Example home.html.heex
 
