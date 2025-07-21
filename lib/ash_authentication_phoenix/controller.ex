@@ -122,6 +122,11 @@ defmodule AshAuthentication.Phoenix.Controller do
   @callback failure(Conn.t(), activity, reason :: any) :: Conn.t()
 
   @doc """
+  Called when a request to sign out is received.
+  """
+  @callback sign_out(Conn.t(), params :: map) :: Conn.t()
+
+  @doc """
   Called when a request is made to set a remember me cookie.
   """
   @callback put_remember_me_cookie(Conn.t(), String.t(), map) :: Conn.t()
