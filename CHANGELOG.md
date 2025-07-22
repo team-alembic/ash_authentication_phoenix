@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.3...v2.10.4) (2025-07-22)
+
+
+
+
+### Improvements:
+
+* add daisyUI overrides (#642) by pikdum
+
 ## [v2.10.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.2...v2.10.3) (2025-07-09)
 
 
