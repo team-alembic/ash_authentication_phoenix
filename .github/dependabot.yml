@@ -1,23 +1,24 @@
-version: 2
+---
 updates:
-  - package-ecosystem: docker
-    directory: "/.devcontainer"
-    schedule:
-      interval: weekly
-      day: thursday
+  - directory: /.devcontainer
     groups:
-      production-dependencies:
-        dependency-type: production
       dev-dependencies:
         dependency-type: development
-  - package-ecosystem: mix
-    directory: "/"
+      production-dependencies:
+        dependency-type: production
+    package-ecosystem: docker
+    schedule:
+      day: thursday
+      interval: monthly
+  - directory: /
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+    package-ecosystem: mix
+    schedule:
+      day: thursday
+      interval: monthly
     versioning-strategy: lockfile-only
-    schedule:
-      interval: weekly
-      day: thursday
-    groups:
-      production-dependencies:
-        dependency-type: production
-      dev-dependencies:
-        dependency-type: development
+version: 2
