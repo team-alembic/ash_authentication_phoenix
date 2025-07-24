@@ -119,7 +119,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   defp deps do
     [
       {:ash_authentication, "~> 4.9 and >= 4.9.1"},
-      {:ash_phoenix, "~> 2.0"},
+      {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},
       {:phoenix_html, "~> 4.0"},

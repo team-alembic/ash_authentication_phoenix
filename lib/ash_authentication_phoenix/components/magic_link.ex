@@ -141,9 +141,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
         :ok
 
       {:error, form} ->
-        Logger.warning(
-          "Error sending magic link email\n\n#{inspect(AshPhoenix.Form.errors(form, for_path: :all), pretty: true)}"
-        )
+        debug_form_errors(form)
     end
 
     flash = override_for(socket.assigns.overrides, :request_flash_text)

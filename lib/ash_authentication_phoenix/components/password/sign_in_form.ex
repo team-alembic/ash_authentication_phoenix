@@ -198,6 +198,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           {:noreply, redirect(socket, to: validate_sign_in_token_path)}
 
         {:error, form} ->
+          debug_form_errors(form)
+
           {:noreply,
            assign(socket, :form, Form.clear_value(form, socket.assigns.strategy.password_field))}
       end

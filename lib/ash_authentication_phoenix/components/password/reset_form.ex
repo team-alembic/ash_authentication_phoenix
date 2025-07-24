@@ -155,6 +155,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
     socket.assigns.form
     |> Form.validate(params)
     |> Form.submit(params: params)
+    |> case do
+      {:error, form} ->
+        debug_form_errors(form)
+
+      _ ->
+        :ok
+    end
 
     flash = override_for(socket.assigns.overrides, :reset_flash_text)
 

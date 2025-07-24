@@ -3,6 +3,7 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   Helpers which are commonly needed inside the various components.
   """
   alias Phoenix.LiveView.Socket
+  require Logger
 
   @doc """
   The LiveView `Socket` contains a reference to the Phoenix endpoint, and from
@@ -60,5 +61,46 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   @spec route_helpers(Socket.t()) :: module
   def route_helpers(socket) do
     Module.concat(socket.router, Helpers)
+  end
+
+  @doc """
+  Logs all form errors when `debug_authentication_failures?` is configured to `true`
+  """
+  def debug_form_errors(form) do
+    if Application.get_env(:ash_authentication, :debug_authentication_failures?) do
+      log =
+        form
+        |> AshPhoenix.Form.raw_errors(for_path: :all)
+        |> Enum.sort_by(&length(elem(&1, 0)))
+        |> Enum.map_join(fn {path, error} ->
+          prefix =
+            if path == [] do
+              "Errors:\n\n"
+            else
+              "Errors for path #{inspect(path)}:\n\n"
+            end
+
+          prefix <>
+            Enum.map_join(error, fn error ->
+              Exception.format(:error, error, stacktrace(error))
+              |> String.split("\n")
+              |> Enum.map_join("\n", &"  #{&1}")
+            end)
+        end)
+
+      Logger.warning(
+        "Encountered errors when submitting form for #{inspect(form.source.resource)}#{form.source.action.name}\n\n#{log}"
+      )
+    end
+
+    form
+  end
+
+  defp stacktrace(%{stacktrace: %{stacktrace: stacktrace}}) do
+    stacktrace
+  end
+
+  defp stacktrace(_error) do
+    nil
   end
 end
