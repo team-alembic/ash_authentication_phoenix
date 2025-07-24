@@ -34,7 +34,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
-  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
+  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5, debug_form_errors: 1]
   import Slug
   require Logger
 

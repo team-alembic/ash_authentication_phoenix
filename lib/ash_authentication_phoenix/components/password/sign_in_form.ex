@@ -39,7 +39,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   alias Phoenix.LiveView.{Rendered, Socket}
 
   import AshAuthentication.Phoenix.Components.Helpers,
-    only: [auth_path: 5, auth_path: 6]
+    only: [auth_path: 5, auth_path: 6, debug_form_errors: 1]
 
   import PhoenixHTMLHelpers.Form
   import Slug
