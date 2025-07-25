@@ -84,6 +84,7 @@ defmodule AshAuthentication.Phoenix.Router do
   end
   ```
   """
+  @deprecated "Use auth_routes/2..3 instead"
   @spec auth_routes_for(Ash.Resource.t(), auth_route_options) :: Macro.t()
   defmacro auth_routes_for(resource, opts) when is_list(opts) do
     quote location: :keep do
