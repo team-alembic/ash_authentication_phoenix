@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.10.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.4...v2.10.5) (2025-07-29)
+
+
+
+
+### Improvements:
+
+* debug form errors in templates by [@zachdaniel](https://github.com/zachdaniel)
+
 ## [v2.10.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.3...v2.10.4) (2025-07-22)
 
 
