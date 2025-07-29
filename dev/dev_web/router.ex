@@ -35,12 +35,12 @@ defmodule DevWeb.Router do
 
     magic_sign_in_route(Example.Accounts.User, :magic_link,
       auth_routes_prefix: "/auth",
-      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
     )
 
     sign_in_route(
       path: "/sign-in",
-      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default],
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI],
       auth_routes_prefix: "/auth"
     )
 
