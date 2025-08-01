@@ -81,7 +81,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             ]
           ]
         ]
-      end
+      end,
+      compilers: [:phoenix_live_view] ++ Mix.compilers()
     ]
   end
 
@@ -118,6 +119,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:lazy_html, ">= 0.0.0", only: :test},
       {:ash_authentication, "~> 4.9 and >= 4.9.1"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
