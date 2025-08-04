@@ -75,28 +75,11 @@ This will produce a form with the usual three fields (current password, new pass
   end
 
   defp assign_form(%{assigns: %{current_user: user}} = socket) do
-    form =
-      AshPhoenix.Form.for_update(user, :change_password,
-        as: "user",
-        # Only necessary when using field policies with `private_fields :include`.
-        prepare_source: fn changeset ->
-          %{
-            changeset
-            | data:
-                Ash.load!(changeset.data, :hashed_password,
-                  context: %{private: %{password_change?: true}}
-                )
-          }
-        end,
-        actor: user
-      )
-
+    form = AshPhoenix.Form.for_update(user, :change_password, as: "user", actor: user)
     assign(socket, form: to_form(form))
   end
 ```
 `update/2` is covered in the `Phoenix.LiveComponent` life-cycle documentation, so we won't go into it here.  The private function `assign_form/1` should look familiar if you have any forms for Ash resources in your application, but with a significant addition: the `prepare_source` option.
-
-When using field policies, the `@current_user` assign set by AshAuthentication may not contain the value of the `hashed_password` attribute, because it is a private field (if you are using `private_fields :hide` or `private_fields :include`).  This is what you normally want in your application, but the `:change_password` action needs this to validate the `:current_password` argument, you may need to explicitly load this attribute.  We also pass a private context field to the load operation to use in a field policy that we will write later on.
 
 The attribute `phx-target={@myself}` on the form in our template ensures the submit event is received by the component, so the `handle_event/3` function in this module is called, rather than the LiveView that mounts this component receiving the event.
 
@@ -130,45 +113,6 @@ Since the password-change workflow is done entirely in our application code, the
   end
   # ...
 ```
-
-If you are using field policies with `private_fields` set to something other than `:show`, you also need to allow `ChangePasswordComponent` to read the `hashed_password` field, as we mentioned earlier.  We need to write a custom check to read the private context we set in the component earlier.
-
-> ### Don't use `private_fields :hide` {: .info}
-> With `private_fields :hide`, fields marked `sensitive? true` will *always* be hidden, regardless of any `field_policy_bypass`.  See the section on [private fields in the Ash Policies guide](https://hexdocs.pm/ash/policies.html#handling-private-fields-in-internal-functions).
-
-```elixir
-# lib/my_app/accounts/user.ex
-  # ...
-  field_policies do
-    private_fields :include
-
-    # ...
-
-    field_policy_bypass :* do
-      description "Users can access all fields for password change"
-      authorize_if MyApp.Checks.PasswordChangeInteraction
-    end
-  end
-  # ...
-```
-
-```elixir
-# lib/my_app/checks/password_change_interaction.ex
-defmodule MyApp.Checks.PasswordChangeInteraction do
-  use Ash.Policy.SimpleCheck
-
-  @impl Ash.Policy.Check
-  def describe(_) do
-    "MyApp is performing a password change for this interaction"
-  end
-
-  @impl Ash.Policy.SimpleCheck
-  def match?(_, %{subject: %{context: %{private: %{password_change?: true}}}}, _), do: true
-  def match?(_, _, _), do: false
-end
-```
-
-This is actually how `AshAuthentication.Checks.AshAuthenticationInteraction` is implemented, only matching a slightly different pattern.
 
 ## Using the LiveComponent
 Finally, let's use this component in our UI somewhere.  Exactly where this belongs will depend on the wider UX of your application, so for the sake of example, let's assume that you already have a LiveView called `LiveUserSettings` in your application, where you want to add the password-change form.
@@ -265,3 +209,73 @@ end
 ```
 
 `MyApp.Mailer.send_mail_to_user/3` would be your application's internal interface to whichever mailer you are using, such as [Swoosh](https://hexdocs.pm/swoosh) or [Bamboo](https://hexdocs.pm/bamboo), that takes the HTML and text email bodies in a two-element tuple, the subject line, and the recipient user.
+
+# Field Policies
+If you are not using field policies, or you are using field policies with `private_fields :show` (the default), you can skip this section.
+
+When using field policies, the `@current_user` assign set by AshAuthentication may not contain the value of the `hashed_password` attribute, because it is a private field (if you are using `private_fields :hide` or `private_fields :include`).  This is what you normally want in your application, but the `:change_password` action needs this to validate the `:current_password` argument, you will need to explicitly load this attribute when creating the form in `ChangePasswordComponent`.
+
+### Load `hashed_password` in the form
+Change the function `assign_form/1` in `ChangePasswordComponent` as follows.
+
+```elixir
+  defp assign_form(%{assigns: %{current_user: user}} = socket) do
+    form =
+      AshPhoenix.Form.for_update(user, :change_password,
+        as: "user",
+        # Add this argument
+        prepare_source: fn changeset ->
+          %{
+            changeset
+            | data:
+                Ash.load!(changeset.data, :hashed_password,
+                  context: %{private: %{password_change?: true}}
+                )
+          }
+        end,
+        actor: user
+      )
+
+    assign(socket, form: to_form(form))
+  end
+```
+
+There are a couple of things going on here:
+1. We are calling `Ash.load!/3` to load the attribute `hashed_password` on the record in the changeset.
+2. Setting a private context field for this `Ash.load!/3` call to be used in a field policy bypass that we need to write in order for this load to succeed.
+
+### Field Policy Bypass
+The actual work will be done in a separate policy check module, so our bypass will look very simple.  If you are using `private_fields :hide`, you will need to change it to `private_fields :include`, otherwise the `hashed_password` field will always be hidden, regardless of any field policy bypass.
+```elixir
+# lib/my_app/accounts/user.ex
+  # ...
+  field_policies do
+    private_fields :include
+
+    # ...
+
+    field_policy_bypass :* do
+      description "Users can access all fields for password change"
+      authorize_if MyApp.Checks.PasswordChangeInteraction
+    end
+  end
+  # ...
+```
+
+```elixir
+# lib/my_app/checks/password_change_interaction.ex
+defmodule MyApp.Checks.PasswordChangeInteraction do
+  use Ash.Policy.SimpleCheck
+
+  @impl Ash.Policy.Check
+  def describe(_) do
+    "MyApp is performing a password change for this interaction"
+  end
+
+  @impl Ash.Policy.SimpleCheck
+  def match?(_, %{subject: %{context: %{private: %{password_change?: true}}}}, _), do: true
+  def match?(_, _, _), do: false
+end
+```
+
+This is actually how `AshAuthentication.Checks.AshAuthenticationInteraction` is implemented, only matching a slightly different pattern.
