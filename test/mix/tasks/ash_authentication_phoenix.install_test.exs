@@ -1,13 +1,14 @@
 # credo:disable-for-this-file Credo.Check.Design.AliasUsage
 defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
-  use ExUnit.Case
+  use ExUnit.Case, parameterize: [%{daisy_ui: true}, %{daisy_ui: false}]
   @moduletag :igniter
 
   import Igniter.Test
 
-  setup do
+  setup context do
     igniter =
       test_project()
+      |> maybe_add_daisy_ui(context)
       |> Igniter.Project.Deps.add_dep({:simple_sat, ">= 0.0.0"})
       |> Igniter.Project.Deps.add_dep({:ash_authentication, ">= 0.0.0"})
       |> Igniter.Project.Formatter.add_formatter_plugin(Spark.Formatter)
@@ -32,7 +33,14 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
       """)
       |> apply_igniter!()
 
-    [igniter: igniter]
+    base_override =
+      if context.daisy_ui do
+        AshAuthentication.Phoenix.Overrides.DaisyUI
+      else
+        AshAuthentication.Phoenix.Overrides.Default
+      end
+
+    [igniter: igniter, base_override: base_override]
   end
 
   test "installation is idempotent", %{igniter: igniter} do
@@ -196,7 +204,10 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     """)
   end
 
-  test "installation modifies the router", %{igniter: igniter} do
+  test "installation modifies the router", %{
+    igniter: igniter,
+    base_override: base_override
+  } do
     igniter
     |> Igniter.compose_task("ash_authentication_phoenix.install")
     |> assert_has_patch("lib/test_web/router.ex", """
@@ -241,27 +252,33 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |      reset_path: "/reset",
     + |      auth_routes_prefix: "/auth",
     + |      on_mount: [{TestWeb.LiveUserAuth, :live_no_user}],
-    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
     + |    )
     + |
     + |    # Remove this if you do not want to use the reset password feature
     + |    reset_route(
     + |      auth_routes_prefix: "/auth",
-    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
     + |    )
     + |
     + |    # Remove this if you do not use the confirmation strategy
     + |    confirm_route(Test.Accounts.User, :confirm_new_user,
     + |      auth_routes_prefix: "/auth",
-    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
     + |    )
     + |
     + |    # Remove this if you do not use the magic link strategy.
     + |    magic_sign_in_route(Test.Accounts.User, :magic_link,
     + |      auth_routes_prefix: "/auth",
-    + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
     + |    )
     + |  end
     """)
   end
+
+  defp maybe_add_daisy_ui(igniter, %{daisy_ui: true}) do
+    Igniter.create_new_file(igniter, "assets/vendor/daisyui.js", "")
+  end
+
+  defp maybe_add_daisy_ui(igniter, _), do: igniter
 end

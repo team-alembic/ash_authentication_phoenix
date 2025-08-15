@@ -146,6 +146,13 @@ if Code.ensure_loaded?(Igniter) do
       with {_, _source, zipper} <- Igniter.Project.Module.find_module!(igniter, router),
            {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper),
            :error <- Igniter.Code.Module.move_to_use(zipper, AshAuthentication.Phoenix.Router) do
+        override_module =
+          if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
+            AshAuthentication.Phoenix.Overrides.DaisyUI
+          else
+            AshAuthentication.Phoenix.Overrides.Default
+          end
+
         igniter
         |> use_authentication_phoenix_router(router)
         |> Igniter.Libs.Phoenix.append_to_pipeline(:browser, "plug :load_from_session",
@@ -165,22 +172,22 @@ if Code.ensure_loaded?(Igniter) do
 
           # Remove these if you'd like to use your own authentication views
           sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
-            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+            overrides: [#{inspect(overrides)}, #{override_module}]
 
           # Remove this if you do not want to use the reset password feature
-          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, #{override_module}]
 
           # Remove this if you do not use the confirmation strategy
           confirm_route #{inspect(options[:user])},
             :confirm_new_user,
             auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+            overrides: [#{inspect(overrides)}, #{override_module}]
 
           # Remove this if you do not use the magic link strategy.
           magic_sign_in_route #{inspect(options[:user])},
             :magic_link,
             auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, AshAuthentication.Phoenix.Overrides.Default]
+            overrides: [#{inspect(overrides)}, #{override_module}]
           """,
           with_pipelines: [:browser],
           arg2: Igniter.Libs.Phoenix.web_module(igniter),
