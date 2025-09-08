@@ -187,6 +187,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :link_class, "btn btn-outline btn-block"
 
     set :icon_class, "-ml-0.4 mr-2 h-4 w-4"
+
+    set :icon_src, nil
   end
 
   override Components.Apple do

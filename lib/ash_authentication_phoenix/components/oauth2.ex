@@ -2,7 +2,8 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS classes for the root `div` element.",
     link_class: "CSS classes for the `a` element.",
-    icon_class: "CSS classes for the icon SVG."
+    icon_class: "CSS classes for the icon SVG.",
+    icon_src: "Map of strategy names to icon sources."
 
   @moduledoc """
   Generates a sign-in button for OAuth2.
@@ -40,9 +41,13 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
   @impl true
   @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
+    strategy_name = assigns.strategy.name
+    icon_src = override_for(assigns.overrides, :icon_src)[strategy_name]
+
     assigns =
       assigns
       |> assign(:subject_name, Info.authentication_subject_name!(assigns.strategy.resource))
+      |> assign(:icon_src, icon_src)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
@@ -53,7 +58,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
         href={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request)}
         class={override_for(@overrides, :link_class)}
       >
-        <.icon icon={@strategy.icon} overrides={@overrides} />
+        <.icon icon={@strategy.icon} overrides={@overrides} icon_src={@icon_src} />
         {_gettext("Sign in with #{strategy_name(@strategy)}")}
       </a>
     </div>
@@ -62,8 +67,12 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
 
   def icon(assigns) do
     ~H"""
-    <%= if @icon do %>
-      {raw(icon_svg(@icon, override_for(@overrides, :icon_class)))}
+    <%= if @icon_src do %>
+      <img src={@icon_src} class={override_for(@overrides, :icon_class)} alt="" />
+    <% else %>
+      <%= if @icon do %>
+        {raw(icon_svg(@icon, override_for(@overrides, :icon_class)))}
+      <% end %>
     <% end %>
     """
   end

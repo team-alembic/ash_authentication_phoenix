@@ -219,6 +219,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     """
 
     set :icon_class, "-ml-0.4 mr-2 h-4 w-4"
+
+    set :icon_src, nil
   end
 
   override Components.Apple do
