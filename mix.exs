@@ -132,7 +132,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:phoenix, "~> 1.6"},
       {:bcrypt_elixir, "~> 3.0"},
       {:slugify, "~> 1.3"},
-      {:gettext, "~> 0.26", optional: true},
+      {:gettext, "~> 0.26 or ~> 1.0", optional: true},
       {:igniter, "~> 0.5 and >= 0.5.25", optional: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
