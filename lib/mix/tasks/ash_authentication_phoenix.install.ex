@@ -105,14 +105,11 @@ if Code.ensure_loaded?(Igniter) do
                igniter,
                "Which Phoenix router should be modified to allow authentication?"
              ),
-           {:endpoint, {igniter, endpoint}}
-           when not is_nil(endpoint) <-
-             {:endpoint,
-              Igniter.Libs.Phoenix.select_endpoint(
-                igniter,
-                router,
-                "Which Phoenix endpoint should be used to trigger disconnects?"
-              )} do
+           {igniter, [endpoint | _]} <-
+             Igniter.Libs.Phoenix.endpoints_for_router(
+               igniter,
+               router
+             ) do
         web_module = Igniter.Libs.Phoenix.web_module(igniter)
         overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
         otp_app = Igniter.Project.Application.app_name(igniter)
@@ -136,10 +133,10 @@ if Code.ensure_loaded?(Igniter) do
           Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
           """)
 
-        {:endpoint, {igniter, nil}} ->
+        {igniter, []} ->
           igniter
           |> Igniter.add_warning("""
-          AshAuthenticationPhoenix installer could not find a Phoenix endpoint. Skipping installation.
+          AshAuthenticationPhoenix installer could not find any Phoenix endpoints attached to the router you selected. Skipping installation.
 
           Set up a phoenix endpoint and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
           """)
