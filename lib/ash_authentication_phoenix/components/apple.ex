@@ -16,6 +16,7 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
 
     * `strategy` - The strategy configuration as per
       `AshAuthentication.Info.strategy/2`.  Required.
+    * `auth_routes_prefix` - Optional route prefix for authentication routes.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
 
@@ -25,11 +26,12 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
   use AshAuthentication.Phoenix.Web, :live_component
   alias AshAuthentication.{Info, Strategy}
   alias Phoenix.LiveView.Rendered
-  import AshAuthentication.Phoenix.Components.Helpers, only: [route_helpers: 1]
+  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 6]
   import Phoenix.HTML, only: [raw: 1]
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
+          optional(:auth_routes_prefix) => String.t(),
           optional(:overrides) => [module],
           optional(:gettext_fn) => {module, atom}
         }
@@ -43,16 +45,12 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
       |> assign(:subject_name, Info.authentication_subject_name!(assigns.strategy.resource))
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
+      |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <a
-        href={
-          route_helpers(@socket).auth_path(
-            @socket.endpoint,
-            {@subject_name, Strategy.name(@strategy), :request}
-          )
-        }
+        href={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request, %{})}
         class={override_for(@overrides, :link_class)}
       >
         <.icon icon={:apple_white} overrides={@overrides} />
