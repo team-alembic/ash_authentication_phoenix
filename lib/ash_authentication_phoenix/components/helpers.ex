@@ -72,21 +72,7 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
         form
         |> AshPhoenix.Form.raw_errors(for_path: :all)
         |> Enum.sort_by(&length(elem(&1, 0)))
-        |> Enum.map_join(fn {path, error} ->
-          prefix =
-            if path == [] do
-              "Errors:\n\n"
-            else
-              "Errors for path #{inspect(path)}:\n\n"
-            end
-
-          prefix <>
-            Enum.map_join(error, fn error ->
-              Exception.format(:error, error, stacktrace(error))
-              |> String.split("\n")
-              |> Enum.map_join("\n", &"  #{&1}")
-            end)
-        end)
+        |> Enum.map_join(&format_error_with_path/1)
 
       Logger.warning(
         "Encountered errors when submitting form for #{inspect(form.source.resource)}#{form.source.action.name}\n\n#{log}"
@@ -94,6 +80,22 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
     end
 
     form
+  end
+
+  defp format_error_with_path({path, error}) do
+    prefix =
+      if path == [] do
+        "Errors:\n\n"
+      else
+        "Errors for path #{inspect(path)}:\n\n"
+      end
+
+    prefix <>
+      Enum.map_join(error, fn error ->
+        Exception.format(:error, error, stacktrace(error))
+        |> String.split("\n")
+        |> Enum.map_join("\n", &"  #{&1}")
+      end)
   end
 
   defp stacktrace(%{stacktrace: %{stacktrace: stacktrace}}) do
