@@ -24,7 +24,7 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Strategy}
+  alias AshAuthentication.Info
   alias Phoenix.LiveView.Rendered
   import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 6]
   import Phoenix.HTML, only: [raw: 1]

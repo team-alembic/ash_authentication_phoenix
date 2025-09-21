@@ -372,6 +372,8 @@ Generates a sign-in button for OAuth2.
 
   * `:icon_class` - CSS classes for the icon SVG.
 
+  * `:icon_src` - Map of strategy names to icon sources.
+
   * `:link_class` - CSS classes for the `a` element.
 
   * `:root_class` - CSS classes for the root `div` element.

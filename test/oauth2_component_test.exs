@@ -4,10 +4,10 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2Test do
   use ExUnit.Case, async: false
   import Phoenix.LiveViewTest
 
-  alias Gettext.Interpolation.Default
+  alias AshAuthentication.Info
   alias AshAuthentication.Phoenix.Components.OAuth2
   alias AshAuthentication.Phoenix.Overrides.Default
-  alias AshAuthentication.Info
+  alias Gettext.Interpolation.Default
 
   describe "icon_src override" do
     defmodule TestOverridesWithIconSrc do
