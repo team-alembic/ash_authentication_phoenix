@@ -7,7 +7,6 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2Test do
   alias AshAuthentication.Info
   alias AshAuthentication.Phoenix.Components.OAuth2
   alias AshAuthentication.Phoenix.Overrides.Default
-  alias Gettext.Interpolation.Default
 
   describe "icon_src override" do
     defmodule TestOverridesWithIconSrc do
