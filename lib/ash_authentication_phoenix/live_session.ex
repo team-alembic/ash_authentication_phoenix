@@ -19,7 +19,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   import Phoenix.Component, only: [assign: 3, assign_new: 3]
   import AshAuthentication.Phoenix.Components.Helpers
-  alias AshAuthentication.{Info, Phoenix.LiveSession}
+  alias AshAuthentication.{Info, Jwt, Phoenix.LiveSession, TokenResource.Actions}
   alias Phoenix.LiveView.Socket
 
   @doc """
@@ -182,17 +182,9 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         with token when is_binary(token) <-
                session[session_key],
              {:ok, %{"sub" => subject, "jti" => jti} = claims, _}
-             when not is_map_key(claims, "act") <-
-               AshAuthentication.Jwt.verify(token, otp_app, opts),
+             when not is_map_key(claims, "act") <- Jwt.verify(token, otp_app, opts),
              {:ok, [_]} <-
-               AshAuthentication.TokenResource.Actions.get_token(
-                 token_resource,
-                 %{
-                   "jti" => jti,
-                   "purpose" => "user"
-                 },
-                 opts
-               ) do
+               Actions.get_token(token_resource, %{"jti" => jti, "purpose" => "user"}, opts) do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
         else
           _ ->
