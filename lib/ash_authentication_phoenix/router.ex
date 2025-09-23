@@ -28,7 +28,7 @@ defmodule AshAuthentication.Phoenix.Router do
       pipe_through :browser
       sign_in_route auth_routes_prefix: "/auth"
       sign_out_route AuthController
-      auth_routes_for MyApp.Accounts.User, to: AuthController
+      auth_routes AuthController, MyApp.Accounts.User
       reset_route auth_routes_prefix: "/auth"
     end
   ```
@@ -83,6 +83,11 @@ defmodule AshAuthentication.Phoenix.Router do
     )
   end
   ```
+  """
+  @deprecated """
+  Replaced by `auth_routes/2..3`.
+
+  Run `mix igniter.apply_upgrades ash_authentication_phoenix:2.10.5:2.10.6` to fix automatically.
   """
   @spec auth_routes_for(Ash.Resource.t(), auth_route_options) :: Macro.t()
   defmacro auth_routes_for(resource, opts) when is_list(opts) do
