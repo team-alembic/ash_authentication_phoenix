@@ -161,34 +161,56 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       end
 
     context = session["context"] || %{}
+    opts = [tenant: tenant, context: context]
 
-    socket =
+    otp_app =
       socket
       |> otp_app_from_socket()
-      |> AshAuthentication.authenticated_resources()
-      |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
-      |> Enum.reduce(socket, fn {subject_name, resource}, socket ->
-        current_subject_name = String.to_existing_atom("current_#{subject_name}")
 
-        if Map.has_key?(socket.assigns, current_subject_name) do
-          raise "Cannot set assign `#{current_subject_name}` before default `AshAuthentication.Phoenix.LiveSession.on_mount/4` has run."
+    otp_app
+    |> AshAuthentication.authenticated_resources()
+    |> Stream.map(
+      &{&1, Info.authentication_tokens_require_token_presence_for_authentication?(&1),
+       to_string(Info.authentication_subject_name!(&1))}
+    )
+    |> Enum.reduce_while(socket, fn
+      {resource, true, subject_name}, socket ->
+        current_subject_name = String.to_existing_atom("current_#{subject_name}")
+        token_resource = Info.authentication_tokens_token_resource!(resource)
+        session_key = "#{subject_name}_token"
+
+        with token when is_binary(token) <-
+               session[session_key],
+             {:ok, %{"sub" => subject, "jti" => jti} = claims, _}
+             when not is_map_key(claims, "act") <-
+               AshAuthentication.Jwt.verify(token, otp_app, opts),
+             {:ok, [_]} <-
+               AshAuthentication.TokenResource.Actions.get_token(
+                 token_resource,
+                 %{
+                   "jti" => jti,
+                   "purpose" => "user"
+                 },
+                 opts
+               ) do
+          {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
+        else
+          _ ->
+            {:halt, socket}
         end
 
-        assign_new(socket, current_subject_name, fn ->
-          if value = session[subject_name] do
-            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-            case AshAuthentication.subject_to_user(value, resource,
-                   tenant: tenant,
-                   context: context
-                 ) do
-              {:ok, user} -> user
-              _ -> nil
-            end
-          end
-        end)
-      end)
+      {resource, false, subject_name}, socket ->
+        current_subject_name = String.to_existing_atom("current_#{subject_name}")
 
-    {:cont, socket}
+        with subject when is_binary(subject) <- session[subject_name],
+             {:ok, subject} <- split_identifier(subject, resource) do
+          {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
+        else
+          _ ->
+            {:halt, socket}
+        end
+    end)
+    |> then(&{:cont, &1})
   end
 
   def on_mount(_, _params, _session, socket), do: {:cont, socket}
@@ -228,5 +250,30 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           |> Map.put("context", Ash.PlugHelpers.get_context(conn))
       end
     end)
+  end
+
+  defp assign_user(socket, current_subject_name, subject, resource, opts \\ []) do
+    assign_new(socket, current_subject_name, fn ->
+      case AshAuthentication.subject_to_user(
+             subject,
+             resource,
+             opts
+           ) do
+        {:ok, user} -> user
+        _ -> nil
+      end
+    end)
+  end
+
+  # shamelessly copied from AshAuthentication.Plugs.Helpers
+  defp split_identifier(subject, resource) do
+    if Info.authentication_session_identifier!(resource) == :jti do
+      case String.split(subject, ":", parts: 2) do
+        [_jti, subject] -> {:ok, subject}
+        _ -> :error
+      end
+    else
+      {:ok, subject}
+    end
   end
 end
