@@ -99,17 +99,7 @@ if Code.ensure_loaded?(Igniter) do
           "Which Phoenix router should be modified to allow authentication?"
         )
 
-      with {igniter, router}
-           when not is_nil(router) <-
-             Igniter.Libs.Phoenix.select_router(
-               igniter,
-               "Which Phoenix router should be modified to allow authentication?"
-             ),
-           {igniter, [endpoint | _]} <-
-             Igniter.Libs.Phoenix.endpoints_for_router(
-               igniter,
-               router
-             ) do
+      if router do
         web_module = Igniter.Libs.Phoenix.web_module(igniter)
         overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
         otp_app = Igniter.Project.Application.app_name(igniter)
@@ -120,26 +110,17 @@ if Code.ensure_loaded?(Igniter) do
         |> setup_routes_alias()
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
-        |> create_auth_controller(otp_app, endpoint)
+        |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
         |> add_auth_routes(overrides, options, router, web_module)
         |> create_live_user_auth(web_module)
       else
-        {igniter, nil} ->
-          igniter
-          |> Igniter.add_warning("""
-          AshAuthenticationPhoenix installer could not find a Phoenix router. Skipping installation.
+        igniter
+        |> Igniter.add_warning("""
+        AshAuthenticationPhoenix installer could not find a Phoenix router. Skipping installation.
 
-          Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
-          """)
-
-        {igniter, []} ->
-          igniter
-          |> Igniter.add_warning("""
-          AshAuthenticationPhoenix installer could not find any Phoenix endpoints attached to the router you selected. Skipping installation.
-
-          Set up a phoenix endpoint and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
-          """)
+        Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
+        """)
       end
     end
 
@@ -349,7 +330,7 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
-    defp create_auth_controller(igniter, otp_app, endpoint) do
+    defp create_auth_controller(igniter, otp_app) do
       Igniter.Project.Module.create_module(
         igniter,
         Igniter.Libs.Phoenix.web_module_name(igniter, "AuthController"),
@@ -367,12 +348,10 @@ if Code.ensure_loaded?(Igniter) do
               _ -> "You are now signed in"
             end
 
-          {:ok, %{"jti" => jti}} = AshAuthentication.Jwt.peek(token)
-
           conn
           |> delete_session(:return_to)
           |> store_in_session(user)
-          |> put_session(:live_socket_id, "users_socket:\#{jti}")
+          |> set_live_socket_id(token)
           # If your resource has a different name, update the assign name here (i.e :current_admin)
           |> assign(:current_user, user)
           |> put_flash(:info, message)
@@ -405,14 +384,10 @@ if Code.ensure_loaded?(Igniter) do
         def sign_out(conn, _params) do
           return_to = get_session(conn, :return_to) || ~p"/"
 
-          live_socket_id =
-            get_session(conn, :live_socket_id)
-
           conn
           |> clear_session(:#{otp_app})
           |> put_flash(:info, "You are now signed out")
           |> redirect(to: return_to)
-          |> tap(fn _ -> #{inspect(endpoint)}.broadcast(live_socket_id, "disconnect", %{}) end)
         end
         """
       )
