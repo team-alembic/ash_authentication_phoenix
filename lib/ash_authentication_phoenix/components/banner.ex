@@ -43,7 +43,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
       <%= case {override_for(@overrides, :href_url), override_for(@overrides, :image_url)} do %>
-        <% {nil, nil} -> %>
+        <% {_, nil} -> %>
         <% {nil, img} -> %>
           <img class={override_for(@overrides, :image_class)} src={img} />
         <% {hrf, img} -> %>
@@ -52,7 +52,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
           </a>
       <% end %>
       <%= case {override_for(@overrides, :href_url), override_for(@overrides, :dark_image_url)} do %>
-        <% {nil, nil} -> %>
+        <% {_, nil} -> %>
         <% {nil, img} -> %>
           <img class={override_for(@overrides, :dark_image_class)} src={img} />
         <% {hrf, img} -> %>
@@ -61,7 +61,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
           </a>
       <% end %>
       <%= case  {override_for(@overrides, :href_url), override_for(@overrides, :text)} do %>
-        <% {nil, nil} -> %>
+        <% {_, nil} -> %>
         <% {nil, txt} -> %>
           <div class={override_for(@overrides, :text_class)}>
             {_gettext(txt)}
