@@ -244,7 +244,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     end)
   end
 
-  defp assign_user(socket, current_subject_name, subject, resource, opts \\ []) do
+  defp assign_user(socket, current_subject_name, subject, resource, opts) do
     assign_new(socket, current_subject_name, fn ->
       case AshAuthentication.subject_to_user(
              subject,
