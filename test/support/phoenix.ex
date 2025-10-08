@@ -25,9 +25,7 @@ defmodule AshAuthentication.Phoenix.Test.HomeLive do
     ~H"""
     <script src={"https://cdn.jsdelivr.net/npm/phoenix@#{phx_vsn()}/priv/static/phoenix.min.js"}>
     </script>
-    <script
-      src={"https://cdn.jsdelivr.net/npm/phoenix_live_view@#{lv_vsn()}/priv/static/phoenix_live_view.min.js"}
-    >
+    <script src={"https://cdn.jsdelivr.net/npm/phoenix_live_view@#{lv_vsn()}/priv/static/phoenix_live_view.min.js"}>
     </script>
     <script>
       let liveSocket = new window.LiveView.LiveSocket("/live", window.Phoenix.Socket)
