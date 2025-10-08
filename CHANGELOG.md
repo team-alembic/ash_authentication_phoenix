@@ -11,6 +11,29 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.11.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.5...v2.11.0) (2025-10-08)
+
+
+
+
+### Features:
+
+* added token validation on socket mount by Abdessabour Moutik [(#666)](https://github.com/team-alembic/ash_authentication_phoenix/pull/666)
+
+* add icon_src override by Dawid Danieluk [(#660)](https://github.com/team-alembic/ash_authentication_phoenix/pull/660)
+
+### Bug Fixes:
+
+* banner rendering with empty text/images by James Harton
+
+* update Apple component to use auth_path helper for Phoenix 1.7+ compatibility by Aake Gregertsen [(#663)](https://github.com/team-alembic/ash_authentication_phoenix/pull/663)
+
+### Improvements:
+
+* Deprecate Router.auth_routes_for/2..3 (#653) by James Harton [(#653)](https://github.com/team-alembic/ash_authentication_phoenix/pull/653)
+
+* install with daisyUI overrides if using daisyUI (#650) by pikdum [(#650)](https://github.com/team-alembic/ash_authentication_phoenix/pull/650)
+
 ## [v2.10.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.4...v2.10.5) (2025-07-29)
 
 
