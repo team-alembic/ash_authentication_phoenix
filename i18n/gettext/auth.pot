@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 ## This file is a PO Template file.
 ##
 ## "msgid"s here are often extracted from source code.

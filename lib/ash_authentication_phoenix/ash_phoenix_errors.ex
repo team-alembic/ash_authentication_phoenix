@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defimpl AshPhoenix.FormData.Error, for: AshAuthentication.Errors.AuthenticationFailed do
   import PhoenixHTMLHelpers.Form, only: [humanize: 1]
 

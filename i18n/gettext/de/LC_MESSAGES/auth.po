@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 ## "msgid"s in this file come from POT (.pot) files.
 ###
 ### Do not add, change, or remove "msgid"s manually here as

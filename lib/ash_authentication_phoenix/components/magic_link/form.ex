@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for root `div` element.",

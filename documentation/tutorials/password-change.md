@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+
+SPDX-License-Identifier: MIT
+-->
+
 # Building a password-change UI
 AshAuthentication's Igniter task adds a `:change_password` action when you specify the password strategy, but AshAuthenticationPhoenix does not provide a component for this action, so you will need to either write your own, or use one provided by a component library that supports [AshPhoenix](https://hexdocs.pm/ash_phoenix/).  The main reason for this is that the password-change UI is usually not as separate from the rest of an application as sign-in, registration, and password-reset actions.
 

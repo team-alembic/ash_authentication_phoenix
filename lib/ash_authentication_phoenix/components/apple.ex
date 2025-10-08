@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.Components.Apple do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS classes for the root `div` element.",
