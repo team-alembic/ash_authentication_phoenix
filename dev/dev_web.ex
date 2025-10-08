@@ -24,7 +24,7 @@ defmodule DevWeb do
   @doc false
   def controller do
     quote do
-      use Phoenix.Controller, namespace: DevWeb
+      use Phoenix.Controller, formats: [:html, :json]
 
       import Plug.Conn
       alias DevWeb.Router.Helpers, as: Routes
@@ -43,17 +43,16 @@ defmodule DevWeb do
         only: [view_module: 1, view_template: 1]
 
       # Include shared imports and aliases for views
-      unquote(view_helpers())
+      unquote(html_helpers())
     end
   end
 
   @doc false
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {DevWeb.LayoutView, "live.html"}
+      use Phoenix.LiveView
 
-      unquote(view_helpers())
+      unquote(html_helpers())
     end
   end
 
@@ -62,7 +61,21 @@ defmodule DevWeb do
     quote do
       use Phoenix.LiveComponent
 
-      unquote(view_helpers())
+      unquote(html_helpers())
+    end
+  end
+
+  @doc false
+  def html do
+    quote do
+      use Phoenix.Component
+
+      # Import convenience functions from controllers
+      import Phoenix.Controller,
+        only: [get_csrf_token: 0, view_module: 1, view_template: 1]
+
+      # Include general helpers for rendering HTML
+      unquote(html_helpers())
     end
   end
 
@@ -71,7 +84,7 @@ defmodule DevWeb do
     quote do
       use Phoenix.Component
 
-      unquote(view_helpers())
+      unquote(html_helpers())
     end
   end
 
@@ -93,7 +106,7 @@ defmodule DevWeb do
     end
   end
 
-  defp view_helpers do
+  defp html_helpers do
     quote do
       # Use all HTML functionality (forms, tags, etc)
       import Phoenix.HTML
