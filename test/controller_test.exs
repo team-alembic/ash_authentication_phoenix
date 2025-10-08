@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.ControllerTest do
   @moduledoc false
   use AshAuthentication.Phoenix.Test.ConnCase

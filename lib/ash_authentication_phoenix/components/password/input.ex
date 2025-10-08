@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.Components.Password.Input do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     field_class: "CSS class for `div` elements surrounding the fields.",

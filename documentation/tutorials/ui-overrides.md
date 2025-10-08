@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+
+SPDX-License-Identifier: MIT
+-->
+
 # Overriding Ash Authentication Phoenix's default UI
 
 Ash Authentication Phoenix provides a default UI implementation to get you started, however we wanted there to be a middle road between "you gets what you gets" and "¯\\_(ツ)_/¯ make your own". Thus AAP's system of UI overrides were born.

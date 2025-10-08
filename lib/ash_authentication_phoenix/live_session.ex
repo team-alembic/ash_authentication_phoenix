@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.LiveSession do
   @moduledoc """
   Ensures that any loaded users which are present in a conn's assigns are also

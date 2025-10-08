@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+
+SPDX-License-Identifier: MIT
+-->
+
 # Setting up your routes for LiveView
 
 A built in live session wrapper is provided that will set the user assigns for you. To use it, wrap your live routes like so:
