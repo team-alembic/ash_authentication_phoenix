@@ -338,7 +338,7 @@ if Code.ensure_loaded?(Igniter) do
         use #{inspect(Igniter.Libs.Phoenix.web_module(igniter))}, :controller
         use AshAuthentication.Phoenix.Controller
 
-        def success(conn, activity, user, _token) do
+        def success(conn, activity, user, token) do
           return_to = get_session(conn, :return_to) || ~p"/"
 
           message =
@@ -351,6 +351,7 @@ if Code.ensure_loaded?(Igniter) do
           conn
           |> delete_session(:return_to)
           |> store_in_session(user)
+          |> set_live_socket_id(token)
           # If your resource has a different name, update the assign name here (i.e :current_admin)
           |> assign(:current_user, user)
           |> put_flash(:info, message)
