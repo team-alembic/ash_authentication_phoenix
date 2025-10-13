@@ -34,8 +34,25 @@ defmodule AshAuthentication.Phoenix.Controller do
 
     def sign_out(conn, _params) do
       conn
-      |> clear_session()
+      |> clear_session(:my_otp_app)
       |> render("sign_out.html")
+    end
+
+    @remember_me_cookie_options [
+      http_only: true, # prevents the cookie from being accessed by JavaScript
+      secure: true, # only send the cookie over HTTPS
+      same_site: "Lax" # prevents the cookie from being sent with cross-site requests
+    ]
+    def put_remember_me_cookie(conn, cookie_name, cookie_value, max_age) do
+      cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, max_age)
+      conn
+      |> put_resp_cookie(cookie_name, cookie_value, cookie_options)
+    end
+
+    def delete_remember_me_cookie(conn, cookie_name) do
+      cookie_options = Keyword.put(@remember_me_cookie_options, :max_age, 0)
+      conn
+      |> delete_resp_cookie(cookie_name, cookie_options)
     end
   end
   ```
@@ -82,6 +99,7 @@ defmodule AshAuthentication.Phoenix.Controller do
 
   alias AshAuthentication.Plug.Dispatcher
   alias AshAuthentication.Plug.Helpers
+  alias AshAuthentication.Strategy.RememberMe
   alias Plug.Conn
 
   @type t :: module
@@ -105,6 +123,16 @@ defmodule AshAuthentication.Phoenix.Controller do
   """
   @callback sign_out(Conn.t(), params :: map) :: Conn.t()
 
+  @doc """
+  Called when a request is made to set a remember me cookie.
+  """
+  @callback put_remember_me_cookie(Conn.t(), String.t(), map) :: Conn.t()
+
+  @doc """
+  Called when a request is made to delete a remember me cookie.
+  """
+  @callback delete_remember_me_cookie(Conn.t(), String.t()) :: Conn.t()
+
   @doc false
   @spec __using__(any) :: Macro.t()
   defmacro __using__(_opts) do
@@ -115,6 +143,7 @@ defmodule AshAuthentication.Phoenix.Controller do
       import Plug.Conn, except: [clear_session: 1]
       import AshAuthentication.Phoenix.Plug
       import AshAuthentication.Phoenix.Controller
+      alias AshAuthentication.Strategy.RememberMe
 
       @doc false
       @impl true
@@ -199,7 +228,23 @@ defmodule AshAuthentication.Phoenix.Controller do
         end
       end
 
-      defoverridable success: 4, failure: 3
+      @doc false
+      @impl true
+      @spec put_remember_me_cookie(Conn.t(), String.t(), map) :: Conn.t()
+      def put_remember_me_cookie(conn, cookie_name, remember_me_options),
+        do: RememberMe.Plug.Helpers.put_remember_me_cookie(conn, cookie_name, remember_me_options)
+
+      @doc false
+      @impl true
+      @spec delete_remember_me_cookie(Conn.t(), String.t()) :: Conn.t()
+      def delete_remember_me_cookie(conn, cookie_name),
+        do: RememberMe.Plug.Helpers.delete_remember_me_cookie(conn, cookie_name)
+
+      @doc false
+      defoverridable success: 4,
+                     failure: 3,
+                     put_remember_me_cookie: 3,
+                     delete_remember_me_cookie: 2
     end
   end
 
@@ -227,6 +272,7 @@ defmodule AshAuthentication.Phoenix.Controller do
   """
   def clear_session(conn, otp_app) do
     conn
+    |> RememberMe.Plug.Helpers.delete_all_remember_me_cookies(otp_app)
     |> Helpers.revoke_bearer_tokens(otp_app)
     |> Helpers.revoke_session_tokens(otp_app)
     |> Plug.Conn.clear_session()

@@ -14,6 +14,20 @@ defmodule AshAuthentication.Phoenix.Plug do
   alias Plug.Conn
 
   @doc """
+  Attempts to sign in the user with the remember me token if the user is not already signed in.
+
+  A wrapper around `AshAuthentication.Plug.Helpers.sign_in_with_remember_me/2`
+  with the `otp_app` as extracted from the endpoint.
+  """
+  @spec sign_in_with_remember_me(Conn.t(), keyword) :: Conn.t()
+  def sign_in_with_remember_me(conn, opts) do
+    {maybe_otp_app, opts} = Keyword.pop(opts, :otp_app)
+    otp_app = maybe_otp_app || conn.private.phoenix_endpoint.config(:otp_app)
+
+    Helpers.sign_in_using_remember_me(conn, otp_app, opts)
+  end
+
+  @doc """
   Attempt to retrieve all actors from the connections' session.
 
   A wrapper around `AshAuthentication.Plug.Helpers.retrieve_from_session/2`

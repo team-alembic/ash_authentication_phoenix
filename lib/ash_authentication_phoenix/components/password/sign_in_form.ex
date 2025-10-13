@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
+  alias AshAuthentication.Phoenix.Components.Helpers
+
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -77,6 +79,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+      |> assign_new(:remember_me_field, fn -> Helpers.remember_me_field(assigns.strategy) end)
 
     context =
       Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
@@ -143,12 +146,19 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
-
         <%= if @inner_block do %>
           <div class={override_for(@overrides, :slot_class)}>
             {render_slot(@inner_block, form)}
           </div>
         <% end %>
+
+        <Password.Input.remember_me_field
+          :if={@remember_me_field}
+          name={@remember_me_field}
+          form={form}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
 
         <Password.Input.submit
           strategy={@strategy}
@@ -189,6 +199,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
              read_one?: true
            ) do
         {:ok, user} ->
+          auth_path_params = get_auth_path_params(params, user)
+
           validate_sign_in_token_path =
             auth_path(
               socket,
@@ -196,7 +208,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
               socket.assigns.auth_routes_prefix,
               socket.assigns.strategy,
               :sign_in_with_token,
-              token: user.__metadata__.token
+              auth_path_params
             )
 
           {:noreply, redirect(socket, to: validate_sign_in_token_path)}
@@ -216,6 +228,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         |> assign(:trigger_action, form.valid?)
 
       {:noreply, socket}
+    end
+  end
+
+  defp get_auth_path_params(params, user) do
+    case Map.get(params, "remember_me") do
+      nil -> %{token: user.__metadata__.token}
+      remember_me -> %{token: user.__metadata__.token, remember_me: remember_me}
     end
   end
 

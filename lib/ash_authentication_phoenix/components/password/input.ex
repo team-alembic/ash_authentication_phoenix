@@ -16,7 +16,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     submit_class: "CSS class for the form submit `input` element.",
     error_ul: "CSS class for the `ul` element on error lists.",
     error_li: "CSS class for the `li` elements on error lists.",
-    input_debounce: "Number of milliseconds to debounce input by (or `nil` to disable)."
+    input_debounce: "Number of milliseconds to debounce input by (or `nil` to disable).",
+    remember_me_class: "CSS class for the `div` element surrounding the remember me field.",
+    remember_me_input_label: "Label for remember me field.",
+    checkbox_class: "CSS class for the `input` element of the remember me field.",
+    checkbox_label_class: "CSS class for the `label` element of the remember me field."
 
   @moduledoc """
   Function components for dealing with form input during password
@@ -208,6 +212,54 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         phx_debounce: override_for(@overrides, :input_debounce)
       )}
       <.error form={@form} field={@password_confirmation_field} overrides={@overrides} />
+    </div>
+    """
+  end
+
+  @doc """
+  Generate a form field for the remember me field.
+
+  ## Props
+
+    * `socket` - Phoenix LiveView socket.  This is needed to be able to retrieve
+      the correct CSS configuration.  Required.
+    * `strategy` - The configuration map as per
+      `AshAuthentication.authenticated_resources/1`.  Required.
+    * `form` - An `AshPhoenix.Form`.  Required.
+    * `name` - The name of the field.  Defaults to `:remember_me`.
+    * `overrides` - A list of override modules.
+    * `gettext_fn` - Optional text translation function.
+  """
+  @spec remember_me_field(%{
+          required(:socket) => Socket.t(),
+          required(:strategy) => Strategy.t(),
+          required(:form) => Form.t(),
+          optional(:name) => atom,
+          optional(:overrides) => [module],
+          optional(:gettext_fn) => {module, atom}
+        }) :: Rendered.t() | no_return
+  def remember_me_field(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:name, fn -> :remember_me end)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:gettext_fn, fn -> nil end)
+      |> assign_new(:checkbox_class, fn -> override_for(assigns.overrides, :checkbox_class) end)
+      |> assign_new(:label_class, fn -> override_for(assigns.overrides, :label_class) end)
+
+    ~H"""
+    <div class={override_for(@overrides, :remember_me_class)}>
+      {checkbox(@form, @name,
+        class: @checkbox_class,
+        value: input_value(@form, @name),
+        phx_debounce: override_for(@overrides, :input_debounce)
+      )}
+      {label(
+        @form,
+        @name,
+        _gettext(override_for(@overrides, :remember_me_input_label)),
+        class: override_for(@overrides, :checkbox_label_class)
+      )}
     </div>
     """
   end

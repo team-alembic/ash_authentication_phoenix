@@ -42,6 +42,9 @@ msgstr "Lösenord"
 msgid "Password Confirmation"
 msgstr "Lösenordsbekräftelse"
 
+msgid "Remember me"
+msgstr "Kom ihåg mig"
+
 msgid "Request magic link"
 msgstr "Begär magisk länk"
 

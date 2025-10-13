@@ -129,11 +129,11 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:lazy_html, ">= 0.0.0", only: :test},
-      {:ash_authentication, "~> 4.9 and >= 4.9.1"},
+      {:ash_authentication, "~> 4.10"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},
+      {:lazy_html, ">= 0.0.0", only: :test},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_html_helpers, "~> 1.0"},
       {:phoenix_live_view, "~> 1.0"},
