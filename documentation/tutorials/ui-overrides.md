@@ -277,6 +277,10 @@ Generates a default password reset form.
 Function components for dealing with form input during password
 authentication.
 
+  * `:checkbox_class` - CSS class for the `input` element of the remember me field.
+
+  * `:checkbox_label_class` - CSS class for the `label` element of the remember me field.
+
   * `:error_li` - CSS class for the `li` elements on error lists.
 
   * `:error_ul` - CSS class for the `ul` element on error lists.
@@ -298,6 +302,10 @@ authentication.
   * `:password_confirmation_input_label` - Label for password confirmation field.
 
   * `:password_input_label` - Label for password field.
+
+  * `:remember_me_class` - CSS class for the `div` element surrounding the remember me field.
+
+  * `:remember_me_input_label` - Label for remember me field.
 
   * `:submit_class` - CSS class for the form submit `input` element.
 

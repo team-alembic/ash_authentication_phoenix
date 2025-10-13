@@ -45,6 +45,9 @@ msgstr "Passwort"
 msgid "Password Confirmation"
 msgstr "Passwort Wiederholung"
 
+msgid "Remember me"
+msgstr "Angemeldet bleiben"
+
 msgid "Request magic link"
 msgstr "Magischen Link anfordern"
 
