@@ -196,7 +196,7 @@ defmodule AshAuthentication.Phoenix.Router do
   * `path` the path under which to mount the sign-in live-view. Defaults to `/sign-in` within the current router scope.
   * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
     Allows disabling `helpers: true`.
-    If a tuple {:unscoped, path} is provided, the path prefix will not inherit the current route scope.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
   * `register_path` - the path under which to mount the password strategy's registration live-view.
      If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
      If a tuple {:unscoped, path} is provided, the registration path will not inherit the current route scope.
@@ -208,7 +208,6 @@ defmodule AshAuthentication.Phoenix.Router do
     that use `AshAuthentication`.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.SignInLive`.
-  * `auth_routes_prefix` the prefix to use for the auth routes. Defaults to `/auth`.
   * `as` which is used to prefix the generated `live_session` and `live` route name. Defaults to `:auth`.
   * `otp_app` the otp app or apps to find authentication resources in. Pulls from the socket by default.
   * `overrides` specify any override modules for customisation.  See
@@ -369,18 +368,21 @@ defmodule AshAuthentication.Phoenix.Router do
 
   Available options are:
 
-    * `path` the path under which to mount the live-view. Defaults to
-      `/password-reset`.
-    * `live_view` the name of the live view to render. Defaults to
-      `AshAuthentication.Phoenix.ResetLive`.
-    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
-    * `overrides` specify any override modules for customisation. See
-      `AshAuthentication.Phoenix.Overrides` for more information.
-    * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
-      `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
-      each output text of the live view.
-    * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
-      and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+  * `path` the path under which to mount the live-view. Defaults to
+    `/password-reset`.
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.ResetLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation. See
+    `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
 
   All other options are passed to the generated `scope`.
   """
@@ -481,19 +483,22 @@ defmodule AshAuthentication.Phoenix.Router do
 
   Available options are:
 
-    * `path` the path under which to mount the live-view. Defaults to
-      "/<strategy>".
-    * `token_as_route_param?` whether to use the token as a route parameter. i.e `<path>/:token`. Defaults to `true`.
-    * `live_view` the name of the live view to render. Defaults to
-      `AshAuthentication.Phoenix.ConfirmLive`.
-    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
-    * `overrides` specify any override modules for customisation. See
-      `AshAuthentication.Phoenix.Overrides` for more information.
-    * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
-      `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
-      each output text of the live view.
-    * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
-      and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+  * `path` the path under which to mount the live-view. Defaults to
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
+    "/<strategy>".
+  * `token_as_route_param?` whether to use the token as a route parameter. i.e `<path>/:token`. Defaults to `true`.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.ConfirmLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation. See
+    `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
 
   All other options are passed to the generated `scope`.
   """
@@ -601,19 +606,22 @@ defmodule AshAuthentication.Phoenix.Router do
 
   Available options are:
 
-    * `path` the path under which to mount the live-view. Defaults to
-      "/<strategy>".
-    * `token_as_route_param?` whether to use the token as a route parameter. i.e `<path>/:token`. Defaults to `true`.
-    * `live_view` the name of the live view to render. Defaults to
-      `AshAuthentication.Phoenix.MagicSignInLive`.
-    * `as` which is passed to the generated `live` route. Defaults to `:auth`.
-    * `overrides` specify any override modules for customisation. See
-      `AshAuthentication.Phoenix.Overrides` for more information.
-    * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
-      `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
-      each output text of the live view.
-    * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
-      and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+  * `path` the path under which to mount the live-view. Defaults to
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
+    "/<strategy>".
+  * `token_as_route_param?` whether to use the token as a route parameter. i.e `<path>/:token`. Defaults to `true`.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.MagicSignInLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation. See
+    `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
 
   All other options are passed to the generated `scope`.
   """
