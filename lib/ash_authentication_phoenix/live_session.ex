@@ -192,7 +192,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
         else
           _ ->
-            {:halt, socket}
+            {:cont, socket}
         end
 
       {resource, false, subject_name}, socket ->
@@ -203,7 +203,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
         else
           _ ->
-            {:halt, socket}
+            {:cont, socket}
         end
     end)
     |> then(&{:cont, &1})

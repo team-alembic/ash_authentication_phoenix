@@ -138,7 +138,9 @@ defmodule AshAuthentication.Phoenix.Test.Router do
   scope "/", AshAuthentication.Phoenix.Test do
     pipe_through(:browser)
 
-    live("/", HomeLive, :index)
+    ash_authentication_live_session :test_session do
+      live("/", HomeLive, :index)
+    end
   end
 
   @doc false
