@@ -11,6 +11,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.12.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.11.0...v2.12.0) (2025-10-15)
+
+
+
+
+### Features:
+
+* Add support for remember me (#625) by [@rgraff](https://github.com/rgraff) [(#625)](https://github.com/team-alembic/ash_authentication_phoenix/pull/625)
+
+### Bug Fixes:
+
+* Support more than one authenticated resource when looking for user assigns (#675) by James Harton [(#675)](https://github.com/team-alembic/ash_authentication_phoenix/pull/675)
+
 ## [v2.11.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.10.5...v2.11.0) (2025-10-08)
 
 
