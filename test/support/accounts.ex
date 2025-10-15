@@ -7,7 +7,8 @@ defmodule Example.Accounts do
   use Ash.Domain, otp_app: :ash_authentication_phoenix
 
   resources do
-    resource Example.Accounts.User
+    resource Example.Accounts.Admin
     resource Example.Accounts.Token
+    resource Example.Accounts.User
   end
 end

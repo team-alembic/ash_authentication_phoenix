@@ -185,6 +185,7 @@ defmodule Example.Accounts.User do
       enabled?(true)
       token_resource(Example.Accounts.Token)
       store_all_tokens? true
+      require_token_presence_for_authentication? false
 
       signing_secret("fake_secret")
     end
