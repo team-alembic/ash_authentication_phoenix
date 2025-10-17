@@ -238,7 +238,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     w-full flex justify-center px-4 border border-transparent rounded-md
     shadow-sm text-sm font-medium text-white bg-black focus:outline-none
     focus:ring-2 focus:ring-offset-2 focus:ring-black inline-flex items-center
-    dark:bg-white dark:text-white dark:ring-white
+    dark:bg-white dark:text-black dark:ring-white
     """
 
     set :icon_class, ""
