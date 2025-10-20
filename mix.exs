@@ -136,7 +136,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:lazy_html, ">= 0.0.0", only: :test},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_html_helpers, "~> 1.0"},
-      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_live_view, "~> 1.1"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:bcrypt_elixir, "~> 3.0"},
