@@ -11,6 +11,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.12.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.12.0...v2.12.1) (2025-10-20)
+
+
+
+
+### Bug Fixes:
+
+* require phoenix_live_view >= 1.1.0 to fix compile errors by James Harton
+
+* dark-theme default text color (#677) by [@jaybarra](https://github.com/jaybarra) [(#677)](https://github.com/team-alembic/ash_authentication_phoenix/pull/677)
+
 ## [v2.12.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.11.0...v2.12.0) (2025-10-15)
 
 
