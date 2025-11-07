@@ -192,7 +192,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
         else
           _ ->
-            {:cont, socket}
+            {:cont, assign_new(socket, current_subject_name, fn -> nil end)}
         end
 
       {resource, false, subject_name}, socket ->
@@ -203,7 +203,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
         else
           _ ->
-            {:cont, socket}
+            {:cont, assign_new(socket, current_subject_name, fn -> nil end)}
         end
     end)
     |> then(&{:cont, &1})
@@ -261,7 +261,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     end)
   end
 
-  # shamelessly copied from AshAuthentication.Plugs.Helpers
+  # shamelessly copied from AshAuthentication.Plug.Helpers
   defp split_identifier(subject, resource) do
     if Info.authentication_session_identifier!(resource) == :jti do
       case String.split(subject, ":", parts: 2) do
