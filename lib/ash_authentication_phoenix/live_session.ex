@@ -179,7 +179,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     )
     |> Enum.reduce_while(socket, fn
       {resource, true, subject_name}, socket ->
-        current_subject_name = String.to_existing_atom("current_#{subject_name}")
+        current_subject_name = String.to_atom("current_#{subject_name}")
         token_resource = Info.authentication_tokens_token_resource!(resource)
         session_key = "#{subject_name}_token"
 
@@ -196,7 +196,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         end
 
       {resource, false, subject_name}, socket ->
-        current_subject_name = String.to_existing_atom("current_#{subject_name}")
+        current_subject_name = String.to_atom("current_#{subject_name}")
 
         with subject when is_binary(subject) <- session[subject_name],
              {:ok, subject} <- split_identifier(subject, resource) do
