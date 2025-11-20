@@ -154,6 +154,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     {:cont, assign(socket, :otp_app, otp_app)}
   end
 
+  # sobelow_skip ["DOS.StringToAtom"]
   def on_mount(:default, _params, session, socket) do
     tenant = socket.assigns[:current_tenant] || session["tenant"]
 
