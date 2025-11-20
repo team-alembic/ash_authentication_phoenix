@@ -38,7 +38,8 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
           required(:token) => String.t(),
           optional(:overrides) => [module],
           optional(:current_tenant) => term(),
-          optional(:gettext_fn) => {module, atom}
+          optional(:gettext_fn) => {module, atom},
+          optional(:resources) => [module]
         }
 
   @doc false
@@ -48,9 +49,12 @@ defmodule AshAuthentication.Phoenix.Components.Reset do
     socket = assign(socket, assigns)
 
     strategies =
-      socket
-      |> otp_app_from_socket()
-      |> AshAuthentication.authenticated_resources()
+      socket.assigns[:resources]
+      |> Kernel.||(
+        socket
+        |> otp_app_from_socket()
+        |> AshAuthentication.authenticated_resources()
+      )
       |> Enum.sort_by(&Info.authentication_subject_name!/1)
       |> Stream.flat_map(&Info.authentication_strategies/1)
       |> Stream.filter(&is_struct(&1, Password))
