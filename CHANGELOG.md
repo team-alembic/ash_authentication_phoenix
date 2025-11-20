@@ -11,6 +11,16 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.12.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.12.1...v2.12.2) (2025-11-20)
+
+
+
+
+### Bug Fixes:
+
+* allow passing in the resource for reset (#687) by [@adamtharani](https://github.com/adamtharani) [(#6877)](https://github.com/team-alembic/ash_authentication_phoenix/pull/687)
+* use String.to_existing_atom -> String.to_atom in on_mount hook (#683) by [@Torkan](https://github.com/Torkan) [(#683)](https://github.com/team-alembic/ash_authentication_phoenix/pull/683)
+
 ## [v2.12.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.12.0...v2.12.1) (2025-10-20)
 
 
