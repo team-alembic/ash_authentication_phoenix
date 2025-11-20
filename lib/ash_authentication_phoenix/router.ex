@@ -383,6 +383,8 @@ defmodule AshAuthentication.Phoenix.Router do
     each output text of the live view.
   * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
     and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+  * `resources` - Which resources should have their sign in UIs rendered. Defaults to all resources
+    that use `AshAuthentication`.
 
   All other options are passed to the generated `scope`.
   """
@@ -410,6 +412,7 @@ defmodule AshAuthentication.Phoenix.Router do
     {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
     {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
     {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+    {resources, opts} = Keyword.pop(opts, :resources)
 
     {overrides, opts} =
       Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
@@ -451,7 +454,8 @@ defmodule AshAuthentication.Phoenix.Router do
                  "auth_routes_prefix" => auth_routes_prefix,
                  "overrides" => unquote(overrides),
                  "gettext_fn" => unquote(gettext_fn),
-                 "otp_app" => unquote(otp_app)
+                 "otp_app" => unquote(otp_app),
+                 "resources" => unquote(resources)
                }
              ]},
           on_mount: on_mount

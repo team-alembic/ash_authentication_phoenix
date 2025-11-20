@@ -39,6 +39,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
       |> assign(:context, session["context"] || %{})
       |> assign(:auth_routes_prefix, session["auth_routes_prefix"])
       |> assign(:gettext_fn, session["gettext_fn"])
+      |> assign(:resources, session["resources"])
 
     {:ok, socket}
   end
@@ -66,6 +67,7 @@ defmodule AshAuthentication.Phoenix.ResetLive do
         current_tenant={@current_tenant}
         context={@context}
         gettext_fn={@gettext_fn}
+        resources={@resources}
       />
     </div>
     """
