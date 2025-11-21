@@ -115,6 +115,14 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
       assert Map.get(result_socket.assigns, :current_admin) == nil
     end
 
+    test "assigns nil when no credentials are present" do
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, %{}, socket)
+
+      assert Map.fetch!(result_socket.assigns, :current_user) == nil
+      assert Map.fetch!(result_socket.assigns, :current_admin) == nil
+    end
+
     test "loads valid resource and skips invalid one (user valid, admin invalid)" do
       user =
         Example.Accounts.User
