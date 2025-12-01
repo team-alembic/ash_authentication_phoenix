@@ -117,9 +117,13 @@ Generates sign in, registration and reset forms for a resource.
 
   * `:interstitial_class` - CSS class for the `div` element between the form and the button.
 
+  * `:register_extra_component` - Optional component module to render in the register_extra slot position. Component will receive the form as a `form` assign.
+
   * `:register_form_module` - The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.Password.RegisterForm`.
 
   * `:register_toggle_text` - Toggle text to display when the register form is not showing (or `nil` to disable).
+
+  * `:reset_extra_component` - Optional component module to render in the reset_extra slot position. Component will receive the form as a `form` assign.
 
   * `:reset_form_module` - The Phoenix component to be used for the reset form. Defaults to `AshAuthentication.Phoenix.Components.Password.ResetForm`.
 
@@ -128,6 +132,8 @@ Generates sign in, registration and reset forms for a resource.
   * `:root_class` - CSS class for the root `div` element.
 
   * `:show_first` - The form to show on first load.  Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.
+
+  * `:sign_in_extra_component` - Optional component module to render in the sign_in_extra slot position. Component will receive the form as a `form` assign.
 
   * `:sign_in_form_module` - The Phoenix component to be used for the sign in form. Defaults to `AshAuthentication.Phoenix.Components.Password.SignInForm`.
 

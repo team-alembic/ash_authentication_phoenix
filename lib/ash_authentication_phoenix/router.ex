@@ -36,6 +36,54 @@ defmodule AshAuthentication.Phoenix.Router do
       reset_route auth_routes_prefix: "/auth"
     end
   ```
+
+  ## Adding Custom Fields to Authentication Forms
+
+  You can slot in custom form fields into the authentication forms using the override system.
+
+  ### Step 1: Create a Component for Your Extra Fields
+
+  ```elixir
+  defmodule MyAppWeb.AuthComponents do
+    use Phoenix.Component
+    import PhoenixHTMLHelpers.Form
+
+    attr :form, :any, required: true
+
+    @spec register_extra(map()) :: Phoenix.LiveView.Rendered.t()
+    def register_extra(assigns) do
+      ~H\"\"\"
+      <div>Testing</div>
+      \"\"\"
+    end
+  end
+  ```
+
+  ### Step 2: Configure Overrides to Use Your Component
+
+  ```elixir
+  defmodule MyAppWeb.AuthOverrides do
+    use AshAuthentication.Phoenix.Overrides
+
+    override AshAuthentication.Phoenix.Components.Password do
+      set :register_extra_component, &MyAppWeb.AuthComponents.register_extra/1
+      set :sign_in_extra_component, &MyAppWeb.AuthComponents.sign_in_extra/1
+      set :reset_extra_component, &MyAppWeb.AuthComponents.reset_extra/1
+    end
+  end
+  ```
+
+  ### Step 3: Pass Overrides to Router Macro
+
+  ```elixir
+  scope "/", MyAppWeb do
+    pipe_through :browser
+    sign_in_route overrides: [MyAppWeb.AuthOverrides]
+  end
+  ```
+
+  The component will receive the form as the `form` assign and will be rendered
+  in the appropriate position within the authentication form.
   """
 
   require Logger
