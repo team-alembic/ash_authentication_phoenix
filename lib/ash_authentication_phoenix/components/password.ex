@@ -22,7 +22,13 @@ defmodule AshAuthentication.Phoenix.Components.Password do
       "The Phoenix component to be used for the sign in form. Defaults to `AshAuthentication.Phoenix.Components.Password.SignInForm`.",
     reset_form_module:
       "The Phoenix component to be used for the reset form. Defaults to `AshAuthentication.Phoenix.Components.Password.ResetForm`.",
-    slot_class: "CSS class for the `div` surrounding the slot."
+    slot_class: "CSS class for the `div` surrounding the slot.",
+    sign_in_extra_component:
+      "Optional component module to render in the sign_in_extra slot position. Component will receive the form as a `form` assign.",
+    register_extra_component:
+      "Optional component module to render in the register_extra slot position. Component will receive the form as a `form` assign.",
+    reset_extra_component:
+      "Optional component module to render in the reset_extra slot position. Component will receive the form as a `form` assign."
 
   @moduledoc """
   Generates sign in, registration and reset forms for a resource.
@@ -185,10 +191,20 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           context={@context}
           gettext_fn={@gettext_fn}
         >
-          <%= if @sign_in_extra do %>
-            <div class={override_for(@overrides, :slot_class)}>
-              {render_slot(@sign_in_extra, form)}
-            </div>
+          <%= cond do %>
+            <% component_module = override_for(@overrides, :sign_in_extra_component) -> %>
+              <div class={override_for(@overrides, :slot_class)}>
+                {Phoenix.LiveView.TagEngine.component(
+                  component_module,
+                  [form: form],
+                  {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+                )}
+              </div>
+            <% @sign_in_extra != [] -> %>
+              <div class={override_for(@overrides, :slot_class)}>
+                {render_slot(@sign_in_extra, form)}
+              </div>
+            <% true -> %>
           <% end %>
 
           <div class={override_for(@overrides, :interstitial_class)}>
@@ -234,10 +250,20 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             context={@context}
             gettext_fn={@gettext_fn}
           >
-            <%= if @register_extra do %>
-              <div class={override_for(@overrides, :slot_class)}>
-                {render_slot(@register_extra, form)}
-              </div>
+            <%= cond do %>
+              <% component_module = override_for(@overrides, :register_extra_component) -> %>
+                <div class={override_for(@overrides, :slot_class)}>
+                  {Phoenix.LiveView.TagEngine.component(
+                    component_module,
+                    [form: form],
+                    {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+                  )}
+                </div>
+              <% @register_extra != [] -> %>
+                <div class={override_for(@overrides, :slot_class)}>
+                  {render_slot(@register_extra, form)}
+                </div>
+              <% true -> %>
             <% end %>
 
             <div class={override_for(@overrides, :interstitial_class)}>
@@ -280,10 +306,20 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             context={@context}
             gettext_fn={@gettext_fn}
           >
-            <%= if @reset_extra do %>
-              <div class={override_for(@overrides, :slot_class)}>
-                {render_slot(@reset_extra, form)}
-              </div>
+            <%= cond do %>
+              <% component_module = override_for(@overrides, :reset_extra_component) -> %>
+                <div class={override_for(@overrides, :slot_class)}>
+                  {Phoenix.LiveView.TagEngine.component(
+                    component_module,
+                    [form: form],
+                    {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+                  )}
+                </div>
+              <% @reset_extra != [] -> %>
+                <div class={override_for(@overrides, :slot_class)}>
+                  {render_slot(@reset_extra, form)}
+                </div>
+              <% true -> %>
             <% end %>
 
             <div class={override_for(@overrides, :interstitial_class)}>
