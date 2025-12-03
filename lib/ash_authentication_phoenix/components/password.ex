@@ -194,11 +194,11 @@ defmodule AshAuthentication.Phoenix.Components.Password do
           <%= cond do %>
             <% component_module = override_for(@overrides, :sign_in_extra_component) -> %>
               <div class={override_for(@overrides, :slot_class)}>
-                <%= Phoenix.LiveView.TagEngine.component(
+                {Phoenix.LiveView.TagEngine.component(
                   component_module,
                   [form: form],
                   {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
-                ) %>
+                )}
               </div>
             <% @sign_in_extra != [] -> %>
               <div class={override_for(@overrides, :slot_class)}>
@@ -253,11 +253,11 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             <%= cond do %>
               <% component_module = override_for(@overrides, :register_extra_component) -> %>
                 <div class={override_for(@overrides, :slot_class)}>
-                  <%= Phoenix.LiveView.TagEngine.component(
+                  {Phoenix.LiveView.TagEngine.component(
                     component_module,
                     [form: form],
                     {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
-                  ) %>
+                  )}
                 </div>
               <% @register_extra != [] -> %>
                 <div class={override_for(@overrides, :slot_class)}>
@@ -309,11 +309,11 @@ defmodule AshAuthentication.Phoenix.Components.Password do
             <%= cond do %>
               <% component_module = override_for(@overrides, :reset_extra_component) -> %>
                 <div class={override_for(@overrides, :slot_class)}>
-                  <%= Phoenix.LiveView.TagEngine.component(
+                  {Phoenix.LiveView.TagEngine.component(
                     component_module,
                     [form: form],
                     {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
-                  ) %>
+                  )}
                 </div>
               <% @reset_extra != [] -> %>
                 <div class={override_for(@overrides, :slot_class)}>
