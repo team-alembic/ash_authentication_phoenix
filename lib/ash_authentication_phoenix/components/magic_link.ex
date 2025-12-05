@@ -9,7 +9,10 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     form_class: "CSS class for the `form` element.",
     request_flash_text:
       "Text for the flash message when a request is received.  Set to `nil` to disable.",
-    disable_button_text: "Text for the submit button when the request is happening."
+    disable_button_text: "Text for the submit button when the request is happening.",
+    checkbox_class: "CSS class for the `remember_me` checkbox",
+    checkbox_label_class: "CSS class for the `remember_me` check box label",
+    remember_me_class: "CSS class for the `div` element surrounding the remember me field."
 
   @moduledoc """
   Generates a sign-in for for a resource using the "Magic link" strategy.
