@@ -12,7 +12,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
   @moduledoc """
   Generates a default magic sign in form.
 
-  ## Component heirarchy
+  ## Component hierarchy
 
   This is a child of `AshAuthentication.Phoenix.Components.MagicLink.SignIn`.
 
@@ -65,6 +65,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+      |> assign_new(:remember_me_field, fn -> :remember_me end)
 
     form =
       strategy.resource
@@ -110,13 +111,21 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <input type="hidden" name="token" value={@token} />
+        {hidden_input(form, :token, value: @token)}
 
         <Input.submit
           strategy={@strategy}
           form={form}
           action={@strategy.sign_in_action_name}
           disable_text={_gettext(override_for(@overrides, :disable_button_text))}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
+
+        <AshAuthentication.Phoenix.Components.MagicLink.Input.remember_me_field
+          :if={@remember_me_field}
+          name={@remember_me_field}
+          form={form}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />

@@ -115,6 +115,11 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   override Components.MagicLink.Input do
     set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
     set :submit_label, "Sign in"
+    set :input_debounce, 350
+    set :remember_me_class, "flex items-center gap-2 mt-2 mb-2 dark:text-white"
+    set :remember_me_input_label, "Remember me"
+    set :checkbox_class, "dark:text-white mr-2"
+    set :checkbox_label_class, "text-sm font-medium text-gray-700 dark:text-white"
   end
 
   override Components.Password do
