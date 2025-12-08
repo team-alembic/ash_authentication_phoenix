@@ -330,11 +330,17 @@ A generic, white-label confirmation page.
 
 Generates a sign-in for for a resource using the "Magic link" strategy.
 
+  * `:checkbox_class` - CSS class for the `remember_me` checkbox
+
+  * `:checkbox_label_class` - CSS class for the `remember_me` check box label
+
   * `:disable_button_text` - Text for the submit button when the request is happening.
 
   * `:form_class` - CSS class for the `form` element.
 
   * `:label_class` - CSS class for the `h2` element.
+
+  * `:remember_me_class` - CSS class for the `div` element surrounding the remember me field.
 
   * `:request_flash_text` - Text for the flash message when a request is received.  Set to `nil` to disable.
 
@@ -368,6 +374,16 @@ Generates a default magic sign in form.
 ### `AshAuthentication.Phoenix.Components.MagicLink.Input`
 
 Function components for dealing with form input during magic link sign in.
+
+  * `:checkbox_class` - CSS class for the `input` element of the remember me field.
+
+  * `:checkbox_label_class` - CSS class for the `label` element of the remember me field.
+
+  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
+
+  * `:remember_me_class` - CSS class for the `div` element surrounding the remember me field.
+
+  * `:remember_me_input_label` - Label for remember me field.
 
   * `:submit_class` - CSS class for the form submit `input` element.
 

@@ -127,6 +127,11 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     mt-4 mb-4
     """
 
+    set :input_debounce, 350
+    set :remember_me_class, "flex items-center gap-2 mt-2 mb-2 dark:text-white"
+    set :remember_me_input_label, "Remember me"
+    set :checkbox_class, "dark:text-white mr-2"
+    set :checkbox_label_class, "text-sm font-medium text-gray-700 dark:text-white"
     set :submit_label, "Sign in"
   end
 
