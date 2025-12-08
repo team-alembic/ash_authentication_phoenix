@@ -25,6 +25,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Input do
   """
 
   use AshAuthentication.Phoenix.Web, :component
+  alias AshAuthentication.Strategy
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import PhoenixHTMLHelpers.Form
