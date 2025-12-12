@@ -71,27 +71,44 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
 
   @doc """
   Returns the name of the remember me field name if any for the given strategy.
-  It does this by looking for the  presence of `RememberMe.MaybeGenerateTokenPreparation`
+  It does this by looking for the presence of `RememberMe.MaybeGenerateTokenPreparation`
+  (for read actions) or `RememberMe.MaybeGenerateTokenChange` (for create actions)
   and the name of the argument that it is expecting.
   """
   @spec remember_me_field(Strategy.t()) :: atom | nil
   def remember_me_field(strategy) do
-    with sign_in_action when not is_nil(sign_in_action) <-
-           Info.action(strategy.resource, strategy.sign_in_action_name),
-         prep_opts when not is_nil(prep_opts) <-
-           Enum.find_value(sign_in_action.preparations, fn
-             %Ash.Resource.Preparation{
-               preparation: {RememberMe.MaybeGenerateTokenPreparation, opts}
-             } ->
-               opts
+    case Info.action(strategy.resource, strategy.sign_in_action_name) do
+      nil ->
+        nil
 
-             _ ->
-               nil
-           end) do
-      Keyword.get(prep_opts, :arguments, :remember_me)
-    else
-      _ -> nil
+      sign_in_action ->
+        find_remember_me_in_preparations(sign_in_action) ||
+          find_remember_me_in_changes(sign_in_action)
     end
+  end
+
+  defp find_remember_me_in_preparations(action) do
+    Enum.find_value(action.preparations, fn
+      %Ash.Resource.Preparation{
+        preparation: {RememberMe.MaybeGenerateTokenPreparation, opts}
+      } ->
+        Keyword.get(opts, :argument, :remember_me)
+
+      _ ->
+        nil
+    end)
+  end
+
+  defp find_remember_me_in_changes(action) do
+    action
+    |> Map.get(:changes, [])
+    |> Enum.find_value(fn
+      %Ash.Resource.Change{change: {RememberMe.MaybeGenerateTokenChange, opts}} ->
+        Keyword.get(opts, :argument, :remember_me)
+
+      _ ->
+        nil
+    end)
   end
 
   @doc """
