@@ -37,7 +37,14 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.MagicLink.Input, Strategy}
+
+  alias AshAuthentication.{
+    Info,
+    Phoenix.Components.Helpers,
+    Phoenix.Components.MagicLink.Input,
+    Strategy
+  }
+
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
@@ -65,7 +72,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
-      |> assign_new(:remember_me_field, fn -> :remember_me end)
+      |> assign_new(:remember_me_field, fn -> Helpers.remember_me_field(assigns.strategy) end)
 
     form =
       strategy.resource
