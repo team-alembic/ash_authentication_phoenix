@@ -11,6 +11,23 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.13.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.12.2...v2.13.0) (2025-12-12)
+
+
+
+
+### Features:
+
+* Add remember_me checkbox field to magic link forms (#693) by Matt Van Horn [(#693)](https://github.com/team-alembic/ash_authentication_phoenix/pull/693)
+
+* Add support for custom extra components in authentication forms (#689) by [@benjaminjacobberg](https://github.com/benjaminjacobberg) [(#689)](https://github.com/team-alembic/ash_authentication_phoenix/pull/689)
+
+* Add support for custom extra components in authentication forms by [@benjaminjacobberg](https://github.com/benjaminjacobberg) [(#689)](https://github.com/team-alembic/ash_authentication_phoenix/pull/689)
+
+### Bug Fixes:
+
+* assign the current subject as nil if user is not otherwise assigned (#684) by capoccias [(#684)](https://github.com/team-alembic/ash_authentication_phoenix/pull/684)
+
 ## [v2.12.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.12.1...v2.12.2) (2025-11-20)
 
 
