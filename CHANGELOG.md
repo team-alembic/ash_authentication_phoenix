@@ -11,6 +11,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.13.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.13.0...v2.13.1) (2025-12-12)
+
+
+
+
+### Bug Fixes:
+
+* only show remember_me checkbox when strategy is configured (#695) by [@jimsynz](https://github.com/jimsynz) [(#695)](https://github.com/team-alembic/ash_authentication_phoenix/pull/695)
+
 ## [v2.13.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.12.2...v2.13.0) (2025-12-12)
 
 
