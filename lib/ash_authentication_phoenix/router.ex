@@ -89,7 +89,9 @@ defmodule AshAuthentication.Phoenix.Router do
   require Logger
 
   @typedoc "Options that can be passed to `auth_routes_for`."
-  @type auth_route_options :: [path_option | to_option | scope_opts_option]
+  @type auth_route_options :: [
+          path_option | to_option | scope_opts_option | only_option | except_option
+        ]
 
   @typedoc "A sub-path if required.  Defaults to `/auth`."
   @type path_option :: {:path, String.t()}
@@ -99,6 +101,12 @@ defmodule AshAuthentication.Phoenix.Router do
 
   @typedoc "Any options which should be passed to the generated scope."
   @type scope_opts_option :: {:scope_opts, keyword}
+
+  @typedoc "A list of strategy/add-on names to include."
+  @type only_option :: {:only, [atom()]}
+
+  @typedoc "A list of strategy/add-on names to exclude."
+  @type except_option :: {:except, [atom()]}
 
   @doc false
   @spec __using__(any) :: Macro.t()
@@ -203,6 +211,10 @@ defmodule AshAuthentication.Phoenix.Router do
   * `not_found_plug` - a plug to call if no route is found. By default, it renders a simple JSON
     response with a 404 status code.
   * `as` - the alias to use for the generated scope. Defaults to `:auth`.
+  * `only` - a list of strategy/add-on names to include. If provided, only routes for strategies
+    and add-ons with names in this list will be generated.
+  * `except` - a list of strategy/add-on names to exclude. If provided, routes for strategies
+    and add-ons with names in this list will not be generated.
   """
   @spec auth_routes(
           auth_controller :: module(),
@@ -228,7 +240,9 @@ defmodule AshAuthentication.Phoenix.Router do
           as: opts[:as] || :auth,
           controller: controller,
           not_found_plug: not_found_plug,
-          resources: List.wrap(unquote(resource_or_resources))
+          resources: List.wrap(unquote(resource_or_resources)),
+          only: opts[:only],
+          except: opts[:except]
       end
     end
   end

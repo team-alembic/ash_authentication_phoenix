@@ -95,6 +95,7 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
       resource
       |> AshAuthentication.Info.authentication_add_ons()
       |> Enum.concat(AshAuthentication.Info.authentication_strategies(resource))
+      |> filter_strategies_and_addons(opts)
       |> Stream.flat_map(&strategy_routes(resource, &1))
     end)
   end
@@ -105,6 +106,24 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
     |> Stream.map(fn {path, phase} ->
       {resource, strategy, path, phase}
     end)
+  end
+
+  @doc false
+  def filter_strategies_and_addons(strategies_and_addons, opts) do
+    cond do
+      only = opts[:only] ->
+        Enum.filter(strategies_and_addons, fn item ->
+          item.name in only
+        end)
+
+      except = opts[:except] ->
+        Enum.reject(strategies_and_addons, fn item ->
+          item.name in except
+        end)
+
+      true ->
+        strategies_and_addons
+    end
   end
 
   @doc false

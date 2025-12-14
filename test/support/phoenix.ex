@@ -83,6 +83,14 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     reset_route auth_routes_prefix: "/auth"
     auth_routes AuthController, Example.Accounts.User, path: "/auth"
 
+    auth_routes AuthController, Example.Accounts.User,
+      path: "/auth-only",
+      only: [:password, :github]
+
+    auth_routes AuthController, Example.Accounts.User,
+      path: "/auth-except",
+      except: [:auth0, :slack, :twitch]
+
     sign_in_route path: "/sign-in-filtered",
                   auth_routes_prefix: "/auth",
                   overrides: [AshAuthentication.Phoenix.Test.FilterInviteOverride],
