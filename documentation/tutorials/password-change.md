@@ -176,7 +176,7 @@ defmodule MyApp.Notifiers.EmailNotifier do
   alias MyApp.Accounts.User
 
   @impl true
-  def notify(%Ash.Notifier.Notification{action: %{name: :change_password}, resource: user}) do
+  def notify(%Ash.Notifier.Notification{action: %{name: :change_password}, data: user}) do
     User.Email.deliver_password_change_notification(user)
   end
 end
