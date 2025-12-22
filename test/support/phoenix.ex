@@ -83,6 +83,11 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     reset_route auth_routes_prefix: "/auth"
     auth_routes AuthController, Example.Accounts.User, path: "/auth"
 
+    sign_in_route path: "/sign-in-filtered",
+                  auth_routes_prefix: "/auth",
+                  overrides: [AshAuthentication.Phoenix.Test.FilterInviteOverride],
+                  as: :filtered
+
     # Custom LiveView for components testing
     sign_in_route path: "/custom_lv",
                   auth_routes_prefix: "/auth",

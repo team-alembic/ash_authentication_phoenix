@@ -97,4 +97,16 @@ defmodule AshAuthentication.Phoenix.SignInTest do
     refute html =~ "Sign in"
     assert html =~ "ever gonna"
   end
+
+  test "sign_in liveview honours filter_strategy override", %{conn: conn} do
+    conn = get(conn, "/sign-in-filtered")
+
+    assert {:ok, _, html} = live(conn)
+
+    # password strategy still visible
+    assert html =~ "sign-in-with-password"
+
+    # invite strategy is hidden
+    refute html =~ "invite-request-invite"
+  end
 end
