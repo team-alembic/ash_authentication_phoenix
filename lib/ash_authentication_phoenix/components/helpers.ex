@@ -88,7 +88,9 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   end
 
   defp find_remember_me_in_preparations(action) do
-    Enum.find_value(action.preparations, fn
+    action
+    |> Map.get(:preparations, [])
+    |> Enum.find_value(fn
       %Ash.Resource.Preparation{
         preparation: {RememberMe.MaybeGenerateTokenPreparation, opts}
       } ->
