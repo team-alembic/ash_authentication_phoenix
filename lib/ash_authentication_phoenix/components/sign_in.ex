@@ -11,7 +11,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       "CSS class for the container for the text of the authentication error.",
     authentication_error_text_class: "CSS class for the authentication error text.",
     strategy_display_order:
-      "Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`."
+      "Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`.",
+    filter_strategy: "A function that decides whether a strategy should be shown"
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
@@ -67,7 +68,16 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   @impl true
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
-    socket = assign(socket, assigns)
+    socket =
+      assign(socket, assigns)
+      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+
+    filter_fn =
+      override_for(
+        socket.assigns.overrides,
+        :filter_strategy,
+        fn _ -> true end
+      )
 
     strategies_by_resource =
       socket.assigns[:resources]
@@ -80,6 +90,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       |> Enum.map(fn resource ->
         resource
         |> Info.authentication_strategies()
+        |> Enum.filter(filter_fn)
         |> Enum.group_by(&strategy_style/1)
         |> Map.update(:form, [], &sort_strategies_by_name/1)
         |> Map.update(:link, [], &sort_strategies_by_name/1)
@@ -88,7 +99,6 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     socket =
       socket
       |> assign(:strategies_by_resource, strategies_by_resource)
-      |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:live_action, fn -> :sign_in end)
       |> assign_new(:path, fn -> "/" end)
