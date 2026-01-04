@@ -11,6 +11,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.14.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.0...v2.14.1) (2026-01-04)
+
+
+
+
+### Bug Fixes:
+
+* remember_me_field/1 should check for RememberMe strategy by [@zachdaniel](https://github.com/zachdaniel)
+
 ## [v2.14.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.13.1...v2.14.0) (2025-12-24)
 
 
