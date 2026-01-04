@@ -77,13 +77,32 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   """
   @spec remember_me_field(Strategy.t()) :: atom | nil
   def remember_me_field(strategy) do
-    case Info.action(strategy.resource, strategy.sign_in_action_name) do
+    sign_in_action_name = strategy.sign_in_action_name
+
+    case Info.action(strategy.resource, sign_in_action_name) do
       nil ->
         nil
 
       sign_in_action ->
-        find_remember_me_in_preparations(sign_in_action) ||
-          find_remember_me_in_changes(sign_in_action)
+        strategy.resource
+        |> AshAuthentication.Info.authentication_strategies()
+        |> Enum.find(fn
+          %AshAuthentication.Strategy.RememberMe{
+            sign_in_action_name: ^sign_in_action_name
+          } ->
+            true
+
+          _ ->
+            false
+        end)
+        |> case do
+          nil ->
+            nil
+
+          _ ->
+            find_remember_me_in_preparations(sign_in_action) ||
+              find_remember_me_in_changes(sign_in_action)
+        end
     end
   end
 
