@@ -456,5 +456,15 @@ Renders a very simple banner at the top of the sign-in component.
   * `:text_class` - CSS class for the text `div`.
 
 
+### `AshAuthentication.Phoenix.Components.Flash`
+
+Renders the [Phoenix flash messages](https://hexdocs.pm/phoenix/controllers.html#flash-messages)
+set by Ash Authentication Phoenix.
+
+  * `:root_class_error` - CSS class for the root `div` element when the flash key is `:error`.
+
+  * `:root_class_info` - CSS class for the root `div` element when the flash key is `:info`.
+
+
 
 <!-- override-docs-end -->
