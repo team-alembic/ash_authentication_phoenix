@@ -87,9 +87,7 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
         strategy.resource
         |> AshAuthentication.Info.authentication_strategies()
         |> Enum.find(fn
-          %AshAuthentication.Strategy.RememberMe{
-            sign_in_action_name: ^sign_in_action_name
-          } ->
+          %AshAuthentication.Strategy.RememberMe{} ->
             true
 
           _ ->
