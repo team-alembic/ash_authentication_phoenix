@@ -131,6 +131,8 @@ defmodule Example.Accounts.User do
     end
 
     strategies do
+      remember_me :remember_me
+
       password do
         identity_field(:email)
         hashed_password_field(:hashed_password)

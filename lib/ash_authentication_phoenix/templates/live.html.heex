@@ -1,25 +1,8 @@
-<%= if Phoenix.Flash.get(@flash, :info) do %>
-  <p
-    class="fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 text-sm
-           bg-emerald-100 dark:bg-emerald-200 text-emerald-800"
-    role="alert"
-    phx-click="lv:clear-flash"
-    phx-value-key="info"
-  >
-    {Phoenix.Flash.get(@flash, :info)}
-  </p>
-<% end %>
-
-<%= if Phoenix.Flash.get(@flash, :error) do %>
-  <p
-    class="fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 text-sm
-           bg-rose-100 dark:bg-rose-200 text-rose-900"
-    role="alert"
-    phx-click="lv:clear-flash"
-    phx-value-key="error"
-  >
-    {Phoenix.Flash.get(@flash, :error)}
-  </p>
-<% end %>
+<.live_component
+  module={AshAuthentication.Phoenix.Components.Flash}
+  id="flash"
+  overrides={@overrides}
+  flash={@flash}
+/>
 
 {@inner_content}

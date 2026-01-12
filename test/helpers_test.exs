@@ -17,7 +17,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         %{preparations: [], changes: []}
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == nil
     end
@@ -25,7 +25,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
     test "returns nil when action is not found" do
       stub(Ash.Resource.Info, :action, fn _resource, _action_name -> nil end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :nonexistent}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :nonexistent}
 
       assert Helpers.remember_me_field(strategy) == nil
     end
@@ -42,7 +42,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :remember_me
     end
@@ -60,7 +60,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :custom_remember
     end
@@ -77,7 +77,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :remember_me
     end
@@ -94,7 +94,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :remember_me
     end
@@ -111,7 +111,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :custom_remember
     end
@@ -128,7 +128,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :remember_me
     end
@@ -150,7 +150,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :from_preparation
     end
@@ -174,7 +174,7 @@ defmodule AshAuthentication.Phoenix.Components.HelpersTest do
         }
       end)
 
-      strategy = %{resource: FakeResource, sign_in_action_name: :sign_in}
+      strategy = %{resource: Example.Accounts.User, sign_in_action_name: :sign_in}
 
       assert Helpers.remember_me_field(strategy) == :remember_me
     end

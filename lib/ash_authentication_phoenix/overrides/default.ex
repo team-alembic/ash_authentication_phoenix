@@ -104,6 +104,18 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :text, "or"
   end
 
+  override Components.Flash do
+    set :message_class_info, """
+    fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 text-sm
+    bg-emerald-100 dark:bg-emerald-200 text-emerald-800
+    """
+
+    set :message_class_error, """
+    fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 text-sm
+    bg-rose-100 dark:bg-rose-200 text-rose-900
+    """
+  end
+
   override MagicSignInLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
   end

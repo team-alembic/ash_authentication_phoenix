@@ -11,6 +11,60 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.14.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.0...v2.14.1) (2026-01-04)
+
+
+
+
+### Bug Fixes:
+
+* remember_me_field/1 should check for RememberMe strategy by [@zachdaniel](https://github.com/zachdaniel)
+
+## [v2.14.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.13.1...v2.14.0) (2025-12-24)
+
+
+
+
+### Features:
+
+* Add remember_me checkbox field to magic link forms (#693) by Matt Van Horn [(#693)](https://github.com/team-alembic/ash_authentication_phoenix/pull/693)
+
+* Add support for custom extra components in authentication forms (#689) by [@benjaminjacobberg](https://github.com/benjaminjacobberg) [(#689)](https://github.com/team-alembic/ash_authentication_phoenix/pull/689)
+
+* Add support for custom extra components in authentication forms by [@benjaminjacobberg](https://github.com/benjaminjacobberg) [(#689)](https://github.com/team-alembic/ash_authentication_phoenix/pull/689)
+
+* Add support for remember me (#625) by Robert Graff [(#625)](https://github.com/team-alembic/ash_authentication_phoenix/pull/625)
+
+* added token validation on socket mount by Abdessabour Moutik [(#666)](https://github.com/team-alembic/ash_authentication_phoenix/pull/666)
+
+* add icon_src override by Dawid Danieluk [(#660)](https://github.com/team-alembic/ash_authentication_phoenix/pull/660)
+
+### Bug Fixes:
+
+* don't assume all actions have preparations by [@zachdaniel](https://github.com/zachdaniel)
+
+* only show remember_me checkbox when strategy is configured (#695) by [@beam-bots](https://github.com/beam-bots) [(#695)](https://github.com/team-alembic/ash_authentication_phoenix/pull/695)
+
+* assign the current subject as nil if user is not otherwise assigned (#684) by capoccias [(#684)](https://github.com/team-alembic/ash_authentication_phoenix/pull/684)
+
+* use String.to_existing_atom -> String.to_atom in on_mount hook (#683) by Torkild Gundersen Kjevik [(#683)](https://github.com/team-alembic/ash_authentication_phoenix/pull/683)
+
+* require phoenix_live_view >= 1.1.0 to fix compile errors by James Harton
+
+* dark-theme default text color (#677) by Jay Barra [(#677)](https://github.com/team-alembic/ash_authentication_phoenix/pull/677)
+
+* Support more than one authenticated resource when looking for user assigns (#675) by [@beam-bots](https://github.com/beam-bots) [(#675)](https://github.com/team-alembic/ash_authentication_phoenix/pull/675)
+
+* banner rendering with empty text/images by James Harton
+
+* update Apple component to use auth_path helper for Phoenix 1.7+ compatibility by Aake Gregertsen [(#663)](https://github.com/team-alembic/ash_authentication_phoenix/pull/663)
+
+### Improvements:
+
+* Deprecate Router.auth_routes_for/2..3 (#653) by [@beam-bots](https://github.com/beam-bots) [(#653)](https://github.com/team-alembic/ash_authentication_phoenix/pull/653)
+
+* install with daisyUI overrides if using daisyUI (#650) by pikdum [(#650)](https://github.com/team-alembic/ash_authentication_phoenix/pull/650)
+
 ## [v2.13.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.13.0...v2.13.1) (2025-12-12)
 
 
