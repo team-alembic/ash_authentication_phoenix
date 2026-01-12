@@ -89,7 +89,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
 
     context =
       if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
-        Map.put(context, :token_type, :sign_in)
+        # Skip remember_me token generation in the sign_in action because we'll
+        # pass remember_me as a query param to sign_in_with_token instead.
+        # This avoids creating unused tokens in the database.
+        context
+        |> Map.put(:token_type, :sign_in)
+        |> put_in([:private, :skip_remember_me_token_generation], true)
       else
         context
       end
