@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.Test.FilterInviteOverride do
   use AshAuthentication.Phoenix.Overrides
   alias AshAuthentication.Phoenix.Components
