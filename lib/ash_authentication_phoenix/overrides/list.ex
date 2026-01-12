@@ -43,7 +43,8 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
     ],
     Miscellaneous: [
       AshAuthentication.Phoenix.Components.HorizontalRule,
-      AshAuthentication.Phoenix.Components.Banner
+      AshAuthentication.Phoenix.Components.Banner,
+      AshAuthentication.Phoenix.Components.Flash
     ]
   ]
 
