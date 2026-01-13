@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AshAuthentication.Phoenix.Test.FilterInviteOverride do
+  @moduledoc false
   use AshAuthentication.Phoenix.Overrides
   alias AshAuthentication.Phoenix.Components
 
