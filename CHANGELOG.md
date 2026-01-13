@@ -11,6 +11,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.15.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.1...v2.15.0) (2026-01-13)
+
+
+
+
+### Features:
+
+* make flash overridable (#702) by aidalgol [(#702)](https://github.com/team-alembic/ash_authentication_phoenix/pull/702)
+
+### Bug Fixes:
+
+* skip remember_me token generation when using sign_in_tokens (#703) by [@beam-bots](https://github.com/beam-bots) [(#703)](https://github.com/team-alembic/ash_authentication_phoenix/pull/703)
+
 ## [v2.14.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.0...v2.14.1) (2026-01-04)
 
 
