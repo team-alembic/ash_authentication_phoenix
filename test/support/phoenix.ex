@@ -83,6 +83,10 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     reset_route auth_routes_prefix: "/auth"
     auth_routes AuthController, Example.Accounts.User, path: "/auth"
 
+    # Test routes for filtering options
+    auth_routes AuthController, Example.Accounts.User, path: "/auth-only", only: [:password, :github]
+    auth_routes AuthController, Example.Accounts.User, path: "/auth-except", except: [:auth0, :slack, :twitch]
+
     # Custom LiveView for components testing
     sign_in_route path: "/custom_lv",
                   auth_routes_prefix: "/auth",

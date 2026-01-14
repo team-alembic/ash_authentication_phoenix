@@ -77,4 +77,82 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                 }
               ]}
   end
+
+  describe "auth_routes filtering" do
+    test "only option includes only specified strategies and add-ons" do
+      only_routes =
+        AshAuthentication.Phoenix.Test.Router
+        |> Phoenix.Router.routes()
+        |> Enum.filter(&String.starts_with?(&1.path, "/auth-only"))
+
+      strategy_names =
+        only_routes
+        |> Enum.map(fn route ->
+          route.path
+          |> String.split("/")
+          |> Enum.at(2)
+        end)
+        |> Enum.uniq()
+        |> Enum.reject(&is_nil/1)
+
+      assert "password" in strategy_names
+      assert "github" in strategy_names
+
+      refute "auth0" in strategy_names
+      refute "slack" in strategy_names
+      refute "twitch" in strategy_names
+      refute "magic_link" in strategy_names
+    end
+
+    test "except option excludes specified strategies and add-ons" do
+      except_routes =
+        AshAuthentication.Phoenix.Test.Router
+        |> Phoenix.Router.routes()
+        |> Enum.filter(&String.starts_with?(&1.path, "/auth-except"))
+
+      strategy_names =
+        except_routes
+        |> Enum.map(fn route ->
+          route.path
+          |> String.split("/")
+          |> Enum.at(2)
+        end)
+        |> Enum.uniq()
+        |> Enum.reject(&is_nil/1)
+
+      assert "password" in strategy_names
+      assert "github" in strategy_names
+      assert "magic_link" in strategy_names
+
+      refute "auth0" in strategy_names
+      refute "slack" in strategy_names
+      refute "twitch" in strategy_names
+    end
+
+    test "unfiltered auth_routes includes all strategies and add-ons" do
+      all_routes =
+        AshAuthentication.Phoenix.Test.Router
+        |> Phoenix.Router.routes()
+        |> Enum.filter(fn route ->
+          String.starts_with?(route.path, "/auth/")
+        end)
+
+      strategy_names =
+        all_routes
+        |> Enum.map(fn route ->
+          route.path
+          |> String.split("/")
+          |> Enum.at(2)
+        end)
+        |> Enum.uniq()
+        |> Enum.reject(&is_nil/1)
+
+      assert "password" in strategy_names
+      assert "auth0" in strategy_names
+      assert "github" in strategy_names
+      assert "slack" in strategy_names
+      assert "twitch" in strategy_names
+      assert "magic_link" in strategy_names
+    end
+  end
 end
