@@ -99,6 +99,8 @@ Renders sign in mark-up for an authenticated resource.
 
   * `:authentication_error_text_class` - CSS class for the authentication error text.
 
+  * `:filter_strategy` - A function that decides whether a strategy should be shown
+
   * `:root_class` - CSS class for the root `div` element.
 
   * `:show_banner` - Whether or not to show the banner.

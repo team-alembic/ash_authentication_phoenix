@@ -181,6 +181,15 @@ defmodule Example.Accounts.User do
           Logger.debug("Magic link request for #{user.email} with token #{inspect(token)}")
         end)
       end
+
+      magic_link :invite do
+        identity_field :email
+        require_interaction? true
+
+        sender(fn user, token, _ ->
+          Logger.debug("Invite link request for #{user.email} with token #{inspect(token)}")
+        end)
+      end
     end
 
     tokens do
