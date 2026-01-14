@@ -417,6 +417,162 @@ Generates a sign-in button for OAuth2.
   * `:root_class` - CSS classes for the root `div` element.
 
 
+## TOTP
+### `AshAuthentication.Phoenix.Components.Totp`
+
+Generates sign in and setup forms for TOTP authentication.
+
+  * `:hide_class` - CSS class to apply to hide an element.
+
+  * `:interstitial_class` - CSS class for the `div` element between the form and the toggle.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:setup_form_module` - The Phoenix component to be used for the setup form. Defaults to `AshAuthentication.Phoenix.Components.Totp.SetupForm`.
+
+  * `:setup_toggle_text` - Toggle text to display when the setup form is not showing (or `nil` to disable).
+
+  * `:show_first` - The form to show on first load. Either `:sign_in` or `:setup`. Defaults to `:sign_in`.
+
+  * `:sign_in_form_module` - The Phoenix component to be used for the sign in form. Defaults to `AshAuthentication.Phoenix.Components.Totp.SignInForm`.
+
+  * `:sign_in_toggle_text` - Toggle text to display when the sign in form is not showing (or `nil` to disable).
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+  * `:toggler_class` - CSS class for the toggler `a` element.
+
+
+### `AshAuthentication.Phoenix.Components.Totp.SignInForm`
+
+Generates a sign in form for TOTP authentication.
+
+  * `:button_text` - Text for the submit button.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+
+### `AshAuthentication.Phoenix.Components.Totp.SetupForm`
+
+Generates a setup form for TOTP authentication with QR code display.
+
+  * `:button_text` - Text for the submit button.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:error_class` - CSS class for error messages.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:instructions_class` - CSS class for setup instructions text.
+
+  * `:instructions_text` - Instructions text shown above QR code.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:qr_code_class` - CSS class for the QR code container.
+
+  * `:qr_code_wrapper_class` - CSS class for the wrapper around QR code and instructions.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:setup_button_class` - CSS class for the initial setup button.
+
+  * `:setup_button_text` - Text for the initial setup button.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+
+### `AshAuthentication.Phoenix.Components.Totp.Input`
+
+Function components for dealing with form input during TOTP authentication.
+
+  * `:code_input_label` - Label for TOTP code field.
+
+  * `:code_input_placeholder` - Placeholder for TOTP code field.
+
+  * `:error_li` - CSS class for the `li` elements on error lists.
+
+  * `:error_ul` - CSS class for the `ul` element on error lists.
+
+  * `:field_class` - CSS class for `div` elements surrounding the fields.
+
+  * `:identity_input_label` - Label for identity field.
+
+  * `:identity_input_placeholder` - Placeholder for identity field.
+
+  * `:input_class` - CSS class for `input` elements.
+
+  * `:input_class_with_error` - CSS class for `input` elements when there is a validation error.
+
+  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
+
+  * `:invalid_code_class` - CSS class applied to code field when validation fails.
+
+  * `:label_class` - CSS class for `label` elements.
+
+  * `:submit_class` - CSS class for the form submit `input` element.
+
+  * `:valid_code_class` - CSS class applied to code field when validation passes.
+
+
+### `AshAuthentication.Phoenix.TotpSetupLive`
+
+A generic, white-label TOTP setup page for configuring two-factor authentication.
+
+  * `:error_class` - CSS class for the error message when user is not authenticated.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:totp_setup_id` - Element ID for the `TotpSetup` LiveComponent.
+
+
+### `AshAuthentication.Phoenix.TotpVerifyLive`
+
+A generic, white-label TOTP verification page for two-factor authentication.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:totp_verify_id` - Element ID for the `TotpVerify` LiveComponent.
+
+
+### `AshAuthentication.Phoenix.Components.Totp.Verify2faForm`
+
+Generates a verification form for TOTP two-factor authentication.
+
+  * `:button_text` - Text for the submit button.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:error_class` - CSS class for error messages.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:instructions_class` - CSS class for instructions text.
+
+  * `:instructions_text` - Instructions text shown above the code input.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:label_text` - Text for the form heading.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:sign_in_link_class` - CSS class for the sign-in link when not authenticated.
+
+  * `:sign_in_link_text` - Text for the sign-in link.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+
 ## Miscellaneous
 ### `AshAuthentication.Phoenix.Components.HorizontalRule`
 
