@@ -132,7 +132,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           gettext_fn={@gettext_fn}
         />
 
-        <%= if Enum.any?(strategies.form) && Enum.any?(strategies.link) do %>
+        <%= if has_visible_strategies?(strategies.form) && has_visible_strategies?(strategies.link) do %>
           <.live_component
             module={Components.HorizontalRule}
             id={"sign-in-hr-#{i}"}
@@ -192,6 +192,14 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       else
         []
       end
+    end)
+  end
+
+  defp has_visible_strategies?(strategies) do
+    Enum.any?(strategies, fn strategy ->
+      strategy
+      |> component_for_strategy()
+      |> Code.ensure_loaded?()
     end)
   end
 
