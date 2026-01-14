@@ -84,4 +84,23 @@ defmodule AshAuthentication.Phoenix.Plug do
   """
   @spec store_in_session(Conn.t(), Ash.Resource.record()) :: Conn.t()
   defdelegate store_in_session(conn, actor), to: AshAuthentication.Plug.Helpers
+
+  @doc """
+  Set the actor from the connection's assigns.
+
+  This plug takes the user from `conn.assigns.current_<subject_name>` (set by
+  `load_from_session/2`) and sets it as the Ash actor via `Ash.PlugHelpers.set_actor/2`.
+
+  This is required for authentication strategies that need to access the current
+  user via `Ash.PlugHelpers.get_actor/1`.
+
+  ## Example
+
+      pipeline :browser do
+        plug :load_from_session
+        plug :set_actor, :user
+      end
+  """
+  @spec set_actor(Conn.t(), atom) :: Conn.t()
+  defdelegate set_actor(conn, subject_name), to: AshAuthentication.Plug.Helpers
 end

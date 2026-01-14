@@ -13,8 +13,8 @@
     </script>
     <script type="module" crossorigin>
       import 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix_html@v4.3.0/priv/static/phoenix_html.js';
-      import { Socket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix@v1.8.1/priv/static/phoenix.mjs';
-      import { LiveSocket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix_live_view@1.1.14/priv/static/phoenix_live_view.esm.js';
+      import { Socket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix@v1.8.3/priv/static/phoenix.mjs';
+      import { LiveSocket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix_live_view@1.1.19/priv/static/phoenix_live_view.esm.js';
 
       let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
       let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } })

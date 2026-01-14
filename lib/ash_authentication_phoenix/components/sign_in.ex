@@ -237,6 +237,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategy_style(%AshAuthentication.AddOn.Confirmation{}), do: nil
   defp strategy_style(%Strategy.Password{}), do: :form
   defp strategy_style(%Strategy.MagicLink{}), do: :link
+  defp strategy_style(%Strategy.Totp{}), do: :form
   defp strategy_style(%Strategy.RememberMe{}), do: nil
   defp strategy_style(_), do: :link
 
