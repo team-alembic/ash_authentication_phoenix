@@ -246,12 +246,17 @@ defmodule AshAuthentication.Phoenix.Router do
     Allows disabling `helpers: true`.
     If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
   * `register_path` - the path under which to mount the password strategy's registration live-view.
-     If not set, and registration is supported, registration will use a dynamic toggle and will not be routeable to.
-     If a tuple {:unscoped, path} is provided, the registration path will not inherit the current route scope.
+     If not set, no registration route will be generated. The registration form will still be accessible
+     via a toggle on the sign-in page (switching forms with JavaScript rather than navigation).
+     To fully disable registration, either set `registration_enabled? false` on the password strategy
+     in your resource (see `AshAuthentication.Strategy.Password`), or hide the toggle by setting
+     `register_toggle_text: nil` in your overrides (see `AshAuthentication.Phoenix.Overrides`).
+     If a tuple `{:unscoped, path}` is provided, the registration path will not inherit the current route scope.
   * `reset_path` - the path under which to mount the password strategy's password reset live-view, for a user to
-    request a reset token by email. If not set, and password reset is supported, password reset will use a
-    dynamic toggle and will not be routeable to. If a tuple {:unscoped, path} is provided, the reset path
-    will not inherit the current route scope.
+    request a reset token by email. If not set, no reset route will be generated. The reset form will still be
+    accessible via a toggle on the sign-in page (switching forms with JavaScript rather than navigation).
+    To hide the toggle, set `reset_toggle_text: nil` in your overrides (see `AshAuthentication.Phoenix.Overrides`).
+    If a tuple `{:unscoped, path}` is provided, the reset path will not inherit the current route scope.
   * `resources` - Which resources should have their sign in UIs rendered. Defaults to all resources
     that use `AshAuthentication`.
   * `live_view` the name of the live view to render. Defaults to
