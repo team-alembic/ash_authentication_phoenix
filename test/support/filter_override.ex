@@ -7,6 +7,8 @@ defmodule AshAuthentication.Phoenix.Test.FilterInviteOverride do
   use AshAuthentication.Phoenix.Overrides
   alias AshAuthentication.Phoenix.Components
 
+  @doc false
+  @spec filter_strategy(AshAuthentication.Strategy.t()) :: boolean()
   def filter_strategy(strategy), do: strategy.name != :invite
 
   override Components.SignIn do
