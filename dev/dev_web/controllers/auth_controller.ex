@@ -14,8 +14,7 @@ defmodule DevWeb.AuthController do
     conn
     |> store_in_session(user)
     |> assign(:current_user, user)
-    |> put_status(200)
-    |> render("success.html")
+    |> redirect(to: "/")
   end
 
   @doc false

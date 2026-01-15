@@ -110,6 +110,8 @@ defmodule Example.Accounts.User do
 
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :hashed_password, :string, allow_nil?: true, sensitive?: true
+    attribute :totp_secret, :binary, allow_nil?: true, sensitive?: true
+    attribute :last_totp_at, :datetime, allow_nil?: true, sensitive?: true
 
     create_timestamp :created_at
     update_timestamp :updated_at
@@ -189,6 +191,14 @@ defmodule Example.Accounts.User do
         sender(fn user, token, _ ->
           Logger.debug("Invite link request for #{user.email} with token #{inspect(token)}")
         end)
+      end
+
+      totp do
+        identity_field :email
+        issuer "TestApp"
+        sign_in_enabled? true
+        confirm_setup_enabled? true
+        brute_force_strategy {:preparation, Example.TotpNoopPreparation}
       end
     end
 
