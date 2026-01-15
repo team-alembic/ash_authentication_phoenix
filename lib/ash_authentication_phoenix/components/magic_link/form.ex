@@ -124,7 +124,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
           strategy={@strategy}
           form={form}
           action={@strategy.sign_in_action_name}
-          disable_text={_gettext(override_for(@overrides, :disable_button_text))}
+          disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
