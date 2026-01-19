@@ -9,6 +9,16 @@ defmodule AshAuthentication.Phoenix.LiveSession.RequireTotp do
   This module provides an on_mount hook that checks if the current user has
   TOTP configured and redirects to the setup page if not.
 
+  ## Behaviour When No User Is Present
+
+  When there is no authenticated user (i.e., `socket.assigns[:current_user]` is `nil`),
+  this hook returns `{:cont, socket}` without modification. It does not redirect or
+  halt the LiveView mount.
+
+  This design allows the hook to be used in live sessions that may or may not have an
+  authenticated user. For routes that require authentication, use this hook **after**
+  your authentication hook to ensure a user exists before checking TOTP configuration.
+
   ## Usage
 
   Add the hook to your live_session in the router:

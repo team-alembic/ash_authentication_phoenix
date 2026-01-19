@@ -226,35 +226,16 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   end
 
   defp get_redirect_path(socket, params, user) do
-    # Check if TOTP 2FA verification is required
-    # The backend sets :totp_2fa_token in metadata when TOTP verification is needed
-    case user.__metadata__[:totp_2fa_token] do
-      token when is_binary(token) ->
-        # Redirect to TOTP verification page
-        totp_verify_path(socket, token)
+    auth_path_params = get_auth_path_params(params, user)
 
-      _ ->
-        # Normal sign-in token flow
-        auth_path_params = get_auth_path_params(params, user)
-
-        auth_path(
-          socket,
-          socket.assigns.subject_name,
-          socket.assigns.auth_routes_prefix,
-          socket.assigns.strategy,
-          :sign_in_with_token,
-          auth_path_params
-        )
-    end
-  end
-
-  defp totp_verify_path(socket, token) do
-    # Use the configured TOTP verify path or default
-    base_path =
-      socket.assigns[:totp_verify_path] ||
-        "#{socket.assigns.auth_routes_prefix || "/auth"}/totp-verify"
-
-    "#{base_path}/#{token}"
+    auth_path(
+      socket,
+      socket.assigns.subject_name,
+      socket.assigns.auth_routes_prefix,
+      socket.assigns.strategy,
+      :sign_in_with_token,
+      auth_path_params
+    )
   end
 
   defp get_auth_path_params(params, user) do

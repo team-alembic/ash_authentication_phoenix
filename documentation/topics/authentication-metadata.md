@@ -285,9 +285,9 @@ Sets both strategy and verification timestamp:
 }
 ```
 
-### Future: 2FA Flow
+### Multi-Factor Authentication Flow
 
-When implementing password + TOTP 2FA, the metadata will accumulate strategies:
+When using password + TOTP two-factor authentication, the metadata accumulates strategies:
 
 ```elixir
 # After password + TOTP verification

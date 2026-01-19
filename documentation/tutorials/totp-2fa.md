@@ -144,6 +144,183 @@ on_mount: [{AshAuthentication.Phoenix.LiveSession.RequireTotp,
 | `setup_path` | Path to redirect for TOTP setup | `"/auth/totp/setup"` |
 | `current_user_assign` | Assign key for current user | `:current_user` |
 
+## Hard-Required 2FA with Auth Controller
+
+For applications that require TOTP verification immediately after password sign-in (before accessing any authenticated route), use a custom auth controller callback combined with session tracking.
+
+### Custom Auth Controller
+
+Override the `success/4` callback to check TOTP status after password authentication:
+
+```elixir
+defmodule MyAppWeb.AuthController do
+  use MyAppWeb, :controller
+  use AshAuthentication.Phoenix.Controller
+
+  alias AshAuthentication.Phoenix.TotpHelpers
+
+  def success(conn, {:password, _strategy}, user, _token) do
+    if TotpHelpers.totp_configured?(user, user.__struct__) do
+      conn
+      |> put_session(:awaiting_totp_verification, true)
+      |> put_session(:totp_user_id, user.id)
+      |> redirect(to: ~p"/auth/totp/verify")
+    else
+      conn
+      |> store_in_session(user)
+      |> assign(:current_user, user)
+      |> redirect(to: ~p"/")
+    end
+  end
+
+  def success(conn, {:totp, _strategy}, user, _token) do
+    conn
+    |> delete_session(:awaiting_totp_verification)
+    |> delete_session(:totp_user_id)
+    |> store_in_session(user)
+    |> assign(:current_user, user)
+    |> redirect(to: ~p"/")
+  end
+
+  def success(conn, _activity, user, _token) do
+    conn
+    |> store_in_session(user)
+    |> assign(:current_user, user)
+    |> redirect(to: ~p"/")
+  end
+
+  def failure(conn, _activity, _reason) do
+    conn
+    |> put_flash(:error, "Authentication failed")
+    |> redirect(to: ~p"/sign-in")
+  end
+
+  def sign_out(conn, _params) do
+    conn
+    |> clear_session()
+    |> redirect(to: ~p"/")
+  end
+end
+```
+
+### Companion Plug for TOTP Verification
+
+Create a plug that blocks access until TOTP is verified:
+
+```elixir
+defmodule MyAppWeb.Plugs.RequireTotpVerification do
+  import Plug.Conn
+  import Phoenix.Controller
+
+  def init(opts), do: opts
+
+  def call(conn, _opts) do
+    cond do
+      get_session(conn, :awaiting_totp_verification) ->
+        conn
+        |> put_flash(:info, "Please verify your identity")
+        |> redirect(to: "/auth/totp/verify")
+        |> halt()
+
+      true ->
+        conn
+    end
+  end
+end
+```
+
+### Router Configuration
+
+Use the plug in your authenticated pipeline:
+
+```elixir
+defmodule MyAppWeb.Router do
+  use MyAppWeb, :router
+  use AshAuthentication.Phoenix.Router
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {MyAppWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :load_from_session
+  end
+
+  pipeline :require_totp_verified do
+    plug MyAppWeb.Plugs.RequireTotpVerification
+  end
+
+  scope "/auth", MyAppWeb do
+    pipe_through :browser
+
+    auth_routes AuthController, MyApp.Accounts.User, path: "/"
+
+    # TOTP verify page must be accessible during verification
+    get "/totp/verify", TotpVerifyController, :show
+    post "/totp/verify", TotpVerifyController, :verify
+  end
+
+  scope "/", MyAppWeb do
+    pipe_through [:browser, :require_authenticated, :require_totp_verified]
+
+    # All protected routes
+    get "/", PageController, :home
+    get "/dashboard", DashboardController, :index
+  end
+end
+```
+
+### TOTP Verify Controller
+
+```elixir
+defmodule MyAppWeb.TotpVerifyController do
+  use MyAppWeb, :controller
+
+  alias AshAuthentication.Info
+
+  def show(conn, _params) do
+    if get_session(conn, :awaiting_totp_verification) do
+      render(conn, :verify)
+    else
+      redirect(conn, to: ~p"/")
+    end
+  end
+
+  def verify(conn, %{"code" => code}) do
+    user_id = get_session(conn, :totp_user_id)
+    {:ok, user} = MyApp.Accounts.get_user_by_id(user_id)
+    {:ok, strategy} = Info.strategy(user.__struct__, :totp)
+
+    case AshAuthentication.Strategy.action(strategy, :sign_in, %{
+      strategy.identity_field => Map.get(user, strategy.identity_field),
+      :code => code
+    }) do
+      {:ok, verified_user} ->
+        conn
+        |> delete_session(:awaiting_totp_verification)
+        |> delete_session(:totp_user_id)
+        |> store_in_session(verified_user)
+        |> assign(:current_user, verified_user)
+        |> redirect(to: ~p"/")
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Invalid code")
+        |> redirect(to: ~p"/auth/totp/verify")
+    end
+  end
+end
+```
+
+This pattern ensures that:
+
+1. Password authentication succeeds but doesn't grant full access
+2. The user is redirected to TOTP verification
+3. All protected routes check for completed TOTP verification
+4. Only after TOTP verification does the user get full session access
+
 ## Authentication Metadata
 
 When users authenticate, metadata is attached to track which authentication strategies were used:

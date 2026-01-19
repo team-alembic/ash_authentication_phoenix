@@ -22,7 +22,7 @@ defmodule Example.Accounts.User do
         }
 
   actions do
-    defaults([:read])
+    defaults([:read, :update])
 
     create :register_with_auth0 do
       argument :user_info, :map, allow_nil?: false
