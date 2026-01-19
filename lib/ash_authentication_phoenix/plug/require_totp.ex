@@ -9,6 +9,17 @@ defmodule AshAuthentication.Phoenix.Plug.RequireTotp do
   This plug checks if the current user has TOTP configured and can optionally
   redirect users who haven't set up TOTP to the setup page.
 
+  ## Behaviour When No User Is Present
+
+  When there is no authenticated user (i.e., `conn.assigns[:current_user]` is `nil`),
+  this plug passes through without modification. It does not redirect or halt the
+  request.
+
+  This design allows the plug to be used in pipelines that may or may not have an
+  authenticated user. For routes that require authentication, use this plug **after**
+  your authentication plug (e.g., `:require_authenticated`) to ensure a user exists
+  before checking TOTP configuration.
+
   ## Usage
 
   In your router, add the plug to a pipeline:

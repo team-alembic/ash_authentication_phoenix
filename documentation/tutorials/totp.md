@@ -231,6 +231,85 @@ TOTP codes can only be used once. After successful authentication, the `last_tot
 
 The TOTP secret is stored as binary data in the database. This is necessary because the application must be able to read the secret to generate QR codes during setup and to validate codes during sign-in. Mark the attribute with `sensitive?: true` to prevent it from appearing in logs, but note this does not encrypt the data at rest. For additional protection, consider using database-level encryption or application-layer encryption if your security requirements demand it.
 
+### Encrypting Secrets with AshCloak
+
+For application-layer encryption of TOTP secrets, you can use [AshCloak](https://hex.pm/packages/ash_cloak). AshCloak encrypts data before storing it in the database and decrypts it when accessed.
+
+Since AshCloak stores encrypted data in an attribute but exposes the decrypted value via a calculation, you need to configure TOTP to read from the calculation:
+
+```elixir
+defmodule MyApp.Accounts.User do
+  use Ash.Resource,
+    extensions: [AshAuthentication, AshCloak],
+    domain: MyApp.Accounts
+
+  cloak do
+    vault MyApp.Vault
+
+    attributes [:totp_secret]
+
+    decrypt :decrypted_totp_secret, attribute: :totp_secret, type: :binary
+  end
+
+  authentication do
+    strategies do
+      totp do
+        identity_field :email
+        issuer "MyApp"
+        # The encrypted secret is stored here
+        secret_field :totp_secret
+        # But we read from the decrypted calculation
+        read_secret_from :decrypted_totp_secret
+        sign_in_enabled? true
+        confirm_setup_enabled? true
+      end
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+    attribute :email, :ci_string, allow_nil?: false
+    # Encrypted secret - AshCloak will encrypt this automatically
+    attribute :totp_secret, :binary, allow_nil?: true, sensitive?: true
+    attribute :last_totp_at, :datetime, allow_nil?: true, sensitive?: true
+  end
+end
+```
+
+Create a vault module for AshCloak:
+
+```elixir
+defmodule MyApp.Vault do
+  use Cloak.Vault, otp_app: :my_app
+
+  @impl GenServer
+  def init(config) do
+    config =
+      Keyword.put(config, :ciphers,
+        default: {
+          Cloak.Ciphers.AES.GCM,
+          tag: "AES.GCM.V1",
+          key: decode_env!("CLOAK_KEY"),
+          iv_length: 12
+        }
+      )
+
+    {:ok, config}
+  end
+
+  defp decode_env!(var) do
+    var
+    |> System.get_env()
+    |> Base.decode64!()
+  end
+end
+```
+
+With this configuration:
+- `secret_field` specifies where the encrypted secret is written
+- `read_secret_from` specifies the calculation that returns the decrypted value
+- AshCloak handles encryption/decryption transparently
+
 ### Brute Force Protection
 
 Consider implementing rate limiting on TOTP verification to prevent brute force attacks. The TOTP strategy supports configurable brute force protection:
