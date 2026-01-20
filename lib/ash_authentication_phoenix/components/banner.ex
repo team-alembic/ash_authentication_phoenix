@@ -44,9 +44,21 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
 
+    image_url = override_for(assigns.overrides, :image_url)
+    raw_dark_image_url = override_for(assigns.overrides, :dark_image_url)
+    # When image_url is set to nil, also suppress dark_image_url.
+    # This ensures setting image_url: nil disables both light and dark mode images,
+    # matching user expectations that nil means "no image".
+    dark_image_url = if is_nil(image_url), do: nil, else: raw_dark_image_url
+
+    assigns =
+      assigns
+      |> assign(:image_url, image_url)
+      |> assign(:dark_image_url, dark_image_url)
+
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <%= case {override_for(@overrides, :href_url), override_for(@overrides, :image_url)} do %>
+      <%= case {override_for(@overrides, :href_url), @image_url} do %>
         <% {_, nil} -> %>
         <% {nil, img} -> %>
           <img class={override_for(@overrides, :image_class)} src={img} />
@@ -55,7 +67,7 @@ defmodule AshAuthentication.Phoenix.Components.Banner do
             <img class={override_for(@overrides, :image_class)} src={img} />
           </a>
       <% end %>
-      <%= case {override_for(@overrides, :href_url), override_for(@overrides, :dark_image_url)} do %>
+      <%= case {override_for(@overrides, :href_url), @dark_image_url} do %>
         <% {_, nil} -> %>
         <% {nil, img} -> %>
           <img class={override_for(@overrides, :dark_image_class)} src={img} />
