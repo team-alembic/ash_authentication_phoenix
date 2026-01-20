@@ -33,10 +33,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/get-started.md", title: "Get Started"},
             {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
             {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"},
-            {"documentation/tutorials/password-change.md", title: "Password-Change UI"},
-            {"documentation/tutorials/totp.md", title: "TOTP Authentication"},
-            {"documentation/tutorials/totp-2fa.md", title: "TOTP as Second Factor"},
-            {"documentation/topics/authentication-metadata.md", title: "Authentication Metadata"}
+            {"documentation/tutorials/password-change.md", title: "Password-Change UI"}
           ],
           redirects: %{
             "getting-started-with-ash-authentication-phoenix" => "get-started"
@@ -132,10 +129,11 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc.0"},
+      # TODO: Change back to hex dependency before merging - depends on PR #1070
+      {:ash_authentication,
+       github: "moutikabdessabour/ash_authentication", branch: "feat/accommodate-auto-signout"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
-      {:eqrcode, "~> 0.1", optional: true},
       {:jason, "~> 1.0"},
       {:lazy_html, ">= 0.0.0", only: :test},
       {:phoenix_html, "~> 4.0"},
