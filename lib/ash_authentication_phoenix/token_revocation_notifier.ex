@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.TokenRevocationNotifier do
   @moduledoc """
   An Ash notifier that broadcasts LiveView disconnect messages when tokens are revoked.
