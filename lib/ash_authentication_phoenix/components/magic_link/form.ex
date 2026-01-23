@@ -63,7 +63,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink.Form do
       socket
       |> assign(assigns)
       |> assign(
-        trigger_action: false,
+        trigger_action: not strategy.require_interaction?,
         subject_name: subject_name,
         strategy: strategy
       )

@@ -91,6 +91,14 @@ defmodule AshAuthentication.Phoenix.Test.Router do
       path: "/auth-except",
       except: [:auth0, :slack, :twitch]
 
+    magic_sign_in_route(Example.Accounts.User, :magic_link, auth_routes_prefix: "/auth")
+
+    magic_sign_in_route(Example.Accounts.User, :no_interaction,
+      path: "/magic-no-interaction",
+      auth_routes_prefix: "/auth",
+      as: :magic_no_interaction
+    )
+
     sign_in_route path: "/sign-in-filtered",
                   auth_routes_prefix: "/auth",
                   overrides: [AshAuthentication.Phoenix.Test.FilterInviteOverride],
