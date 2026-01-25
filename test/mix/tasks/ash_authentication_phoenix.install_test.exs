@@ -209,6 +209,21 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     """)
   end
 
+  test "installation configures token resource for live session disconnect", %{igniter: igniter} do
+    igniter
+    |> Igniter.compose_task("ash_authentication_phoenix.install")
+    |> assert_has_patch("lib/test/accounts/token.ex", """
+    + |    simple_notifiers: [AshAuthentication.Phoenix.TokenRevocationNotifier]
+    """)
+    |> assert_has_patch("lib/test/accounts/token.ex", """
+    + |    endpoints [TestWeb.Endpoint]
+    """)
+    |> assert_has_patch(
+      "lib/test/accounts/token.ex",
+      ~s(+ |    live_socket_id_template &"users_sessions:\#{&1["jti"]}")
+    )
+  end
+
   test "installation modifies the router", %{
     igniter: igniter,
     base_override: base_override
