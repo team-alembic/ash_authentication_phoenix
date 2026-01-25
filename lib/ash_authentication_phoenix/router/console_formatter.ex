@@ -5,6 +5,8 @@
 defmodule AshAuthentication.Phoenix.Router.ConsoleFormatter do
   @moduledoc false
 
+  alias AshAuthentication.Phoenix.StrategyRouter
+
   @doc """
   Format the routes for printing.
 
@@ -56,7 +58,7 @@ defmodule AshAuthentication.Phoenix.Router.ConsoleFormatter do
        ) do
     plug_opts[:resources]
     |> List.wrap()
-    |> resource_routes()
+    |> resource_routes(plug_opts)
     |> Enum.map(fn {strategy, path, phase} ->
       verb = verb_name(AshAuthentication.Strategy.method_for_phase(strategy, phase))
       route_name = route_name(router, helper)
@@ -76,11 +78,12 @@ defmodule AshAuthentication.Phoenix.Router.ConsoleFormatter do
 
   defp format_route(_, _, _), do: nil
 
-  defp resource_routes(resources) do
+  defp resource_routes(resources, opts) do
     Stream.flat_map(resources, fn resource ->
       resource
       |> AshAuthentication.Info.authentication_add_ons()
       |> Enum.concat(AshAuthentication.Info.authentication_strategies(resource))
+      |> StrategyRouter.filter_strategies_and_addons(opts)
       |> strategy_routes()
     end)
   end
