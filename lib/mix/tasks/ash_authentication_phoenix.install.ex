@@ -114,6 +114,7 @@ if Code.ensure_loaded?(Igniter) do
         |> create_overrides_module(overrides)
         |> add_auth_routes(overrides, options, router, web_module)
         |> create_live_user_auth(web_module)
+        |> configure_token_resource_notifier(options, web_module)
       else
         igniter
         |> Igniter.add_warning("""
@@ -327,6 +328,31 @@ if Code.ensure_loaded?(Igniter) do
           end
         end
         """
+      )
+    end
+
+    defp configure_token_resource_notifier(igniter, options, web_module) do
+      token_resource = options[:token]
+      endpoint = Module.concat(web_module, Endpoint)
+
+      igniter
+      |> Spark.Igniter.add_extension(
+        token_resource,
+        Ash.Resource,
+        :simple_notifiers,
+        AshAuthentication.Phoenix.TokenRevocationNotifier
+      )
+      |> Spark.Igniter.set_option(
+        token_resource,
+        [:token, :endpoints],
+        [endpoint]
+      )
+      |> Spark.Igniter.set_option(
+        token_resource,
+        [:token, :live_socket_id_template],
+        quote do
+          &"users_sessions:#{&1["jti"]}"
+        end
       )
     end
 
