@@ -190,6 +190,15 @@ defmodule Example.Accounts.User do
           Logger.debug("Invite link request for #{user.email} with token #{inspect(token)}")
         end)
       end
+
+      magic_link :no_interaction do
+        identity_field :email
+        require_interaction? false
+
+        sender(fn user, token, _ ->
+          Logger.debug("No-interaction magic link for #{user.email} with token #{inspect(token)}")
+        end)
+      end
     end
 
     tokens do
