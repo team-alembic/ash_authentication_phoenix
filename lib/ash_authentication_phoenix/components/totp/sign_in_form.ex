@@ -1,10 +1,8 @@
-# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+# SPDX-FileCopyrightText: 2024 Alembic Pty Ltd
 #
 # SPDX-License-Identifier: MIT
 
-defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
-  alias AshAuthentication.Phoenix.Components.Helpers
-
+defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -14,17 +12,17 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     disable_button_text: "Text for the submit button when the request is happening."
 
   @moduledoc """
-  Generates a default sign in form.
+  Generates a sign in form for TOTP authentication.
 
   ## Component hierarchy
 
-  This is a child of `AshAuthentication.Phoenix.Components.Password`.
+  This is a child of `AshAuthentication.Phoenix.Components.Totp`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
-    * `AshAuthentication.Phoenix.Components.Password.Input.password_field/1`
-    * `AshAuthentication.Phoenix.Components.Password.Input.submit/1`
+    * `AshAuthentication.Phoenix.Components.Totp.Input.identity_field/1`
+    * `AshAuthentication.Phoenix.Components.Totp.Input.code_field/1`
+    * `AshAuthentication.Phoenix.Components.Totp.Input.submit/1`
 
   ## Props
 
@@ -40,12 +38,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.Password, Strategy}
+  alias AshAuthentication.{Info, Phoenix.Components.Totp, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
 
   import AshAuthentication.Phoenix.Components.Helpers,
-    only: [auth_path: 5, auth_path: 6, debug_form_errors: 1]
+    only: [auth_path: 5]
 
   import PhoenixHTMLHelpers.Form
   import Slug
@@ -79,25 +77,12 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
-      |> assign_new(:remember_me_field, fn -> Helpers.remember_me_field(assigns.strategy) end)
 
     context =
       Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
         strategy: strategy,
         private: %{ash_authentication?: true}
       })
-
-    context =
-      if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
-        # Skip remember_me token generation in the sign_in action because we'll
-        # pass remember_me as a query param to sign_in_with_token instead.
-        # This avoids creating unused tokens in the database.
-        context
-        |> Map.put(:token_type, :sign_in)
-        |> put_in([:private, :skip_remember_me_token_generation], true)
-      else
-        context
-      end
 
     form =
       strategy.resource
@@ -139,13 +124,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Password.Input.identity_field
+        <Totp.Input.identity_field
           strategy={@strategy}
           form={form}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
-        <Password.Input.password_field
+        <Totp.Input.code_field
           strategy={@strategy}
           form={form}
           overrides={@overrides}
@@ -157,15 +142,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           </div>
         <% end %>
 
-        <Password.Input.remember_me_field
-          :if={@remember_me_field}
-          name={@remember_me_field}
-          form={form}
-          overrides={@overrides}
-          gettext_fn={@gettext_fn}
-        />
-
-        <Password.Input.submit
+        <Totp.Input.submit
           strategy={@strategy}
           id={@form.id <> "-submit"}
           form={form}
@@ -197,52 +174,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
 
   def handle_event("submit", params, socket) do
     params = get_params(params, socket.assigns.strategy)
+    form = Form.validate(socket.assigns.form, params)
 
-    if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
-      case Form.submit(socket.assigns.form,
-             params: params,
-             read_one?: true
-           ) do
-        {:ok, user} ->
-          redirect_path = get_redirect_path(socket, params, user)
-          {:noreply, redirect(socket, to: redirect_path)}
+    socket =
+      socket
+      |> assign(:form, form)
+      |> assign(:trigger_action, form.valid?)
 
-        {:error, form} ->
-          debug_form_errors(form)
-
-          {:noreply,
-           assign(socket, :form, Form.clear_value(form, socket.assigns.strategy.password_field))}
-      end
-    else
-      form = Form.validate(socket.assigns.form, params)
-
-      socket =
-        socket
-        |> assign(:form, form)
-        |> assign(:trigger_action, form.valid?)
-
-      {:noreply, socket}
-    end
-  end
-
-  defp get_redirect_path(socket, params, user) do
-    auth_path_params = get_auth_path_params(params, user)
-
-    auth_path(
-      socket,
-      socket.assigns.subject_name,
-      socket.assigns.auth_routes_prefix,
-      socket.assigns.strategy,
-      :sign_in_with_token,
-      auth_path_params
-    )
-  end
-
-  defp get_auth_path_params(params, user) do
-    case Map.get(params, "remember_me") do
-      nil -> %{token: user.__metadata__.token}
-      remember_me -> %{token: user.__metadata__.token, remember_me: remember_me}
-    end
+    {:noreply, socket}
   end
 
   defp get_params(params, strategy) do
