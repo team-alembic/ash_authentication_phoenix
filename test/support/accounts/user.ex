@@ -24,6 +24,12 @@ defmodule Example.Accounts.User do
   actions do
     defaults([:read, :update])
 
+    read :get_by_email do
+      argument :email, :ci_string, allow_nil?: false
+      get? true
+      filter expr(email == ^arg(:email))
+    end
+
     create :register_with_auth0 do
       argument :user_info, :map, allow_nil?: false
       argument :oauth_tokens, :map, allow_nil?: false
@@ -154,6 +160,9 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
+        authorize_url(&get_config/2)
+        token_url(&get_config/2)
+        user_url(&get_config/2)
       end
 
       github do

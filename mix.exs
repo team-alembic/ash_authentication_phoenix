@@ -132,7 +132,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, github: "team-alembic/ash_authentication", branch: "feat/totp"},
+      {:ash_authentication, "~> 5.0.0-rc.0"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:eqrcode, "~> 0.1", optional: true},
