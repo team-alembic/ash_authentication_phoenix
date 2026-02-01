@@ -545,34 +545,39 @@ if Code.ensure_loaded?(Igniter) do
         igniter
       else
         {type, {false, igniter}} ->
-          if install? do
-            Igniter.add_issue(
-              igniter,
-              "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
-            )
-          else
-            run_installer? =
-              Mix.shell().yes?("""
-              Could not find #{type} module. Please set the equivalent CLI flag.
-
-              There are two likely causes:
-
-              1. You have an existing #{type} module that does not have the default name.
-                  If this is the case, quit this command and use the
-                  --#{type} flag to specify the correct module.
-              2. You have not yet run the `ash_authentication` installer.
-                  To run this, answer Y to this prompt.
-
-              Run the installer now?
-              """)
-
-            if run_installer? do
-              Igniter.compose_task(igniter, "ash_authentication.install", argv)
-            else
-              igniter
-            end
-          end
+          handle_missing_module(igniter, options, argv, install?, type)
       end
+    end
+
+    defp handle_missing_module(igniter, options, _argv, true = _install?, type) do
+      Igniter.add_issue(
+        igniter,
+        "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
+      )
+    end
+
+    defp handle_missing_module(igniter, _options, argv, false = _install?, type) do
+      if prompt_to_run_installer?(type) do
+        Igniter.compose_task(igniter, "ash_authentication.install", argv)
+      else
+        igniter
+      end
+    end
+
+    defp prompt_to_run_installer?(type) do
+      Mix.shell().yes?("""
+      Could not find #{type} module. Please set the equivalent CLI flag.
+
+      There are two likely causes:
+
+      1. You have an existing #{type} module that does not have the default name.
+          If this is the case, quit this command and use the
+          --#{type} flag to specify the correct module.
+      2. You have not yet run the `ash_authentication` installer.
+          To run this, answer Y to this prompt.
+
+      Run the installer now?
+      """)
     end
 
     defp module_option(opts, name) do

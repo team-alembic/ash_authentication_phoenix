@@ -129,9 +129,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # TODO: Change back to hex dependency before merging - depends on PR #1070
-      {:ash_authentication,
-       github: "moutikabdessabour/ash_authentication", branch: "feat/accommodate-auto-signout"},
+      {:ash_authentication, "~> 5.0.0-rc"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},
