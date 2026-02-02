@@ -16,6 +16,7 @@ defmodule DevWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :load_from_session
+    plug :set_actor, :user
   end
 
   pipeline :api do
@@ -46,6 +47,16 @@ defmodule DevWeb.Router do
       path: "/sign-in",
       overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI],
       auth_routes_prefix: "/auth"
+    )
+
+    totp_2fa_route(Example.Accounts.User, :totp,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+
+    totp_setup_route(Example.Accounts.User, :totp,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
     )
 
     auth_routes(AuthController, Example.Accounts.User)
