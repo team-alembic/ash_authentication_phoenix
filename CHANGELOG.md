@@ -11,6 +11,41 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.15.0...v3.0.0-rc.0) (2026-02-02)
+### Breaking Changes:
+
+* add TOTP authentication components and routes (#706) by [@beam-bots](https://github.com/beam-bots)
+
+
+
+### Features:
+
+* After user sign out all other tabs will disconnect (#662) by Abdessabour Moutik
+
+* After user sign out all other tabs will disconnect by Abdessabour Moutik
+
+* final implementation hopefully we can put this to rest by Abdessabour Moutik
+
+* add TOTP authentication components and routes by [@beam-bots](https://github.com/beam-bots)
+
+* Allow filtering auth routes (#696) by Andrés [(#696)](https://github.com/team-alembic/ash_authentication_phoenix/pull/696)
+
+### Bug Fixes:
+
+* address PR review feedback for TOTP support by [@beam-bots](https://github.com/beam-bots)
+
+* add dark mode background to input fields (#713) by [@beam-bots](https://github.com/beam-bots) [(#713)](https://github.com/team-alembic/ash_authentication_phoenix/pull/713)
+
+* setting `image_url` to nil now also suppresses dark mode image (#708) by [@beam-bots](https://github.com/beam-bots) [(#708)](https://github.com/team-alembic/ash_authentication_phoenix/pull/708)
+
+* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by [@beam-bots](https://github.com/beam-bots) [(#710)](https://github.com/team-alembic/ash_authentication_phoenix/pull/710)
+
+* check override for `submit_label` in Confirm.Input component (#709) by [@beam-bots](https://github.com/beam-bots) [(#709)](https://github.com/team-alembic/ash_authentication_phoenix/pull/709)
+
+* remove double translation in MagicLink.Form disable_text (#707) by [@beam-bots](https://github.com/beam-bots) [(#707)](https://github.com/team-alembic/ash_authentication_phoenix/pull/707)
+
+* only show separator when alternative strategies are visible (#705) by [@beam-bots](https://github.com/beam-bots) [(#705)](https://github.com/team-alembic/ash_authentication_phoenix/pull/705)
+
 ## [v2.15.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.1...v2.15.0) (2026-01-13)
 
 
