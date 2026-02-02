@@ -198,7 +198,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     @base_input_class """
     appearance-none block w-full px-3 py-2 border rounded-md
     shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm
-    dark:text-white
+    bg-white dark:bg-gray-800 dark:text-white dark:placeholder-gray-500
     """
 
     set :input_class,
