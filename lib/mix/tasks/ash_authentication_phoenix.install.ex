@@ -114,6 +114,7 @@ if Code.ensure_loaded?(Igniter) do
         |> create_overrides_module(overrides)
         |> add_auth_routes(overrides, options, router, web_module)
         |> create_live_user_auth(web_module)
+        |> configure_token_resource_notifier(options, web_module)
       else
         igniter
         |> Igniter.add_warning("""
@@ -330,6 +331,31 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
+    defp configure_token_resource_notifier(igniter, options, web_module) do
+      token_resource = options[:token]
+      endpoint = Module.concat(web_module, Endpoint)
+
+      igniter
+      |> Spark.Igniter.add_extension(
+        token_resource,
+        Ash.Resource,
+        :simple_notifiers,
+        AshAuthentication.Phoenix.TokenRevocationNotifier
+      )
+      |> Spark.Igniter.set_option(
+        token_resource,
+        [:token, :endpoints],
+        [endpoint]
+      )
+      |> Spark.Igniter.set_option(
+        token_resource,
+        [:token, :live_socket_id_template],
+        quote do
+          &"users_sessions:#{&1["jti"]}"
+        end
+      )
+    end
+
     defp create_auth_controller(igniter, otp_app) do
       Igniter.Project.Module.create_module(
         igniter,
@@ -338,7 +364,7 @@ if Code.ensure_loaded?(Igniter) do
         use #{inspect(Igniter.Libs.Phoenix.web_module(igniter))}, :controller
         use AshAuthentication.Phoenix.Controller
 
-        def success(conn, activity, user, _token) do
+        def success(conn, activity, user, token) do
           return_to = get_session(conn, :return_to) || ~p"/"
 
           message =
@@ -351,6 +377,7 @@ if Code.ensure_loaded?(Igniter) do
           conn
           |> delete_session(:return_to)
           |> store_in_session(user)
+          |> set_live_socket_id(token)
           # If your resource has a different name, update the assign name here (i.e :current_admin)
           |> assign(:current_user, user)
           |> put_flash(:info, message)
@@ -518,34 +545,39 @@ if Code.ensure_loaded?(Igniter) do
         igniter
       else
         {type, {false, igniter}} ->
-          if install? do
-            Igniter.add_issue(
-              igniter,
-              "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
-            )
-          else
-            run_installer? =
-              Mix.shell().yes?("""
-              Could not find #{type} module. Please set the equivalent CLI flag.
-
-              There are two likely causes:
-
-              1. You have an existing #{type} module that does not have the default name.
-                  If this is the case, quit this command and use the
-                  --#{type} flag to specify the correct module.
-              2. You have not yet run the `ash_authentication` installer.
-                  To run this, answer Y to this prompt.
-
-              Run the installer now?
-              """)
-
-            if run_installer? do
-              Igniter.compose_task(igniter, "ash_authentication.install", argv)
-            else
-              igniter
-            end
-          end
+          handle_missing_module(igniter, options, argv, install?, type)
       end
+    end
+
+    defp handle_missing_module(igniter, options, _argv, true = _install?, type) do
+      Igniter.add_issue(
+        igniter,
+        "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
+      )
+    end
+
+    defp handle_missing_module(igniter, _options, argv, false = _install?, type) do
+      if prompt_to_run_installer?(type) do
+        Igniter.compose_task(igniter, "ash_authentication.install", argv)
+      else
+        igniter
+      end
+    end
+
+    defp prompt_to_run_installer?(type) do
+      Mix.shell().yes?("""
+      Could not find #{type} module. Please set the equivalent CLI flag.
+
+      There are two likely causes:
+
+      1. You have an existing #{type} module that does not have the default name.
+          If this is the case, quit this command and use the
+          --#{type} flag to specify the correct module.
+      2. You have not yet run the `ash_authentication` installer.
+          To run this, answer Y to this prompt.
+
+      Run the installer now?
+      """)
     end
 
     defp module_option(opts, name) do

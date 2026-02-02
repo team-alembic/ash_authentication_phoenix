@@ -115,3 +115,47 @@ You can also use this to prevent users from visiting the auto generated `sign_in
 ```elixir
 sign_in_route(on_mount: [{MyAppWeb.LiveUserAuth, :live_no_user}])
 ```
+
+## Automatic Session Disconnection on Sign Out
+
+When configured, AshAuthentication.Phoenix can automatically disconnect all LiveView
+sessions when a user signs out. This ensures that tabs left open won't continue to
+function after the user has signed out elsewhere.
+
+### How It Works
+
+1. On sign-in, `set_live_socket_id/2` stores a session identifier based on the token's JTI
+2. When the user signs out, the token is revoked
+3. The `TokenRevocationNotifier` broadcasts a "disconnect" message to all configured endpoints
+4. Phoenix disconnects any LiveView sockets with that session ID
+
+### Configuration
+
+This feature is automatically configured when you run the installer. If you're upgrading
+an existing installation, you'll need to:
+
+1. Update your auth controller to call `set_live_socket_id/2`:
+
+```elixir
+def success(conn, _activity, user, token) do
+  conn
+  |> store_in_session(user)
+  |> set_live_socket_id(token)  # Add this line
+  |> redirect(to: ~p"/")
+end
+```
+
+2. Configure your Token resource:
+
+```elixir
+defmodule MyApp.Accounts.Token do
+  use Ash.Resource,
+    extensions: [AshAuthentication.TokenResource],
+    simple_notifiers: [AshAuthentication.Phoenix.TokenRevocationNotifier]
+
+  token do
+    endpoints [MyAppWeb.Endpoint]
+    live_socket_id_template &("users_sessions:#{&1["jti"]}")
+  end
+end
+```

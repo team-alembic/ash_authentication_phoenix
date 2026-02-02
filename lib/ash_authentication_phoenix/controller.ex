@@ -19,10 +19,11 @@ defmodule AshAuthentication.Phoenix.Controller do
     use MyAppWeb, :controller
     use AshAuthentication.Phoenix.Controller
 
-    def success(conn, _activity, user, _token) do
+    def success(conn, _activity, user, token) do
       conn
       |> store_in_session(user)
       |> assign(:current_user, user)
+      |> set_live_socket_id(token)
       |> redirect(to: Routes.page_path(conn, :index))
     end
 
@@ -97,9 +98,11 @@ defmodule AshAuthentication.Phoenix.Controller do
 
   """
 
+  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Dispatcher
   alias AshAuthentication.Plug.Helpers
   alias AshAuthentication.Strategy.RememberMe
+  alias AshAuthentication.TokenResource.Info
   alias Plug.Conn
 
   @type t :: module
@@ -276,5 +279,25 @@ defmodule AshAuthentication.Phoenix.Controller do
     |> Helpers.revoke_bearer_tokens(otp_app)
     |> Helpers.revoke_session_tokens(otp_app)
     |> Plug.Conn.clear_session()
+  end
+
+  @doc """
+  Set the live socket id so we can send disconnects from the server when the token is revoked.
+
+  This ensures that the user can't use the application with revoked tokens.
+  """
+  def set_live_socket_id(conn, token) do
+    with {:ok, claims} <- Jwt.peek(token),
+         otp_app <- conn.private.phoenix_endpoint.config(:otp_app),
+         {:ok, resource} <- Jwt.token_to_resource(token, otp_app),
+         {:ok, token_resource} <-
+           AshAuthentication.Info.authentication_tokens_token_resource(resource),
+         {:ok, template_fn} <-
+           Info.token_live_socket_id_template(token_resource) do
+      conn
+      |> Plug.Conn.put_session(:live_socket_id, template_fn.(claims))
+    else
+      _ -> conn
+    end
   end
 end

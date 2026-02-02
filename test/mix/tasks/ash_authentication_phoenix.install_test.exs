@@ -108,7 +108,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
       use TestWeb, :controller
       use AshAuthentication.Phoenix.Controller
 
-      def success(conn, activity, user, _token) do
+      def success(conn, activity, user, token) do
         return_to = get_session(conn, :return_to) || ~p"/"
 
         message =
@@ -121,6 +121,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
         conn
         |> delete_session(:return_to)
         |> store_in_session(user)
+        |> set_live_socket_id(token)
         # If your resource has a different name, update the assign name here (i.e :current_admin)
         |> assign(:current_user, user)
         |> put_flash(:info, message)
@@ -206,6 +207,21 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
       end
     end
     """)
+  end
+
+  test "installation configures token resource for live session disconnect", %{igniter: igniter} do
+    igniter
+    |> Igniter.compose_task("ash_authentication_phoenix.install")
+    |> assert_has_patch("lib/test/accounts/token.ex", """
+    + |    simple_notifiers: [AshAuthentication.Phoenix.TokenRevocationNotifier]
+    """)
+    |> assert_has_patch("lib/test/accounts/token.ex", """
+    + |    endpoints [TestWeb.Endpoint]
+    """)
+    |> assert_has_patch(
+      "lib/test/accounts/token.ex",
+      ~s(+ |    live_socket_id_template &"users_sessions:\#{&1["jti"]}")
+    )
   end
 
   test "installation modifies the router", %{
