@@ -16,7 +16,9 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     ConfirmLive,
     MagicSignInLive,
     ResetLive,
-    SignInLive
+    SignInLive,
+    TotpSetupLive,
+    TotpVerifyLive
   }
 
   override SignInLive do
@@ -259,5 +261,132 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     """
 
     set :icon_class, ""
+  end
+
+  override Components.Totp do
+    set :root_class, "mt-4 mb-4"
+    set :hide_class, "hidden"
+    set :show_first, :sign_in
+    set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
+
+    # Setup toggle disabled by default - TOTP setup should be on a dedicated page for authenticated users
+    set :sign_in_toggle_text, nil
+    set :setup_toggle_text, nil
+    set :toggler_class, "flex-none text-blue-500 hover:text-blue-600 px-2 first:pl-0 last:pr-0"
+    set :sign_in_form_module, AshAuthentication.Phoenix.Components.Totp.SignInForm
+    set :setup_form_module, AshAuthentication.Phoenix.Components.Totp.SetupForm
+    set :slot_class, "my-4"
+  end
+
+  override Components.Totp.SignInForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :form_class, nil
+    set :slot_class, "my-4"
+    set :button_text, "Sign in"
+    set :disable_button_text, "Signing in ..."
+  end
+
+  override Components.Totp.SetupForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :instructions_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+
+    set :instructions_text,
+        "Scan this QR code with your authenticator app, then enter the code below."
+
+    set :qr_code_class, "flex justify-center mb-4"
+    set :qr_code_wrapper_class, "text-center"
+    set :form_class, nil
+    set :slot_class, "my-4"
+    set :button_text, "Confirm setup"
+    set :disable_button_text, "Confirming ..."
+    set :setup_button_text, "Set up authenticator"
+
+    set :setup_button_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    """
+
+    set :error_class, "text-red-500 text-sm mb-4"
+  end
+
+  override Components.Totp.Input do
+    set :field_class, "mt-2 mb-2 dark:text-white"
+    set :label_class, "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
+
+    @totp_base_input_class """
+    appearance-none block w-full px-3 py-2 border rounded-md
+    shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm
+    dark:text-white
+    """
+
+    set :input_class,
+        @totp_base_input_class <>
+          """
+          border-gray-300 focus:ring-blue-400 focus:border-blue-500
+          """
+
+    set :input_class_with_error,
+        @totp_base_input_class <>
+          """
+          border-red-400 focus:border-red-400 focus:ring-red-300
+          """
+
+    set :valid_code_class,
+        @totp_base_input_class <>
+          """
+          border-green-400 focus:border-green-400 focus:ring-green-300
+          """
+
+    set :invalid_code_class,
+        @totp_base_input_class <>
+          """
+          border-red-400 focus:border-red-400 focus:ring-red-300
+          """
+
+    set :submit_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    mt-4 mb-4
+    """
+
+    set :identity_input_label, "Email"
+    set :identity_input_placeholder, nil
+    set :code_input_label, "Authentication Code"
+    set :code_input_placeholder, "000000"
+    set :error_ul, "text-red-400 font-light my-3 italic text-sm"
+    set :error_li, nil
+    set :input_debounce, 350
+  end
+
+  override TotpVerifyLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override TotpSetupLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+    set :error_class, "text-red-500 text-center"
+  end
+
+  override Components.Totp.Verify2faForm do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Two-Factor Authentication"
+    set :instructions_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :instructions_text, "Enter the 6-digit code from your authenticator app."
+    set :form_class, nil
+    set :slot_class, "my-4"
+    set :button_text, "Verify"
+    set :disable_button_text, "Verifying ..."
+    set :error_class, "text-red-500 text-sm mb-4"
+    set :sign_in_link_class, "text-blue-500 hover:text-blue-600"
+    set :sign_in_link_text, "Sign in"
   end
 end

@@ -22,7 +22,13 @@ defmodule Example.Accounts.User do
         }
 
   actions do
-    defaults([:read])
+    defaults([:read, :update])
+
+    read :get_by_email do
+      argument :email, :ci_string, allow_nil?: false
+      get? true
+      filter expr(email == ^arg(:email))
+    end
 
     create :register_with_auth0 do
       argument :user_info, :map, allow_nil?: false
@@ -110,6 +116,8 @@ defmodule Example.Accounts.User do
 
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :hashed_password, :string, allow_nil?: true, sensitive?: true
+    attribute :totp_secret, :binary, allow_nil?: true, sensitive?: true
+    attribute :last_totp_at, :datetime, allow_nil?: true, sensitive?: true
 
     create_timestamp :created_at
     update_timestamp :updated_at
@@ -152,6 +160,9 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
+        authorize_url(&get_config/2)
+        token_url(&get_config/2)
+        user_url(&get_config/2)
       end
 
       github do
@@ -198,6 +209,14 @@ defmodule Example.Accounts.User do
         sender(fn user, token, _ ->
           Logger.debug("No-interaction magic link for #{user.email} with token #{inspect(token)}")
         end)
+      end
+
+      totp do
+        identity_field :email
+        issuer "TestApp"
+        sign_in_enabled? true
+        confirm_setup_enabled? true
+        brute_force_strategy {:preparation, Example.TotpNoopPreparation}
       end
     end
 

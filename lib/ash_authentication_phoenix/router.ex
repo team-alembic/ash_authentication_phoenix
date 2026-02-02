@@ -547,6 +547,268 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
+  Generates a TOTP verification page for two-factor authentication using LiveView.
+
+  This page is used after primary authentication (e.g., password sign-in) when
+  the user has TOTP enabled. It displays a form for entering the TOTP code.
+
+  Available options are:
+
+  * `path` the path under which to mount the live-view. Defaults to
+    `/totp-verify`.
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.TotpVerifyLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation. See
+    `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+
+  All other options are passed to the generated `scope`.
+
+  ## Example
+
+      scope "/", MyAppWeb do
+        pipe_through :browser
+        totp_2fa_route MyApp.Accounts.User, :totp, auth_routes_prefix: "/auth"
+      end
+  """
+  @spec totp_2fa_route(
+          resource :: Ash.Resource.t(),
+          strategy :: atom(),
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
+            | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro totp_2fa_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/totp-verify")
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.TotpVerifyLive)
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts =
+      opts
+      |> Keyword.put_new(:alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        strategy = AshAuthentication.Info.strategy!(unquote(resource), unquote(strategy))
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "otp_app" => unquote(otp_app),
+                 "strategy" => strategy,
+                 "resource" => unquote(resource)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_totp_verify", live_session_opts do
+          # Token-based flow (password → TOTP): /totp-verify/:token
+          live("/:token", unquote(live_view), :totp_verify, as: unquote(as))
+          # Step-up authentication flow: /totp-verify (for authenticated users)
+          live("/", unquote(live_view), :totp_verify, as: :"#{unquote(as)}_step_up")
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
+  @doc """
+  Generates a TOTP setup page for configuring two-factor authentication using LiveView.
+
+  This page is used by authenticated users to set up TOTP on their account.
+  It displays a QR code that can be scanned with an authenticator app, and a
+  code input field to confirm the setup.
+
+  **Important**: This route should be protected by authentication middleware to ensure
+  only authenticated users can access it.
+
+  Available options are:
+
+  * `path` the path under which to mount the live-view. Defaults to `/totp-setup`.
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.TotpSetupLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation. See
+    `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain. This is basically a convenience wrapper around `gettext_fn`.
+
+  All other options are passed to the generated `scope`.
+
+  ## Example
+
+      scope "/", MyAppWeb do
+        pipe_through [:browser, :require_authenticated_user]
+        totp_setup_route MyApp.Accounts.User, :totp, auth_routes_prefix: "/auth"
+      end
+  """
+  @spec totp_setup_route(
+          resource :: Ash.Resource.t(),
+          strategy :: atom(),
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
+            | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro totp_setup_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/totp-setup")
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.TotpSetupLive)
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts =
+      opts
+      |> Keyword.put_new(:alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        strategy = AshAuthentication.Info.strategy!(unquote(resource), unquote(strategy))
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "otp_app" => unquote(otp_app),
+                 "strategy" => strategy,
+                 "resource" => unquote(resource)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_totp_setup", live_session_opts do
+          live("/", unquote(live_view), :totp_setup, as: unquote(as))
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
+  @doc """
   Generates a generic, white-label confirmation page using LiveView and the components in
   `AshAuthentication.Phoenix.Components`.
 

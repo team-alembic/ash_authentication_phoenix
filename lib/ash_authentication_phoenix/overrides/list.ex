@@ -41,6 +41,15 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.Apple,
       AshAuthentication.Phoenix.Components.OAuth2
     ],
+    TOTP: [
+      AshAuthentication.Phoenix.Components.Totp,
+      AshAuthentication.Phoenix.Components.Totp.SignInForm,
+      AshAuthentication.Phoenix.Components.Totp.SetupForm,
+      AshAuthentication.Phoenix.Components.Totp.Input,
+      AshAuthentication.Phoenix.TotpSetupLive,
+      AshAuthentication.Phoenix.TotpVerifyLive,
+      AshAuthentication.Phoenix.Components.Totp.Verify2faForm
+    ],
     Miscellaneous: [
       AshAuthentication.Phoenix.Components.HorizontalRule,
       AshAuthentication.Phoenix.Components.Banner,
