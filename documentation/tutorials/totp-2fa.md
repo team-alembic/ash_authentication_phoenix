@@ -60,8 +60,86 @@ defmodule MyApp.Accounts.User do
     attribute :email, :ci_string, allow_nil?: false
     attribute :hashed_password, :string, allow_nil?: true, sensitive?: true
     attribute :totp_secret, :binary, allow_nil?: true, sensitive?: true
-    attribute :last_totp_at, :datetime, allow_nil?: true, sensitive?: true
+    attribute :last_totp_at, :utc_datetime, allow_nil?: true, sensitive?: true
   end
+end
+```
+
+## Built-in TOTP Routes
+
+AshAuthentication.Phoenix provides two router macros for TOTP functionality that handle common use cases:
+
+### totp_2fa_route
+
+Generates a TOTP verification page for two-factor authentication. Use this after primary authentication (e.g., password sign-in) when the user has TOTP enabled.
+
+```elixir
+defmodule MyAppWeb.Router do
+  use MyAppWeb, :router
+  use AshAuthentication.Phoenix.Router
+
+  scope "/auth", MyAppWeb do
+    pipe_through :browser
+
+    # Standard auth routes
+    auth_routes AuthController, MyApp.Accounts.User, path: "/"
+
+    # TOTP verification route - defaults to /totp-verify
+    totp_2fa_route MyApp.Accounts.User, :totp
+  end
+end
+```
+
+Options:
+- `path` - The path to mount at (default: `/totp-verify`)
+- `live_view` - Custom LiveView module (default: `AshAuthentication.Phoenix.TotpVerifyLive`)
+- `auth_routes_prefix` - Prefix for auth routes (e.g., `"/auth"`)
+- `overrides` - Override modules for customisation
+
+### totp_setup_route
+
+Generates a TOTP setup page for users to configure two-factor authentication on their account. This should be protected by authentication middleware.
+
+```elixir
+defmodule MyAppWeb.Router do
+  use MyAppWeb, :router
+  use AshAuthentication.Phoenix.Router
+
+  scope "/auth", MyAppWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    # TOTP setup route - defaults to /totp-setup
+    totp_setup_route MyApp.Accounts.User, :totp
+  end
+end
+```
+
+Options:
+- `path` - The path to mount at (default: `/totp-setup`)
+- `live_view` - Custom LiveView module (default: `AshAuthentication.Phoenix.TotpSetupLive`)
+- `auth_routes_prefix` - Prefix for auth routes
+- `overrides` - Override modules for customisation
+
+### Route Ordering
+
+When using `auth_routes` alongside custom TOTP routes, route ordering matters. The `auth_routes` macro generates catch-all routes that may intercept requests intended for other routes. Define specific routes **before** `auth_routes`, or place them in a separate scope:
+
+```elixir
+scope "/auth", MyAppWeb do
+  pipe_through :browser
+
+  # Define specific routes FIRST
+  totp_2fa_route MyApp.Accounts.User, :totp, path: "/totp/verify"
+
+  # Then auth_routes (which has catch-all patterns)
+  auth_routes AuthController, MyApp.Accounts.User, path: "/"
+end
+
+# Or use a separate scope for TOTP setup (requires authentication)
+scope "/auth", MyAppWeb do
+  pipe_through [:browser, :require_authenticated_user]
+
+  totp_setup_route MyApp.Accounts.User, :totp, path: "/totp/setup"
 end
 ```
 
@@ -160,7 +238,7 @@ defmodule MyAppWeb.AuthController do
   alias AshAuthentication.Phoenix.TotpHelpers
 
   def success(conn, {:password, _strategy}, user, _token) do
-    if TotpHelpers.totp_configured?(user, user.__struct__) do
+    if TotpHelpers.totp_configured?(user) do
       conn
       |> put_session(:awaiting_totp_verification, true)
       |> put_session(:totp_user_id, user.id)
@@ -347,7 +425,7 @@ Use the `TotpHelpers` module to check TOTP status:
 alias AshAuthentication.Phoenix.TotpHelpers
 
 # Check if user has TOTP configured
-TotpHelpers.totp_configured?(user, MyApp.Accounts.User)
+TotpHelpers.totp_configured?(user)
 #=> true
 
 # Check if resource supports TOTP
@@ -415,7 +493,7 @@ defmodule MyAppWeb.SettingsController do
 
   def index(conn, _params) do
     user = conn.assigns.current_user
-    totp_configured = TotpHelpers.totp_configured?(user, MyApp.Accounts.User)
+    totp_configured = TotpHelpers.totp_configured?(user)
 
     render(conn, :index, totp_configured: totp_configured)
   end
@@ -433,7 +511,7 @@ defmodule MyAppWeb.SettingsLive do
 
   def mount(_params, _session, socket) do
     user = socket.assigns.current_user
-    totp_configured = TotpHelpers.totp_configured?(user, MyApp.Accounts.User)
+    totp_configured = TotpHelpers.totp_configured?(user)
 
     {:ok, assign(socket, totp_configured: totp_configured)}
   end
@@ -474,7 +552,7 @@ defmodule MyAppWeb.Require2FA do
       is_nil(user) ->
         {:halt, redirect(socket, to: "/sign-in")}
 
-      not TotpHelpers.totp_configured?(user, MyApp.Accounts.User) ->
+      not TotpHelpers.totp_configured?(user) ->
         socket =
           socket
           |> put_flash(:error, "Please set up two-factor authentication to continue")
@@ -488,7 +566,7 @@ defmodule MyAppWeb.Require2FA do
 
   def on_mount(:optional_2fa, _params, _session, socket) do
     user = socket.assigns[:current_user]
-    configured = user && TotpHelpers.totp_configured?(user, MyApp.Accounts.User)
+    configured = user && TotpHelpers.totp_configured?(user)
     {:cont, assign(socket, :totp_configured, configured || false)}
   end
 end
@@ -527,7 +605,7 @@ defmodule MyAppWeb.Require2FAWithGrace do
       is_nil(user) ->
         {:halt, redirect(socket, to: "/sign-in")}
 
-      TotpHelpers.totp_configured?(user, MyApp.Accounts.User) ->
+      TotpHelpers.totp_configured?(user) ->
         {:cont, assign(socket, :totp_configured, true)}
 
       within_grace_period?(user) ->
