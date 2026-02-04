@@ -52,7 +52,8 @@ defmodule AshAuthentication.Phoenix.TotpHelpers do
   @doc """
   Returns true if the user has TOTP configured.
 
-  This checks if the TOTP secret field on the user resource has a value.
+  This checks if the TOTP secret (via `read_secret_from`) on the user has a value.
+  This supports both direct attribute access and calculations (e.g., for AshCloak).
 
   ## Options
 
@@ -71,7 +72,7 @@ defmodule AshAuthentication.Phoenix.TotpHelpers do
   def totp_configured?(user, opts \\ []) when is_struct(user) do
     case get_totp_strategy(user.__struct__, opts) do
       {:ok, strategy} ->
-        secret = Map.get(user, strategy.secret_field)
+        secret = Map.get(user, strategy.read_secret_from)
         is_binary(secret) and byte_size(secret) > 0
 
       _ ->
