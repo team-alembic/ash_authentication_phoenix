@@ -56,8 +56,8 @@ defmodule AshAuthentication.Phoenix.Components.Confirm.Input do
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:submit_label, fn ->
         fn strategy ->
-          "confirm your #{Enum.at(strategy.monitor_fields, 0)}"
-          |> humanize()
+          override_for(assigns.overrides, :submit_label) ||
+            humanize("confirm your #{Enum.at(strategy.monitor_fields, 0)}")
         end
       end)
       |> assign_new(:disable_text, fn -> nil end)
