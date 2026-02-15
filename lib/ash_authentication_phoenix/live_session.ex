@@ -226,33 +226,29 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       Enum.reduce(additional_hooks, %{}, fn {m, f, a}, acc ->
         Map.merge(acc, apply(m, f, [conn | a]) || %{})
       end)
+      |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
+      |> Map.put("context", Ash.PlugHelpers.get_context(conn))
 
     otp_app
     |> AshAuthentication.authenticated_resources()
     |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
     |> Enum.reduce(acc, fn {subject_name, resource}, session ->
-      session =
-        session
-        |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
-        |> Map.put("context", Ash.PlugHelpers.get_context(conn))
-
-      case Map.fetch(
-             conn.assigns,
-             String.to_existing_atom("current_#{subject_name}")
-           ) do
-        {:ok, user} when is_struct(user, resource) ->
-          if Info.authentication_tokens_require_token_presence_for_authentication?(resource) do
-            token = Plug.Conn.get_session(conn, "#{subject_name}_token")
-            Map.put(session, "#{subject_name}_token", token)
-          else
-            subject = Plug.Conn.get_session(conn, to_string(subject_name))
-            Map.put(session, subject_name, subject)
-          end
-
-        _ ->
-          session
-      end
+      put_subject_session(session, conn, subject_name, resource)
     end)
+  end
+
+  defp put_subject_session(session, conn, subject_name, resource) do
+    with {:ok, user} when is_struct(user, resource) <- Map.fetch(conn.assigns, String.to_existing_atom("current_#{subject_name}")) do
+      if Info.authentication_tokens_require_token_presence_for_authentication?(resource) do
+        token = Plug.Conn.get_session(conn, "#{subject_name}_token")
+        Map.put(session, "#{subject_name}_token", token)
+      else
+        subject = Plug.Conn.get_session(conn, to_string(subject_name))
+        Map.put(session, subject_name, subject)
+      end
+    else
+      _ -> session
+    end
   end
 
   defp assign_user(socket, current_subject_name, subject, resource, opts) do
