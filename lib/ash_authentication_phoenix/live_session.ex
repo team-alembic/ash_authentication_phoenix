@@ -226,27 +226,34 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       Enum.reduce(additional_hooks, %{}, fn {m, f, a}, acc ->
         Map.merge(acc, apply(m, f, [conn | a]) || %{})
       end)
+      |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
+      |> Map.put("context", Ash.PlugHelpers.get_context(conn))
 
     otp_app
     |> AshAuthentication.authenticated_resources()
     |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
     |> Enum.reduce(acc, fn {subject_name, resource}, session ->
-      case Map.fetch(
-             conn.assigns,
-             String.to_existing_atom("current_#{subject_name}")
-           ) do
-        {:ok, user} when is_struct(user, resource) ->
-          session
-          |> Map.put(subject_name, AshAuthentication.user_to_subject(user))
-          |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
-          |> Map.put("context", Ash.PlugHelpers.get_context(conn))
-
-        _ ->
-          session
-          |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
-          |> Map.put("context", Ash.PlugHelpers.get_context(conn))
-      end
+      put_subject_session(session, conn, subject_name, resource)
     end)
+  end
+
+  defp put_subject_session(session, conn, subject_name, resource) do
+    case Map.fetch(conn.assigns, String.to_existing_atom("current_#{subject_name}")) do
+      {:ok, user} when is_struct(user, resource) ->
+        key =
+          case Info.authentication_tokens_require_token_presence_for_authentication?(resource) do
+            true -> "#{subject_name}_token"
+            false -> to_string(subject_name)
+          end
+
+        case Plug.Conn.get_session(conn, key) do
+          nil -> session
+          token_or_subject -> Map.put(session, key, token_or_subject)
+        end
+
+      _ ->
+        session
+    end
   end
 
   defp assign_user(socket, current_subject_name, subject, resource, opts) do
