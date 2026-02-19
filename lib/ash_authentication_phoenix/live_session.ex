@@ -238,20 +238,21 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   end
 
   defp put_subject_session(session, conn, subject_name, resource) do
-    with {:ok, user} when is_struct(user, resource) <-
-           Map.fetch(conn.assigns, String.to_existing_atom("current_#{subject_name}")) do
-      key =
-        case Info.authentication_tokens_require_token_presence_for_authentication?(resource) do
-          true -> "#{subject_name}_token"
-          false -> to_string(subject_name)
+    case Map.fetch(conn.assigns, String.to_existing_atom("current_#{subject_name}")) do
+      {:ok, user} when is_struct(user, resource) ->
+        key =
+          case Info.authentication_tokens_require_token_presence_for_authentication?(resource) do
+            true -> "#{subject_name}_token"
+            false -> to_string(subject_name)
+          end
+
+        case Plug.Conn.get_session(conn, key) do
+          nil -> session
+          token_or_subject -> Map.put(session, key, token_or_subject)
         end
 
-      case Plug.Conn.get_session(conn, key) do
-        nil -> session
-        token_or_subject -> session |> Map.put(key, token_or_subject)
-      end
-    else
-      _ -> session
+      _ ->
+        session
     end
   end
 
