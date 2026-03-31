@@ -57,6 +57,39 @@ defmodule AshAuthentication.Phoenix.Test.HomeLive do
   end
 end
 
+defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
+  @moduledoc false
+  use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
+  alias AshAuthentication.Phoenix.Components
+
+  @impl true
+  def mount(_params, session, socket) do
+    socket =
+      socket
+      |> assign(:auth_routes_prefix, session["auth_routes_prefix"] || "/auth")
+
+    {:ok, socket}
+  end
+
+  @impl true
+  def render(assigns) do
+    # Render the top-level WebAuthn component with a mock strategy
+    # Note: This requires the Strategy.WebAuthn struct to be available
+    ~H"""
+    <.live_component
+      module={Components.WebAuthn}
+      id="webauthn-test"
+      strategy={webauthn_strategy()}
+      auth_routes_prefix={@auth_routes_prefix}
+    />
+    """
+  end
+
+  defp webauthn_strategy do
+    AshAuthentication.Phoenix.Test.WebAuthnHelpers.mock_webauthn_strategy()
+  end
+end
+
 defmodule AshAuthentication.Phoenix.Test.Router do
   @moduledoc false
   alias AshAuthentication.Phoenix.Test.ComponentsLive
@@ -109,6 +142,12 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   auth_routes_prefix: "/auth",
                   live_view: ComponentsLive,
                   as: :custom_lv
+
+    # WebAuthn component testing
+    sign_in_route path: "/webauthn_test",
+                  auth_routes_prefix: "/auth",
+                  live_view: AshAuthentication.Phoenix.Test.WebAuthnComponentsLive,
+                  as: :webauthn_test
 
     # Gettext routes
     sign_in_route path: "/anmeldung",

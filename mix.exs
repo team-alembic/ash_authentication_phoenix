@@ -107,7 +107,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
           "https://api.reuse.software/info/github.com/team-alembic/ash_authentication_phoenix"
       },
       source_url: "https://github.com/team-alembic/ash_authentication_phoenix",
-      files: ~w[lib .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation i18n]
+      files: ~w[lib priv .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation i18n]
     ]
   end
 
@@ -129,7 +129,10 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc"},
+      # TODO: Revert to hex dependency once team-alembic/ash_authentication#1144 is merged
+      # and a new rc is published. The WebAuthn strategy struct is not yet in the published package.
+      {:ash_authentication, path: "../ash_authentication", override: true},
+      {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},

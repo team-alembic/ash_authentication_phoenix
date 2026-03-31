@@ -50,6 +50,14 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.TotpVerifyLive,
       AshAuthentication.Phoenix.Components.Totp.Verify2faForm
     ],
+    WebAuthn: [
+      AshAuthentication.Phoenix.Components.WebAuthn,
+      AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm,
+      AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm,
+      AshAuthentication.Phoenix.Components.WebAuthn.Input,
+      AshAuthentication.Phoenix.Components.WebAuthn.Support,
+      AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials
+    ],
     Miscellaneous: [
       AshAuthentication.Phoenix.Components.HorizontalRule,
       AshAuthentication.Phoenix.Components.Banner,
