@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     identity_input_label: "Label for the identity (email) input field.",

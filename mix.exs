@@ -129,6 +129,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      # TODO: Revert to hex dependency once team-alembic/ash_authentication#1144 is merged
+      # and a new rc is published. The WebAuthn strategy struct is not yet in the published package.
       {:ash_authentication, path: "../ash_authentication", override: true},
       {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},

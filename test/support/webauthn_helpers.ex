@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.Test.WebAuthnHelpers do
   @moduledoc """
   Test helpers for WebAuthn component tests.
