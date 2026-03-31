@@ -27,6 +27,12 @@ if Code.ensure_loaded?(Igniter) do
     * `--token` or `-t` - The resource that represents a token. Defaults to `<accounts>.Token`.
     """
 
+    @phoenix_strategy_tasks %{
+      "password" => "ash_authentication_phoenix.add_strategy.password",
+      "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
+      "totp" => "ash_authentication_phoenix.add_strategy.totp"
+    }
+
     def info(_argv, _composing_task) do
       %Igniter.Mix.Task.Info{
         example: @example,
@@ -36,15 +42,22 @@ if Code.ensure_loaded?(Igniter) do
           user: :string,
           token: :string,
           yes: :boolean,
-          auth_strategy: :string
+          auth_strategy: :csv,
+          mode: :string,
+          name: :string
         ],
-        composes: ["ash_authentication.install"],
+        composes:
+          ["ash_authentication.install"] ++
+            Map.values(@phoenix_strategy_tasks) ++
+            ["ash_authentication_phoenix.add_add_on.confirmation"],
         aliases: [
           s: :auth_strategy,
           a: :accounts,
           u: :user,
           t: :token,
-          y: :yes
+          y: :yes,
+          m: :mode,
+          n: :name
         ]
       }
     end
@@ -88,7 +101,6 @@ if Code.ensure_loaded?(Igniter) do
                 yes_to_deps: true
               )
           end)
-          |> Igniter.compose_task("ash_authentication.install", argv)
         else
           igniter
         end
@@ -110,15 +122,25 @@ if Code.ensure_loaded?(Igniter) do
         |> setup_routes_alias()
         |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
+        # Create Phoenix scaffolding before composing AA, so strategy tasks
+        # can see the controller (e.g. TOTP modifies AuthController)
         |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
-        |> add_auth_routes(overrides, options, router, web_module)
         |> create_live_user_auth(web_module)
+        # Compose AA install if it hasn't already been run (i.e. fresh install).
+        # When AA was already installed, its install task ran in a prior pass
+        # and its output is already on disk.
+        |> maybe_compose_aa_install(install?, argv)
+        # Apply Phoenix-specific strategy integration (sender upgrades, controller mods)
+        |> compose_phoenix_strategy_tasks(options)
+        |> add_auth_routes(overrides, options, router, web_module)
         |> configure_token_resource_notifier(options, web_module)
       else
+        # No router — still run AA install for resource generation if it hasn't already run
         igniter
+        |> maybe_compose_aa_install(install?, argv)
         |> Igniter.add_warning("""
-        AshAuthenticationPhoenix installer could not find a Phoenix router. Skipping installation.
+        AshAuthenticationPhoenix installer could not find a Phoenix router. Skipping Phoenix setup.
 
         Set up a phoenix router and reinvoke the installer with `mix igniter.install ash_authentication_phoenix`.
         """)
@@ -160,7 +182,9 @@ if Code.ensure_loaded?(Igniter) do
 
         igniter
         |> use_authentication_phoenix_router(router)
-        |> Igniter.Libs.Phoenix.append_to_pipeline(:browser, "plug :load_from_session",
+        |> Igniter.Libs.Phoenix.append_to_pipeline(
+          :browser,
+          "plug :load_from_session\nplug :set_actor, :user",
           router: router
         )
         |> Igniter.Libs.Phoenix.append_to_pipeline(
@@ -432,8 +456,6 @@ if Code.ensure_loaded?(Igniter) do
             {:ok,
              Igniter.Code.Common.add_code(zipper, """
              use AshAuthentication.Phoenix.Router
-
-             import AshAuthentication.Plug.Helpers
              """)}
 
           _ ->
@@ -584,6 +606,23 @@ if Code.ensure_loaded?(Igniter) do
 
       Run the installer now?
       """)
+    end
+
+    defp maybe_compose_aa_install(igniter, true = _install?, argv),
+      do: Igniter.compose_task(igniter, "ash_authentication.install", argv)
+
+    defp maybe_compose_aa_install(igniter, false = _install?, _argv), do: igniter
+
+    defp compose_phoenix_strategy_tasks(igniter, options) do
+      strategies = List.wrap(options[:auth_strategy])
+      argv = igniter.args.argv_flags
+
+      Enum.reduce(strategies, igniter, fn strategy, igniter ->
+        case Map.fetch(@phoenix_strategy_tasks, to_string(strategy)) do
+          {:ok, task} -> Igniter.compose_task(igniter, task, argv)
+          :error -> igniter
+        end
+      end)
     end
 
     defp module_option(opts, name) do

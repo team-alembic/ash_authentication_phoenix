@@ -241,6 +241,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
     + |    plug(:load_from_session)
+    + |    plug(:set_actor, :user)
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
       |  pipeline :api do
