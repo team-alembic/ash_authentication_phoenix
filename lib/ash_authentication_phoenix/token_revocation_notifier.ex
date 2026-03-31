@@ -52,7 +52,7 @@ defmodule AshAuthentication.Phoenix.TokenRevocationNotifier do
         resource: token_resource
       }) do
     with {:ok, template_fn} <- Info.token_live_socket_id_template(token_resource),
-         socket_id <- template_fn.(data),
+         socket_id <- template_fn.(Map.delete(data, :__struct__)),
          {:ok, endpoints} when endpoints != [] <- Info.token_endpoints(token_resource) do
       Enum.each(endpoints, fn endpoint ->
         endpoint.broadcast(socket_id, "disconnect", %{})

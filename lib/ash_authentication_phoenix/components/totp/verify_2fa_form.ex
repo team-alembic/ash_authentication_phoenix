@@ -239,10 +239,16 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
 
     form = Form.validate(socket.assigns.form, params)
 
+    # The form's valid? check includes the :user argument which is a struct
+    # injected by the plug on the server side, not submitted by the form.
+    # We validate the code format ourselves instead.
+    code = Map.get(params, "code", "")
+    code_valid? = Regex.match?(~r/^\d{6}$/, String.trim(code))
+
     socket =
       socket
       |> assign(:form, form)
-      |> assign(:trigger_action, form.valid?)
+      |> assign(:trigger_action, code_valid?)
 
     {:noreply, socket}
   end
