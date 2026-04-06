@@ -18,12 +18,32 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     MagicSignInLive,
     ResetLive,
     SignInLive,
+    SignOutLive,
     TotpSetupLive,
     TotpVerifyLive
   }
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center bg-base-100"
+  end
+
+  override SignOutLive do
+    set :root_class, "grid h-screen place-items-center bg-base-100"
+  end
+
+  override Components.SignOut do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :h2_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :h2_text, "Sign out"
+    set :info_text, "Are you sure you want to sign out?"
+    set :info_text_class, "text-sm text-base-content/60 mb-4"
+    set :form_class, nil
+    set :button_text, "Sign out"
+    set :button_class, "btn btn-primary btn-block"
   end
 
   override ConfirmLive do

@@ -410,21 +410,116 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
-  Generates a sign-out route which points to the `sign_out` action in your auth
-  controller.
+  Generates a sign-out route with CSRF protection.
 
-  This is optional, but you probably want it.
+  This generates two routes:
+
+    * A `GET` route that renders a sign-out confirmation page using LiveView.
+      The page displays a form with a button that submits a `DELETE` request.
+    * A `DELETE` route that points to the `sign_out` action in your auth controller.
+
+  This two-step approach prevents logout CSRF attacks, where a malicious site
+  could force users to sign out by embedding a link to the sign-out URL.
+
+  ## Options
+
+    * `path` - the path to mount the sign-out routes at. Defaults to `/sign-out`.
+    * `live_view` - the LiveView module to use for the confirmation page.
+      Defaults to `AshAuthentication.Phoenix.SignOutLive`.
+    * `as` - the alias for the generated routes. Defaults to `:auth`.
+    * `otp_app` - the OTP app to find authenticated resources in.
+    * `overrides` - override modules for customisation. See
+      `AshAuthentication.Phoenix.Overrides` for more information.
+    * `layout` - the layout to use for the LiveView.
+    * `on_mount` - additional `on_mount` hooks for the live session.
+    * `on_mount_prepend` - hooks to run before the default hooks.
+    * `gettext_fn` - a `{module, function}` tuple for text translation.
+    * `gettext_backend` - a `{module, domain}` tuple for Gettext.
+
+  All other options are passed to the generated `scope`.
   """
   @spec sign_out_route(AshAuthentication.Phoenix.Controller.t(), path :: String.t(), [
-          {:as, atom} | {atom, any}
+          {:as, atom}
+          | {:live_view, module}
+          | {:otp_app, atom}
+          | {:overrides, [module]}
+          | {:layout, {module, atom} | false}
+          | {:on_mount, [module]}
+          | {:on_mount_prepend, [module]}
+          | {:gettext_fn, {module, atom}}
+          | {:gettext_backend, {module, String.t()}}
+          | {atom, any}
         ]) :: Macro.t()
   defmacro sign_out_route(auth_controller, path \\ "/sign-out", opts \\ []) do
     {as, opts} = Keyword.pop(opts, :as, :auth)
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignOutLive)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    live_view_opts =
+      opts
+      |> Keyword.put_new(:alias, false)
 
     quote do
-      scope unquote(path), unquote(opts) do
-        get("/", unquote(auth_controller), :sign_out, as: unquote(as))
+      sign_out_path = Phoenix.Router.scoped_path(__MODULE__, unquote(path))
+
+      scope unquote(path), unquote(live_view_opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "overrides" => unquote(overrides),
+                 "otp_app" => unquote(otp_app),
+                 "sign_out_path" => sign_out_path,
+                 "gettext_fn" => unquote(gettext_fn)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_sign_out", live_session_opts do
+          live("/", unquote(live_view), :sign_out, as: :"#{unquote(as)}_sign_out")
+        end
       end
+
+      scope unquote(path), unquote(opts) do
+        delete("/", unquote(auth_controller), :sign_out, as: unquote(as))
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
     end
   end
 
