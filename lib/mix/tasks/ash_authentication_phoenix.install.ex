@@ -120,18 +120,12 @@ if Code.ensure_loaded?(Igniter) do
         |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
         |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
         |> setup_routes_alias()
-        |> warn_on_missing_modules(options, argv, install?)
         |> do_or_explain_tailwind_changes()
-        # Create Phoenix scaffolding before composing AA, so strategy tasks
-        # can see the controller (e.g. TOTP modifies AuthController)
         |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
         |> create_live_user_auth(web_module)
-        # Compose AA install if it hasn't already been run (i.e. fresh install).
-        # When AA was already installed, its install task ran in a prior pass
-        # and its output is already on disk.
         |> maybe_compose_aa_install(install?, argv)
-        # Apply Phoenix-specific strategy integration (sender upgrades, controller mods)
+        |> warn_on_missing_modules(options, argv, install?)
         |> compose_phoenix_strategy_tasks(options)
         |> add_auth_routes(overrides, options, router, web_module)
         |> configure_token_resource_notifier(options, web_module)
