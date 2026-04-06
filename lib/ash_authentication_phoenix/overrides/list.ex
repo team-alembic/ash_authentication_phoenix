@@ -10,6 +10,10 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.SignInLive,
       AshAuthentication.Phoenix.Components.SignIn
     ],
+    "Sign Out": [
+      AshAuthentication.Phoenix.SignOutLive,
+      AshAuthentication.Phoenix.Components.SignOut
+    ],
     "Password Sign-in": [
       AshAuthentication.Phoenix.Components.Password,
       AshAuthentication.Phoenix.Components.Password.RegisterForm,

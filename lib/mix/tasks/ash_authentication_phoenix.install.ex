@@ -518,33 +518,37 @@ if Code.ensure_loaded?(Igniter) do
         igniter
       else
         {type, {false, igniter}} ->
-          if install? do
-            Igniter.add_issue(
-              igniter,
-              "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
-            )
-          else
-            run_installer? =
-              Mix.shell().yes?("""
-              Could not find #{type} module. Please set the equivalent CLI flag.
+          handle_missing_module(igniter, type, options, argv, install?)
+      end
+    end
 
-              There are two likely causes:
+    defp handle_missing_module(igniter, type, options, _argv, true) do
+      Igniter.add_issue(
+        igniter,
+        "Could not find #{type} module: #{inspect(options[type])}. Something went wrong with installing ash_authentication."
+      )
+    end
 
-              1. You have an existing #{type} module that does not have the default name.
-                  If this is the case, quit this command and use the
-                  --#{type} flag to specify the correct module.
-              2. You have not yet run the `ash_authentication` installer.
-                  To run this, answer Y to this prompt.
+    defp handle_missing_module(igniter, type, _options, argv, false) do
+      run_installer? =
+        Mix.shell().yes?("""
+        Could not find #{type} module. Please set the equivalent CLI flag.
 
-              Run the installer now?
-              """)
+        There are two likely causes:
 
-            if run_installer? do
-              Igniter.compose_task(igniter, "ash_authentication.install", argv)
-            else
-              igniter
-            end
-          end
+        1. You have an existing #{type} module that does not have the default name.
+            If this is the case, quit this command and use the
+            --#{type} flag to specify the correct module.
+        2. You have not yet run the `ash_authentication` installer.
+            To run this, answer Y to this prompt.
+
+        Run the installer now?
+        """)
+
+      if run_installer? do
+        Igniter.compose_task(igniter, "ash_authentication.install", argv)
+      else
+        igniter
       end
     end
 

@@ -19,10 +19,14 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
       assert_mount_render(conn, ~p"/reset", "Request magic link")
     end
 
-    test "sign-out renders", %{conn: conn} do
+    test "sign-out renders confirmation page", %{conn: conn} do
       conn = get(conn, ~p"/sign-out")
-      assert html_response(conn, 200) =~ "Signed out"
-      assert {:error, :nosession} = live(conn)
+      assert html_response(conn, 200) =~ "Are you sure you want to sign out?"
+
+      assert {:ok, _view, html} = live(conn)
+      assert html =~ "Sign out"
+      assert html =~ ~s(method="post")
+      assert html =~ ~s(value="delete")
     end
 
     defp assert_mount_render(conn, path, response) do
@@ -72,7 +76,7 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
       assert Ash.CiString.value(conn.assigns.current_user.email) == email
     end
 
-    test "sign-out user", %{conn: conn} do
+    test "sign-out user via DELETE", %{conn: conn} do
       strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
       email = "sign.out@email"
       password = "sign.out.secret"
@@ -81,10 +85,24 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
       conn =
         conn
         |> sign_in_user(strategy, email, password)
-        |> get(~p"/sign-out")
+        |> delete(~p"/sign-out")
 
       assert html_response(conn, 200) =~ "Signed out"
       assert get_session(conn, :user) == nil
+    end
+
+    test "GET sign-out does not clear session", %{conn: conn} do
+      strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
+      email = "sign.out.get@email"
+      password = "sign.out.get.secret"
+      create_user!(strategy, email, password)
+
+      conn =
+        conn
+        |> sign_in_user(strategy, email, password)
+        |> get(~p"/sign-out")
+
+      assert html_response(conn, 200) =~ "Are you sure you want to sign out?"
     end
   end
 

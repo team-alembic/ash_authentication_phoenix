@@ -108,6 +108,35 @@ Renders sign in mark-up for an authenticated resource.
   * `:strategy_display_order` - Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`.
 
 
+## Sign Out
+### `AshAuthentication.Phoenix.SignOutLive`
+
+A generic, white-label sign-out confirmation page.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.SignOut`
+
+Renders a sign-out confirmation form.
+
+  * `:button_class` - CSS class for the sign-out button.
+
+  * `:button_text` - Text for the sign-out button.
+
+  * `:form_class` - CSS class for the form element.
+
+  * `:h2_class` - CSS class for the heading.
+
+  * `:h2_text` - Heading text.
+
+  * `:info_text` - Informational text displayed below the heading.
+
+  * `:info_text_class` - CSS class for the informational text.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
 ## Password Sign-in
 ### `AshAuthentication.Phoenix.Components.Password`
 

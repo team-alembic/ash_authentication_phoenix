@@ -16,11 +16,39 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     ConfirmLive,
     MagicSignInLive,
     ResetLive,
-    SignInLive
+    SignInLive,
+    SignOutLive
   }
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override SignOutLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override Components.SignOut do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :h2_class,
+        "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+
+    set :h2_text, "Sign out"
+    set :info_text, "Are you sure you want to sign out?"
+    set :info_text_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :form_class, nil
+
+    set :button_text, "Sign out"
+
+    set :button_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    """
   end
 
   override ConfirmLive do

@@ -181,7 +181,8 @@ Given the above configuration you should see the following in your routes:
 
 Generated example app
           auth_path  GET  /sign-in                               AshAuthentication.Phoenix.SignInLive :sign_in
-          auth_path  GET  /sign-out                              ExampleWeb.AuthController :sign_out
+   auth_sign_out_path  GET  /sign-out                              AshAuthentication.Phoenix.SignOutLive :sign_out
+          auth_path  DELETE  /sign-out                           ExampleWeb.AuthController :sign_out
           auth_path  *    /auth/user/password/register           ExampleWeb.AuthController {:user, :password, :register}
           auth_path  *    /auth/user/password/sign_in            ExampleWeb.AuthController {:user, :password, :sign_in}
           page_path  GET  /                                      ExampleWeb.PageController :home
@@ -378,7 +379,7 @@ The sign in page shows a link to register a new account.
 
 ### Sign Out
 
-Visit [`localhost:4000/sign-out`](http://localhost:4000/sign-out) from your browser.
+Visit [`localhost:4000/sign-out`](http://localhost:4000/sign-out) from your browser. You will see a confirmation page with a "Sign out" button. Clicking it sends a CSRF-protected `DELETE` request to complete the sign-out.
 
 ### Debugging the Authentication flow
 
