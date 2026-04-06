@@ -142,8 +142,14 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
               You can confirm your account using the link we sent to you, or by resetting your password.
               \"\"\"
 
-            _ ->
+            {{:password, _}, _} ->
               "Incorrect email or password"
+
+            {{:magic_link, _}, _} ->
+              "Invalid or expired sign-in link"
+
+            _ ->
+              "Authentication failed"
           end
 
         conn
