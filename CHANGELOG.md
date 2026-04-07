@@ -11,10 +11,58 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.0...v3.0.0-rc.1) (2026-04-07)
+### Breaking Changes:
+
+* add TOTP authentication components and routes (#706) by James Harton
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by [@jimsynz](https://github.com/jimsynz)
+
+
+### Features:
+
+* After user sign out all other tabs will disconnect (#662) by Abdessabour Moutik
+
+* After user sign out all other tabs will disconnect by Abdessabour Moutik
+
+* final implementation hopefully we can put this to rest by Abdessabour Moutik
+
+* add TOTP authentication components and routes by James Harton
+
+* Allow filtering auth routes (#696) by Andrés
+
+### Bug Fixes:
+
+* read session data from Plug session in generate_session (#716) by Jinkyou Son
+
+* read session data from Plug session in generate_session by Jinkyou Son
+
+* use case instead of single-clause with per credo by Jinkyou Son
+
+* respect override for submit_label in Confirm.Input component (#717) by Jinkyou Son
+
+* improve TOTP helpers and documentation (#715) by James Harton
+
+* improve TOTP helpers and documentation by James Harton
+
+* address PR review feedback for TOTP support by James Harton
+
+* add dark mode background to input fields (#713) by James Harton
+
+* setting `image_url` to nil now also suppresses dark mode image (#708) by James Harton
+
+* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by James Harton
+
+* check override for `submit_label` in Confirm.Input component (#709) by James Harton
+
+* remove double translation in MagicLink.Form disable_text (#707) by James Harton
+
+* only show separator when alternative strategies are visible (#705) by James Harton
+
 ## [v3.0.0-rc.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.15.0...v3.0.0-rc.0) (2026-02-02)
 ### Breaking Changes:
 
-* add TOTP authentication components and routes (#706) by [@beam-bots](https://github.com/beam-bots)
+* add TOTP authentication components and routes (#706) by [@jimsynz](https://github.com/jimsynz)
 
 
 
@@ -26,25 +74,25 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 * final implementation hopefully we can put this to rest by Abdessabour Moutik
 
-* add TOTP authentication components and routes by [@beam-bots](https://github.com/beam-bots)
+* add TOTP authentication components and routes by [@jimsynz](https://github.com/jimsynz)
 
 * Allow filtering auth routes (#696) by Andrés [(#696)](https://github.com/team-alembic/ash_authentication_phoenix/pull/696)
 
 ### Bug Fixes:
 
-* address PR review feedback for TOTP support by [@beam-bots](https://github.com/beam-bots)
+* address PR review feedback for TOTP support by [@jimsynz](https://github.com/jimsynz)
 
-* add dark mode background to input fields (#713) by [@beam-bots](https://github.com/beam-bots) [(#713)](https://github.com/team-alembic/ash_authentication_phoenix/pull/713)
+* add dark mode background to input fields (#713) by [@jimsynz](https://github.com/jimsynz) [(#713)](https://github.com/team-alembic/ash_authentication_phoenix/pull/713)
 
-* setting `image_url` to nil now also suppresses dark mode image (#708) by [@beam-bots](https://github.com/beam-bots) [(#708)](https://github.com/team-alembic/ash_authentication_phoenix/pull/708)
+* setting `image_url` to nil now also suppresses dark mode image (#708) by [@jimsynz](https://github.com/jimsynz) [(#708)](https://github.com/team-alembic/ash_authentication_phoenix/pull/708)
 
-* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by [@beam-bots](https://github.com/beam-bots) [(#710)](https://github.com/team-alembic/ash_authentication_phoenix/pull/710)
+* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by [@jimsynz](https://github.com/jimsynz) [(#710)](https://github.com/team-alembic/ash_authentication_phoenix/pull/710)
 
-* check override for `submit_label` in Confirm.Input component (#709) by [@beam-bots](https://github.com/beam-bots) [(#709)](https://github.com/team-alembic/ash_authentication_phoenix/pull/709)
+* check override for `submit_label` in Confirm.Input component (#709) by [@jimsynz](https://github.com/jimsynz) [(#709)](https://github.com/team-alembic/ash_authentication_phoenix/pull/709)
 
-* remove double translation in MagicLink.Form disable_text (#707) by [@beam-bots](https://github.com/beam-bots) [(#707)](https://github.com/team-alembic/ash_authentication_phoenix/pull/707)
+* remove double translation in MagicLink.Form disable_text (#707) by [@jimsynz](https://github.com/jimsynz) [(#707)](https://github.com/team-alembic/ash_authentication_phoenix/pull/707)
 
-* only show separator when alternative strategies are visible (#705) by [@beam-bots](https://github.com/beam-bots) [(#705)](https://github.com/team-alembic/ash_authentication_phoenix/pull/705)
+* only show separator when alternative strategies are visible (#705) by [@jimsynz](https://github.com/jimsynz) [(#705)](https://github.com/team-alembic/ash_authentication_phoenix/pull/705)
 
 ## [v2.16.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.15.0...v2.16.0) (2026-04-07)
 ### Breaking Changes:
@@ -63,7 +111,7 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Bug Fixes:
 
-* skip remember_me token generation when using sign_in_tokens (#703) by [@beam-bots](https://github.com/beam-bots) [(#703)](https://github.com/team-alembic/ash_authentication_phoenix/pull/703)
+* skip remember_me token generation when using sign_in_tokens (#703) by [@jimsynz](https://github.com/jimsynz) [(#703)](https://github.com/team-alembic/ash_authentication_phoenix/pull/703)
 
 ## [v2.14.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.0...v2.14.1) (2026-01-04)
 
@@ -97,7 +145,7 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 * don't assume all actions have preparations by [@zachdaniel](https://github.com/zachdaniel)
 
-* only show remember_me checkbox when strategy is configured (#695) by [@beam-bots](https://github.com/beam-bots) [(#695)](https://github.com/team-alembic/ash_authentication_phoenix/pull/695)
+* only show remember_me checkbox when strategy is configured (#695) by [@jimsynz](https://github.com/jimsynz) [(#695)](https://github.com/team-alembic/ash_authentication_phoenix/pull/695)
 
 * assign the current subject as nil if user is not otherwise assigned (#684) by capoccias [(#684)](https://github.com/team-alembic/ash_authentication_phoenix/pull/684)
 
@@ -107,7 +155,7 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 * dark-theme default text color (#677) by Jay Barra [(#677)](https://github.com/team-alembic/ash_authentication_phoenix/pull/677)
 
-* Support more than one authenticated resource when looking for user assigns (#675) by [@beam-bots](https://github.com/beam-bots) [(#675)](https://github.com/team-alembic/ash_authentication_phoenix/pull/675)
+* Support more than one authenticated resource when looking for user assigns (#675) by [@jimsynz](https://github.com/jimsynz) [(#675)](https://github.com/team-alembic/ash_authentication_phoenix/pull/675)
 
 * banner rendering with empty text/images by James Harton
 
@@ -115,7 +163,7 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 ### Improvements:
 
-* Deprecate Router.auth_routes_for/2..3 (#653) by [@beam-bots](https://github.com/beam-bots) [(#653)](https://github.com/team-alembic/ash_authentication_phoenix/pull/653)
+* Deprecate Router.auth_routes_for/2..3 (#653) by [@jimsynz](https://github.com/jimsynz) [(#653)](https://github.com/team-alembic/ash_authentication_phoenix/pull/653)
 
 * install with daisyUI overrides if using daisyUI (#650) by pikdum [(#650)](https://github.com/team-alembic/ash_authentication_phoenix/pull/650)
 
