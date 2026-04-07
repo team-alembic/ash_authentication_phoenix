@@ -11,6 +11,13 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.16.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.15.0...v2.16.0) (2026-04-07)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by [@jimsynz](https://github.com/jimsynz)
+
+
+
 ## [v2.15.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.14.1...v2.15.0) (2026-01-13)
 
 
