@@ -236,19 +236,24 @@ if Code.ensure_loaded?(EQRCode) do
 
     def handle_event("confirm", params, socket) do
       params = get_params(params, socket.assigns.strategy)
+      code = Map.get(params, "code", "") |> String.trim()
 
-      params =
-        params
-        |> Map.put("setup_token", socket.assigns.setup_token)
+      cond do
+        not Regex.match?(~r/^\d{6}$/, code) ->
+          form = Form.validate(socket.assigns.form, params)
+          {:noreply, assign(socket, form: form)}
 
-      form = Form.validate(socket.assigns.form, params)
+        not valid_totp_code?(socket.assigns.totp_url, code, socket.assigns.strategy) ->
+          form = Form.validate(socket.assigns.form, params)
 
-      socket =
-        socket
-        |> assign(:form, form)
-        |> assign(:trigger_action, form.valid?)
+          {:noreply,
+           assign(socket, form: form, error: "Invalid authentication code. Please try again.")}
 
-      {:noreply, socket}
+        true ->
+          params = Map.put(params, "setup_token", socket.assigns.setup_token)
+          form = Form.validate(socket.assigns.form, params)
+          {:noreply, assign(socket, form: form, error: nil, trigger_action: true)}
+      end
     end
 
     defp build_confirm_form(socket) do
@@ -298,6 +303,27 @@ if Code.ensure_loaded?(EQRCode) do
     end
 
     defp generate_qr_svg(_), do: nil
+
+    defp valid_totp_code?(totp_url, code, strategy) when is_binary(totp_url) do
+      uri = URI.parse(totp_url)
+      query = URI.decode_query(uri.query || "")
+
+      case Base.decode32(query["secret"] || "", padding: false) do
+        {:ok, secret} ->
+          period = String.to_integer(query["period"] || "30")
+          grace_period = Map.get(strategy, :grace_period) || 0
+          time = System.os_time(:second)
+
+          Enum.any?(0..grace_period, fn i ->
+            NimbleTOTP.valid?(secret, code, period: period, time: time - i * period)
+          end)
+
+        _ ->
+          false
+      end
+    end
+
+    defp valid_totp_code?(_, _, _), do: false
 
     defp validate_code_format(code) when is_binary(code) do
       code = String.trim(code)
