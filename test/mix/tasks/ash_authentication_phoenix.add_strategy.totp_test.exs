@@ -116,10 +116,16 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.TotpTest do
       igniter
       |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.totp", ["--mode", "2fa"])
       |> assert_has_patch("lib/test_web/router.ex", """
-      + |    totp_2fa_route(Test.Accounts.User, :totp, auth_routes_prefix: "/auth")
+      + |    totp_2fa_route(Test.Accounts.User, :totp,
+      + |      auth_routes_prefix: "/auth",
+      + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      + |    )
       """)
       |> assert_has_patch("lib/test_web/router.ex", """
-      + |    totp_setup_route(Test.Accounts.User, :totp, auth_routes_prefix: "/auth")
+      + |    totp_setup_route(Test.Accounts.User, :totp,
+      + |      auth_routes_prefix: "/auth",
+      + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      + |    )
       """)
     end
 
@@ -154,7 +160,10 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.TotpTest do
         ])
 
       assert_has_patch(result, "lib/test_web/router.ex", """
-      + |    totp_setup_route(Test.Accounts.User, :totp, auth_routes_prefix: "/auth")
+      + |    totp_setup_route(Test.Accounts.User, :totp,
+      + |      auth_routes_prefix: "/auth",
+      + |      overrides: [TestWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      + |    )
       """)
 
       refute diff(result, path: "lib/test_web/router.ex") =~ "totp_2fa_route"

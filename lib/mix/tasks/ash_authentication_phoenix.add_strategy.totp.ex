@@ -103,16 +103,26 @@ if Code.ensure_loaded?(Igniter) do
       if router do
         user = inspect(options[:user])
         strategy_name = inspect(options[:name])
+        overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+
+        override_module =
+          if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
+            AshAuthentication.Phoenix.Overrides.DaisyUI
+          else
+            AshAuthentication.Phoenix.Overrides.Default
+          end
+
+        overrides_opt = "overrides: [#{inspect(overrides)}, #{inspect(override_module)}]"
 
         routes =
           if options[:mode] == :"2fa" do
             """
-            totp_2fa_route #{user}, #{strategy_name}, auth_routes_prefix: "/auth"
-            totp_setup_route #{user}, #{strategy_name}, auth_routes_prefix: "/auth"
+            totp_2fa_route #{user}, #{strategy_name}, auth_routes_prefix: "/auth", #{overrides_opt}
+            totp_setup_route #{user}, #{strategy_name}, auth_routes_prefix: "/auth", #{overrides_opt}
             """
           else
             """
-            totp_setup_route #{user}, #{strategy_name}, auth_routes_prefix: "/auth"
+            totp_setup_route #{user}, #{strategy_name}, auth_routes_prefix: "/auth", #{overrides_opt}
             """
           end
 
