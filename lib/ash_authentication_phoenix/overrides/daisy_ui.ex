@@ -16,6 +16,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     Components,
     ConfirmLive,
     MagicSignInLive,
+    RecoveryCodeDisplayLive,
+    RecoveryCodeVerifyLive,
     ResetLive,
     SignInLive,
     SignOutLive,
@@ -339,5 +341,81 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :error_class, "text-error text-sm mb-4"
     set :sign_in_link_class, "link link-primary"
     set :sign_in_link_text, "Sign in"
+    set :recovery_code_link_class, "link link-primary text-sm mt-4 block"
+    set :recovery_code_link_text, "Use a recovery code instead"
+    set :recovery_code_link_path, nil
+  end
+
+  override RecoveryCodeVerifyLive do
+    set :root_class, "grid h-screen place-items-center bg-base-100"
+  end
+
+  override RecoveryCodeDisplayLive do
+    set :root_class, "grid h-screen place-items-center bg-base-100"
+    set :error_class, "text-error text-center"
+  end
+
+  override Components.RecoveryCode.VerifyForm do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :label_text, "Recovery Code"
+    set :instructions_class, "text-sm text-base-content/70 mb-4"
+    set :instructions_text, "Enter one of your recovery codes."
+    set :form_class, nil
+    set :slot_class, "my-4"
+    set :button_text, "Verify"
+    set :disable_button_text, "Verifying ..."
+    set :error_class, "text-error text-sm mb-4"
+    set :sign_in_link_class, "link link-primary"
+    set :sign_in_link_text, "Sign in"
+    set :totp_link_class, "link link-primary text-sm mt-4 block"
+    set :totp_link_text, "Use authenticator app instead"
+    set :totp_link_path, nil
+  end
+
+  override Components.RecoveryCode.DisplayCodes do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :label_text, "Recovery Codes"
+    set :instructions_class, "text-sm text-base-content/70 mb-4"
+
+    set :instructions_text,
+        "Save these codes in a safe place. Each code can only be used once."
+
+    set :codes_grid_class, "grid grid-cols-2 gap-2 my-4 font-mono text-sm"
+    set :code_item_class, "p-2 bg-base-200 rounded text-center"
+    set :warning_class, "text-warning text-sm my-4"
+
+    set :warning_text,
+        "If you lose access to your authenticator app, you can use these codes to sign in."
+
+    set :generate_button_class, "btn btn-primary btn-block"
+    set :confirm_button_class, "btn btn-success btn-block"
+    set :confirm_path, "/"
+    set :error_class, "text-error text-sm mb-4"
+  end
+
+  override Components.RecoveryCode.Input do
+    set :field_class, "mt-2 mb-2"
+    set :label_class, "block text-sm font-medium text-base-content mb-1"
+
+    @recovery_code_base_input_class "input w-full font-mono tracking-widest uppercase"
+
+    set :input_class, @recovery_code_base_input_class
+    set :input_class_with_error, @recovery_code_base_input_class <> " input-error"
+    set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
+    set :code_input_label, "Recovery Code"
+    set :code_input_placeholder, "Enter recovery code"
+    set :error_ul, "text-error font-light my-3 italic text-sm"
+    set :error_li, nil
+    set :input_debounce, 350
   end
 end

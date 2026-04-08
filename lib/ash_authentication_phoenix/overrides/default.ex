@@ -15,6 +15,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     Components,
     ConfirmLive,
     MagicSignInLive,
+    RecoveryCodeDisplayLive,
+    RecoveryCodeVerifyLive,
     ResetLive,
     SignInLive,
     SignOutLive,
