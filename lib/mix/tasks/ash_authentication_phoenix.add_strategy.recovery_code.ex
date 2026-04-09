@@ -57,6 +57,7 @@ if Code.ensure_loaded?(Igniter) do
 
       igniter
       |> add_recovery_code_routes(options)
+      |> add_cross_link_overrides()
       |> maybe_modify_controller()
     end
 
@@ -115,6 +116,43 @@ if Code.ensure_loaded?(Igniter) do
         )
       else
         igniter
+      end
+    end
+
+    defp add_cross_link_overrides(igniter) do
+      overrides_module = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+      {exists?, igniter} = Igniter.Project.Module.module_exists(igniter, overrides_module)
+
+      if exists? do
+        igniter
+        |> Igniter.Project.Module.find_and_update_module!(overrides_module, fn zipper ->
+          code = """
+          override AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
+            set :recovery_code_link_path, "/recovery-code-verify"
+          end
+
+          override AshAuthentication.Phoenix.Components.RecoveryCode.VerifyForm do
+            set :totp_link_path, "/totp-verify"
+          end
+          """
+
+          {:ok, Igniter.Code.Common.add_code(zipper, code)}
+        end)
+      else
+        Igniter.add_warning(igniter, """
+        Could not find AuthOverrides module at #{inspect(overrides_module)}.
+
+        To enable the "Use a recovery code" link on the TOTP verify page, add this
+        to your overrides module:
+
+            override AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
+              set :recovery_code_link_path, "/recovery-code-verify"
+            end
+
+            override AshAuthentication.Phoenix.Components.RecoveryCode.VerifyForm do
+              set :totp_link_path, "/totp-verify"
+            end
+        """)
       end
     end
 
