@@ -70,7 +70,7 @@ defmodule AshAuthentication.Phoenix.RecoveryCodeHelpers do
     strategies =
       resource
       |> Info.authentication_strategies()
-      |> Enum.filter(&is_recovery_code_strategy?/1)
+      |> Enum.filter(&recovery_code_strategy?/1)
 
     case {strategy_name, strategies} do
       {nil, [strategy | _]} ->
