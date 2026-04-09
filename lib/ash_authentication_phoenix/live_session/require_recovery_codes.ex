@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+#
+# SPDX-License-Identifier: MIT
+
 defmodule AshAuthentication.Phoenix.LiveSession.RequireRecoveryCodes do
   @moduledoc """
   A LiveView on_mount hook that enforces recovery code configuration.
