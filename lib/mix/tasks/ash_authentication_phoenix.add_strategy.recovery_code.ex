@@ -57,6 +57,7 @@ if Code.ensure_loaded?(Igniter) do
 
       igniter
       |> add_recovery_code_routes(options)
+      |> maybe_modify_controller()
     end
 
     defp parse_options(igniter) do
@@ -115,6 +116,71 @@ if Code.ensure_loaded?(Igniter) do
       else
         igniter
       end
+    end
+
+    defp maybe_modify_controller(igniter) do
+      web_module = Igniter.Libs.Phoenix.web_module(igniter)
+      controller = Module.concat(web_module, AuthController)
+
+      {exists?, igniter} = Igniter.Project.Module.module_exists(igniter, controller)
+
+      if exists? do
+        add_confirm_setup_clause(igniter, controller)
+      else
+        Igniter.add_warning(igniter, """
+        Could not find AuthController at #{inspect(controller)}.
+
+        You may want to manually add a success/4 clause that redirects to
+        /recovery-codes after successful TOTP setup (confirm_setup phase).
+        """)
+      end
+    end
+
+    defp add_confirm_setup_clause(igniter, controller) do
+      Igniter.Project.Module.find_and_update_module!(igniter, controller, fn zipper ->
+        case Igniter.Code.Function.move_to_def(zipper, :success, 4, target: :at) do
+          {:ok, zipper} ->
+            if has_confirm_setup_clause?(zipper) do
+              {:ok, zipper}
+            else
+              {:ok,
+               Igniter.Code.Common.add_code(zipper, confirm_setup_clause(), placement: :before)}
+            end
+
+          _ ->
+            {:ok, zipper}
+        end
+      end)
+    end
+
+    defp has_confirm_setup_clause?(zipper) do
+      zipper
+      |> Sourceror.Zipper.topmost()
+      |> Igniter.Code.Common.move_to(fn z ->
+        Igniter.Code.Function.function_call?(z, :def, [2, 3, 4]) and
+          source_contains_confirm_setup_guard?(z)
+      end)
+      |> case do
+        {:ok, _} -> true
+        :error -> false
+      end
+    end
+
+    defp source_contains_confirm_setup_guard?(zipper) do
+      source = Sourceror.Zipper.node(zipper) |> Macro.to_string()
+      String.contains?(source, "confirm_setup")
+    end
+
+    defp confirm_setup_clause do
+      ~S"""
+      def success(conn, {_, :confirm_setup}, user, token) do
+        conn
+        |> store_in_session(user)
+        |> set_live_socket_id(token)
+        |> assign(:current_user, user)
+        |> redirect(to: ~p"/recovery-codes")
+      end
+      """
     end
   end
 else
