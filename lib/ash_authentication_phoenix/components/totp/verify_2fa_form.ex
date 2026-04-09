@@ -17,8 +17,10 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
     sign_in_link_class: "CSS class for the sign-in link when not authenticated.",
     sign_in_link_text: "Text for the sign-in link.",
     recovery_code_link_class: "CSS class for the recovery code link.",
-    recovery_code_link_text: "Text for the link to recovery code verification (or `nil` to hide).",
-    recovery_code_link_path: "Path to the recovery code verification page (or `nil` to hide the link)."
+    recovery_code_link_text:
+      "Text for the link to recovery code verification (or `nil` to hide).",
+    recovery_code_link_path:
+      "Path to the recovery code verification page (or `nil` to hide the link)."
 
   @moduledoc """
   Generates a verification form for TOTP two-factor authentication.
@@ -208,10 +210,14 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
 
             <%= if recovery_path = override_for(@overrides, :recovery_code_link_path) do %>
               <.link
-                navigate={if @mode == :token && @token, do: "#{recovery_path}/#{@token}", else: recovery_path}
+                navigate={
+                  if @mode == :token && @token, do: "#{recovery_path}/#{@token}", else: recovery_path
+                }
                 class={override_for(@overrides, :recovery_code_link_class)}
               >
-                {_gettext(override_for(@overrides, :recovery_code_link_text, "Use a recovery code instead"))}
+                {_gettext(
+                  override_for(@overrides, :recovery_code_link_text, "Use a recovery code instead")
+                )}
               </.link>
             <% end %>
           <% else %>

@@ -177,18 +177,18 @@ if Code.ensure_loaded?(Igniter) do
     defp add_confirm_setup_clause(igniter, controller) do
       Igniter.Project.Module.find_and_update_module!(igniter, controller, fn zipper ->
         case Igniter.Code.Function.move_to_def(zipper, :success, 4, target: :at) do
-          {:ok, zipper} ->
-            if has_confirm_setup_clause?(zipper) do
-              {:ok, zipper}
-            else
-              {:ok,
-               Igniter.Code.Common.add_code(zipper, confirm_setup_clause(), placement: :before)}
-            end
-
-          _ ->
-            {:ok, zipper}
+          {:ok, zipper} -> maybe_insert_confirm_setup_clause(zipper)
+          _ -> {:ok, zipper}
         end
       end)
+    end
+
+    defp maybe_insert_confirm_setup_clause(zipper) do
+      if has_confirm_setup_clause?(zipper) do
+        {:ok, zipper}
+      else
+        {:ok, Igniter.Code.Common.add_code(zipper, confirm_setup_clause(), placement: :before)}
+      end
     end
 
     defp has_confirm_setup_clause?(zipper) do

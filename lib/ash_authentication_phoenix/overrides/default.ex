@@ -487,12 +487,14 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   override Components.RecoveryCode.Input do
     set :field_class, "mt-2"
     set :label_class, "block text-sm font-medium text-gray-700 dark:text-gray-300"
+
     set :input_class, """
     mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300
     dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400
     focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm
     font-mono tracking-widest uppercase
     """
+
     set :code_input_label, "Recovery Code"
     set :code_input_placeholder, "Enter recovery code"
 

@@ -27,31 +27,30 @@ defmodule AshAuthentication.Phoenix.RecoveryCodeHelpers do
   """
   @spec recovery_codes_configured?(Ash.Resource.record(), keyword()) :: boolean()
   def recovery_codes_configured?(user, opts \\ []) when is_struct(user) do
-    case get_recovery_code_strategy(user.__struct__, opts) do
-      {:ok, strategy} ->
-        codes = Map.get(user, strategy.recovery_codes_relationship_name)
+    with {:ok, strategy} <- get_recovery_code_strategy(user.__struct__, opts),
+         {:ok, codes} <- load_recovery_codes(user, strategy) do
+      Enum.any?(codes)
+    else
+      _ -> false
+    end
+  end
 
-        case codes do
-          %Ash.NotLoaded{} ->
-            case Ash.load(user, [strategy.recovery_codes_relationship_name]) do
-              {:ok, loaded_user} ->
-                loaded_user
-                |> Map.get(strategy.recovery_codes_relationship_name, [])
-                |> Enum.any?()
-
-              _ ->
-                false
-            end
-
-          codes when is_list(codes) ->
-            Enum.any?(codes)
+  defp load_recovery_codes(user, strategy) do
+    case Map.get(user, strategy.recovery_codes_relationship_name) do
+      %Ash.NotLoaded{} ->
+        case Ash.load(user, [strategy.recovery_codes_relationship_name]) do
+          {:ok, loaded_user} ->
+            {:ok, Map.get(loaded_user, strategy.recovery_codes_relationship_name, [])}
 
           _ ->
-            false
+            {:error, :load_failed}
         end
 
+      codes when is_list(codes) ->
+        {:ok, codes}
+
       _ ->
-        false
+        {:error, :unexpected}
     end
   end
 
@@ -99,6 +98,6 @@ defmodule AshAuthentication.Phoenix.RecoveryCodeHelpers do
     end
   end
 
-  defp is_recovery_code_strategy?(%AshAuthentication.Strategy.RecoveryCode{}), do: true
-  defp is_recovery_code_strategy?(_), do: false
+  defp recovery_code_strategy?(%AshAuthentication.Strategy.RecoveryCode{}), do: true
+  defp recovery_code_strategy?(_), do: false
 end
