@@ -33,7 +33,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/get-started.md", title: "Get Started"},
             {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
             {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"},
-            {"documentation/tutorials/password-change.md", title: "Password-Change UI"}
+            {"documentation/tutorials/password-change.md", title: "Password-Change UI"},
+            {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"}
           ],
           redirects: %{
             "getting-started-with-ash-authentication-phoenix" => "get-started"
