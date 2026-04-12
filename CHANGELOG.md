@@ -11,6 +11,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.1...v3.0.0-rc.2) (2026-04-12)
+
+
+
+
+### Features:
+
+* add Phoenix integration for recovery code strategy (#724) by [@jimsynz](https://github.com/jimsynz)
+
+* add convention-named Phoenix strategy tasks for auth integration (#719) by [@jimsynz](https://github.com/jimsynz)
+
 ## [v3.0.0-rc.1](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.0...v3.0.0-rc.1) (2026-04-07)
 ### Breaking Changes:
 
