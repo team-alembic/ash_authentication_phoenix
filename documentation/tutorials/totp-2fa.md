@@ -551,13 +551,13 @@ defmodule MyAppWeb.AdminLive do
 end
 ```
 
-### Backup Codes
+### Recovery Codes
 
-Consider implementing backup codes for users who lose access to their authenticator app. This is not built into `ash_authentication` by default but can be implemented as a custom strategy.
-
-### Account Recovery
-
-Have a process for users who lose both their password and TOTP access. This typically involves identity verification through support channels.
+Use the [recovery code strategy](recovery-codes.md) to give users one-time
+backup codes for when they lose access to their authenticator app. When both
+TOTP and recovery codes are installed via Igniter, the "Use a recovery code
+instead" link is automatically added to the TOTP verify page, and users are
+redirected to generate recovery codes after completing TOTP setup.
 
 ## Next Steps
 

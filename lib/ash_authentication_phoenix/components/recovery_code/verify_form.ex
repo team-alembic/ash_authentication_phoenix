@@ -1,8 +1,8 @@
-# SPDX-FileCopyrightText: 2024 Alembic Pty Ltd
+# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
 #
 # SPDX-License-Identifier: MIT
 
-defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
+defmodule AshAuthentication.Phoenix.Components.RecoveryCode.VerifyForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
@@ -16,52 +16,41 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
     error_class: "CSS class for error messages.",
     sign_in_link_class: "CSS class for the sign-in link when not authenticated.",
     sign_in_link_text: "Text for the sign-in link.",
-    recovery_code_link_class: "CSS class for the recovery code link.",
-    recovery_code_link_text:
-      "Text for the link to recovery code verification (or `nil` to hide).",
-    recovery_code_link_path:
-      "Path to the recovery code verification page (or `nil` to hide the link)."
+    totp_link_class: "CSS class for the TOTP verify link.",
+    totp_link_text: "Text for the link to TOTP verification (or `nil` to hide).",
+    totp_link_path: "Path to the TOTP verification page (or `nil` to hide the link)."
 
   @moduledoc """
-  Generates a verification form for TOTP two-factor authentication.
+  Generates a verification form for recovery code authentication.
 
   This component supports two authentication flows:
 
   ## Token-based Flow (mode: :token)
 
-  Used after primary authentication (e.g., password sign-in) when the user has
-  TOTP enabled. The token contains partial authentication info that will be
-  exchanged for a full session token after TOTP verification.
+  Used after primary authentication (e.g., password sign-in) as a 2FA fallback
+  when the user cannot access their TOTP authenticator. The token contains partial
+  authentication info that will be exchanged for a full session token after
+  successful recovery code verification.
 
   ## Step-up Authentication Flow (mode: :step_up)
 
-  Used when an already-authenticated user needs to verify their TOTP code to
-  access protected resources. No token is required - uses the current_user
-  from the session.
+  Used when an already-authenticated user needs to verify their identity to
+  access protected resources. No token is required.
 
   ## Component hierarchy
 
-  This is rendered by `AshAuthentication.Phoenix.TotpVerifyLive`.
+  This is rendered by `AshAuthentication.Phoenix.RecoveryCodeVerifyLive`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.Totp.Input.code_field/1`
-    * `AshAuthentication.Phoenix.Components.Totp.Input.submit/1`
-
-  ## Props
-
-    * `strategy` - The TOTP strategy configuration. Required.
-    * `mode` - The verification mode: `:token`, `:step_up`, or `:error`. Required.
-    * `token` - The partial authentication token (required for `:token` mode).
-    * `current_user` - The authenticated user (required for `:step_up` mode).
-    * `overrides` - A list of override modules.
-    * `gettext_fn` - Optional text translation function.
+    * `AshAuthentication.Phoenix.Components.RecoveryCode.Input.code_field/1`
+    * `AshAuthentication.Phoenix.Components.RecoveryCode.Input.submit/1`
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.Totp, Strategy}
+  alias AshAuthentication.{Info, Phoenix.Components.RecoveryCode, Strategy}
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
 
@@ -71,21 +60,9 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
   import Phoenix.HTML.Form
   import Slug
 
-  @type props :: %{
-          required(:strategy) => AshAuthentication.Strategy.t(),
-          required(:mode) => :token | :step_up | :error,
-          optional(:token) => String.t(),
-          optional(:current_user) => map(),
-          optional(:current_tenant) => String.t(),
-          optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t(),
-          optional(:overrides) => [module],
-          optional(:gettext_fn) => {module, atom}
-        }
-
   @doc false
   @impl true
-  @spec update(props, Socket.t()) :: {:ok, Socket.t()}
+  @spec update(map, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns[:strategy]
     resource = assigns[:resource]
@@ -122,7 +99,7 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
             domain: domain,
             as: subject_name |> to_string() |> slugify(),
             id:
-              "#{subject_name}-#{Strategy.name(strategy)}-verify-2fa"
+              "#{subject_name}-#{Strategy.name(strategy)}-verify-recovery-code"
               |> slugify(),
             tenant: assigns[:current_tenant],
             context: context
@@ -160,7 +137,7 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
       <%= case @mode do %>
         <% :error -> %>
           <p class={override_for(@overrides, :error_class)}>
-            {_gettext("You must be signed in to verify your authentication code.")}
+            {_gettext("You must be signed in to verify with a recovery code.")}
           </p>
           <a href="/sign-in" class={override_for(@overrides, :sign_in_link_class)}>
             {_gettext(override_for(@overrides, :sign_in_link_text, "Sign in"))}
@@ -183,8 +160,7 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
                 <input type="hidden" name={input_name(form, :token)} value={@token} />
               <% end %>
 
-              <Totp.Input.code_field
-                strategy={@strategy}
+              <RecoveryCode.Input.code_field
                 form={form}
                 overrides={@overrides}
                 gettext_fn={@gettext_fn}
@@ -196,11 +172,8 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
                 </div>
               <% end %>
 
-              <Totp.Input.submit
-                strategy={@strategy}
+              <RecoveryCode.Input.submit
                 id={@form.id <> "-submit"}
-                form={form}
-                action={:verify}
                 label={override_for(@overrides, :button_text)}
                 disable_text={override_for(@overrides, :disable_button_text)}
                 overrides={@overrides}
@@ -208,16 +181,12 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
               />
             </.form>
 
-            <%= if recovery_path = override_for(@overrides, :recovery_code_link_path) do %>
+            <%= if totp_path = override_for(@overrides, :totp_link_path) do %>
               <.link
-                navigate={
-                  if @mode == :token && @token, do: "#{recovery_path}/#{@token}", else: recovery_path
-                }
-                class={override_for(@overrides, :recovery_code_link_class)}
+                navigate={if @mode == :token, do: "#{totp_path}/#{@token}", else: totp_path}
+                class={override_for(@overrides, :totp_link_class)}
               >
-                {_gettext(
-                  override_for(@overrides, :recovery_code_link_text, "Use a recovery code instead")
-                )}
+                {_gettext(override_for(@overrides, :totp_link_text, "Use authenticator app instead"))}
               </.link>
             <% end %>
           <% else %>
@@ -232,9 +201,7 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
 
   @doc false
   @impl true
-  @spec handle_event(String.t(), %{required(String.t()) => String.t()}, Socket.t()) ::
-          {:noreply, Socket.t()}
-
+  @spec handle_event(String.t(), map, Socket.t()) :: {:noreply, Socket.t()}
   def handle_event("change", params, socket) do
     params = get_params(params, socket.assigns.strategy)
 
@@ -257,11 +224,8 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
 
     form = Form.validate(socket.assigns.form, params)
 
-    # The form's valid? check includes the :user argument which is a struct
-    # injected by the plug on the server side, not submitted by the form.
-    # We validate the code format ourselves instead.
     code = Map.get(params, "code", "")
-    code_valid? = Regex.match?(~r/^\d{6}$/, String.trim(code))
+    code_valid? = String.trim(code) != ""
 
     socket =
       socket

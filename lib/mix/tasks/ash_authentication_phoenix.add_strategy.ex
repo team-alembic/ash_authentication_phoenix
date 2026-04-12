@@ -15,13 +15,15 @@ if Code.ensure_loaded?(Igniter) do
       "password" => "ash_authentication.add_strategy.password",
       "magic_link" => "ash_authentication.add_strategy.magic_link",
       "api_key" => "ash_authentication.add_strategy.api_key",
-      "totp" => "ash_authentication.add_strategy.totp"
+      "totp" => "ash_authentication.add_strategy.totp",
+      "recovery_code" => "ash_authentication.add_strategy.recovery_code"
     }
 
     @aap_strategy_tasks %{
       "password" => "ash_authentication_phoenix.add_strategy.password",
       "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
-      "totp" => "ash_authentication_phoenix.add_strategy.totp"
+      "totp" => "ash_authentication_phoenix.add_strategy.totp",
+      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code"
     }
 
     @strategy_names Map.keys(@aa_strategy_tasks)
@@ -32,7 +34,9 @@ if Code.ensure_loaded?(Igniter) do
                             magic_link:
                               "Register and sign in with a magic link, sent via email to the user.",
                             api_key: "Sign in with an API key.",
-                            totp: "Authenticate with a time-based one-time password (TOTP)."
+                            totp: "Authenticate with a time-based one-time password (TOTP).",
+                            recovery_code:
+                              "Authenticate with one-time recovery codes as a 2FA fallback."
                           ]
                           |> Enum.map_join("\n", fn {name, description} ->
                             "  * `#{name}` - #{description}"

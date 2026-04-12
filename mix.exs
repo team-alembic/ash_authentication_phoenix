@@ -33,7 +33,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/get-started.md", title: "Get Started"},
             {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
             {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"},
-            {"documentation/tutorials/password-change.md", title: "Password-Change UI"}
+            {"documentation/tutorials/password-change.md", title: "Password-Change UI"},
+            {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"}
           ],
           redirects: %{
             "getting-started-with-ash-authentication-phoenix" => "get-started"
@@ -129,7 +130,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc"},
+      {:ash_authentication, "~> 5.0.0-rc.2", override: true},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},

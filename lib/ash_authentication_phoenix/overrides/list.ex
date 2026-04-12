@@ -54,6 +54,13 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.TotpVerifyLive,
       AshAuthentication.Phoenix.Components.Totp.Verify2faForm
     ],
+    "Recovery Code": [
+      AshAuthentication.Phoenix.RecoveryCodeVerifyLive,
+      AshAuthentication.Phoenix.RecoveryCodeDisplayLive,
+      AshAuthentication.Phoenix.Components.RecoveryCode.VerifyForm,
+      AshAuthentication.Phoenix.Components.RecoveryCode.DisplayCodes,
+      AshAuthentication.Phoenix.Components.RecoveryCode.Input
+    ],
     Miscellaneous: [
       AshAuthentication.Phoenix.Components.HorizontalRule,
       AshAuthentication.Phoenix.Components.Banner,
