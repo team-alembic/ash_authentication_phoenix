@@ -11,6 +11,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [3.0.0-rc.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.2...3.0.0-rc.3) (2026-04-13)
+
+
+
+
+### Features:
+
+* extract sign-in setup task, register OAuth strategies (#725) by [@jimsynz](https://github.com/jimsynz) [(#725)](https://github.com/team-alembic/ash_authentication_phoenix/pull/725)
+
 ## [v3.0.0-rc.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.1...v3.0.0-rc.2) (2026-04-12)
 
 
