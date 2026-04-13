@@ -101,7 +101,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       strategy.resource
       |> Form.for_action(strategy.register_action_name,
         domain: domain,
-        as: subject_name |> to_string(),
+        as: subject_name |> to_string() |> slugify(),
         transform_errors: _transform_errors(),
         tenant: socket.assigns[:current_tenant],
         context: context,
