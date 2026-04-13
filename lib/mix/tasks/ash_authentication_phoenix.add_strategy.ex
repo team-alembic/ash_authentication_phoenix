@@ -16,14 +16,30 @@ if Code.ensure_loaded?(Igniter) do
       "magic_link" => "ash_authentication.add_strategy.magic_link",
       "api_key" => "ash_authentication.add_strategy.api_key",
       "totp" => "ash_authentication.add_strategy.totp",
-      "recovery_code" => "ash_authentication.add_strategy.recovery_code"
+      "recovery_code" => "ash_authentication.add_strategy.recovery_code",
+      "github" => "ash_authentication.add_strategy.github",
+      "google" => "ash_authentication.add_strategy.google",
+      "apple" => "ash_authentication.add_strategy.apple",
+      "auth0" => "ash_authentication.add_strategy.auth0",
+      "microsoft" => "ash_authentication.add_strategy.microsoft",
+      "slack" => "ash_authentication.add_strategy.slack",
+      "oidc" => "ash_authentication.add_strategy.oidc",
+      "oauth2" => "ash_authentication.add_strategy.oauth2"
     }
 
     @aap_strategy_tasks %{
       "password" => "ash_authentication_phoenix.add_strategy.password",
       "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
-      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code"
+      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code",
+      "github" => "ash_authentication_phoenix.setup",
+      "google" => "ash_authentication_phoenix.setup",
+      "apple" => "ash_authentication_phoenix.setup",
+      "auth0" => "ash_authentication_phoenix.setup",
+      "microsoft" => "ash_authentication_phoenix.setup",
+      "slack" => "ash_authentication_phoenix.setup",
+      "oidc" => "ash_authentication_phoenix.setup",
+      "oauth2" => "ash_authentication_phoenix.setup"
     }
 
     @strategy_names Map.keys(@aa_strategy_tasks)
@@ -36,7 +52,15 @@ if Code.ensure_loaded?(Igniter) do
                             api_key: "Sign in with an API key.",
                             totp: "Authenticate with a time-based one-time password (TOTP).",
                             recovery_code:
-                              "Authenticate with one-time recovery codes as a 2FA fallback."
+                              "Authenticate with one-time recovery codes as a 2FA fallback.",
+                            github: "Sign in with GitHub.",
+                            google: "Sign in with Google.",
+                            apple: "Sign in with Apple.",
+                            auth0: "Sign in with Auth0.",
+                            microsoft: "Sign in with Microsoft.",
+                            slack: "Sign in with Slack.",
+                            oidc: "Sign in with a generic OpenID Connect provider.",
+                            oauth2: "Sign in with a generic OAuth2 provider."
                           ]
                           |> Enum.map_join("\n", fn {name, description} ->
                             "  * `#{name}` - #{description}"
@@ -89,7 +113,12 @@ if Code.ensure_loaded?(Igniter) do
           identity_field: :string,
           hash_provider: :string,
           mode: :string,
-          name: :string
+          name: :string,
+          base_url: :string,
+          authorize_url: :string,
+          token_url: :string,
+          user_url: :string,
+          team_id: :string
         ],
         aliases: [
           a: :accounts,
