@@ -161,7 +161,6 @@ defmodule AshAuthentication.Phoenix.Components.Confirm.Form do
       strategy.resource
       |> Info.authentication_subject_name!()
       |> to_string()
-      |> slugify()
 
     Map.get(params, param_key, %{})
   end
