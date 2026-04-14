@@ -5,6 +5,15 @@
 defmodule AshAuthentication.Phoenix.Test.WebAuthnHelpers do
   @moduledoc """
   Test helpers for WebAuthn component tests.
+
+  These helpers build a mock `AshAuthentication.Strategy.WebAuthn` struct used
+  only for rendering tests (gated by the `:webauthn_strategy_required` tag).
+
+  The mock uses `Example.Accounts.User` as its `:resource` because the component
+  only needs the resource for subject-name derivation via `Info`. Actual WebAuthn
+  ceremony tests (credential creation, sign-in) are not covered here — those
+  belong in the upstream `ash_authentication` package alongside a dedicated
+  fixture like `Example.UserWithWebAuthn`.
   """
 
   @doc """

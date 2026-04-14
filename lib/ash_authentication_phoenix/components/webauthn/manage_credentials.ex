@@ -253,47 +253,26 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     user = socket.assigns.current_user
     tenant = socket.assigns.current_tenant
 
-    with {:ok, attestation_object} <-
-           Base.url_decode64(params["attestation_object"], padding: false),
-         {:ok, client_data_json} <- Base.url_decode64(params["client_data_json"], padding: false),
-         {:ok, {auth_data, _}} <- Wax.register(attestation_object, client_data_json, challenge) do
-      cred_data = auth_data.attested_credential_data
+    add_params = %{
+      "attestation_object" => params["attestation_object"],
+      "client_data_json" => params["client_data_json"],
+      "label" => "New Key"
+    }
 
-      attrs = %{
-        credential_id: cred_data.credential_id,
-        public_key: cred_data.credential_public_key,
-        sign_count: auth_data.sign_count,
-        label: "New Key",
-        user_id: user.id
-      }
+    case WebAuthn.Actions.add_credential(strategy, add_params,
+           challenge: challenge,
+           user: user,
+           tenant: tenant
+         ) do
+      {:ok, _credential} ->
+        socket =
+          socket
+          |> assign(adding: false, add_challenge: nil, error_message: nil)
+          |> load_credentials()
 
-      context = %{private: %{ash_authentication?: true}}
-      ash_opts = [authorize?: false]
-      ash_opts = if tenant, do: Keyword.put(ash_opts, :tenant, tenant), else: ash_opts
+        {:noreply, socket}
 
-      case strategy.credential_resource
-           |> Ash.Changeset.new()
-           |> Ash.Changeset.set_context(context)
-           |> Ash.Changeset.for_create(:create, attrs, ash_opts)
-           |> Ash.create() do
-        {:ok, _credential} ->
-          socket =
-            socket
-            |> assign(adding: false, add_challenge: nil, error_message: nil)
-            |> load_credentials()
-
-          {:noreply, socket}
-
-        {:error, _} ->
-          {:noreply,
-           assign(socket,
-             adding: false,
-             add_challenge: nil,
-             error_message: "Failed to save new key."
-           )}
-      end
-    else
-      _ ->
+      {:error, _} ->
         {:noreply,
          assign(socket,
            adding: false,
