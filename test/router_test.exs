@@ -31,10 +31,9 @@ defmodule AshAuthentication.Phoenix.RouterTest do
   end
 
   test "sign_in_routes respects the inherited router scope" do
-    route =
-      AshAuthentication.Phoenix.Test.Router
-      |> Phoenix.Router.routes()
-      |> Enum.find(&(&1.path == "/nested/sign-in"))
+    routes = Phoenix.Router.routes(AshAuthentication.Phoenix.Test.Router)
+
+    route = Enum.find(routes, &(&1.path == "/nested/sign-in"))
 
     {_, _, _, %{extra: %{session: session}}} = route.metadata.phoenix_live_view
 
@@ -52,6 +51,12 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "resources" => nil
                 }
               ]}
+
+    assert Enum.find(routes, &(&1.path == "/nested/reset")),
+           "reset route should be at /nested/reset, not /nested/nested/reset"
+
+    assert Enum.find(routes, &(&1.path == "/nested/register")),
+           "register route should be at /nested/register, not /nested/nested/register"
   end
 
   test "sign_in_routes respects unscoped" do
