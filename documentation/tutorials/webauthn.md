@@ -100,9 +100,19 @@ The hooks communicate with the server via `push_event` / `handle_event` — you 
 
 ## Origin and `rp_id` configuration
 
-The `rp_id` (Relying Party ID) must match your site's domain. For local development, use `"localhost"`. For production, use your bare domain (e.g. `"example.com"`, not `"https://example.com"`). The browser enforces that the origin of the page exactly matches the `rp_id`, so this is the most common source of "WebAuthn not working" issues in production.
+The `rp_id` (Relying Party ID) must be a **hostname only** — never include the scheme or port. The browser derives the effective domain from the page origin and checks that the `rp_id` is either equal to it or a registrable suffix of it.
 
-Credentials registered against one `rp_id` cannot be used with a different one — changing it will invalidate existing credentials.
+| Environment | Page URL                     | Correct `rp_id`      | Common mistake                 |
+| ----------- | ---------------------------- | -------------------- | ------------------------------ |
+| Local dev   | `http://localhost:4000`      | `"localhost"`        | `"localhost:4000"` (has port)  |
+| Staging     | `https://staging.example.com` | `"staging.example.com"` or `"example.com"` | `"https://staging.example.com"` (has scheme) |
+| Production  | `https://example.com`        | `"example.com"`      | `"https://example.com"`        |
+
+**Local development gotcha**: Phoenix serves on `http://localhost:4000` by default, and it's tempting to set `rp_id "localhost:4000"` to "match" that. Don't — WebAuthn will reject it with a `SecurityError` because `rp_id` is a [domain string](https://www.w3.org/TR/webauthn-2/#rp-id), not an origin. The port (and scheme) are part of the origin, which the browser validates separately; `rp_id` is only the domain. Use `"localhost"` in dev and let the browser handle the port match on its own.
+
+WebAuthn over plain HTTP is only allowed when the origin is `localhost` or `127.0.0.1` — any other hostname requires HTTPS, even in development.
+
+Credentials registered against one `rp_id` cannot be used with a different one — changing it invalidates existing credentials. Pick your production `rp_id` carefully (bare apex like `"example.com"` is usually safer than `"www.example.com"` because it covers subdomains).
 
 ## Credential management
 
@@ -137,7 +147,9 @@ See [UI Overrides](ui-overrides.md) for the full list of overridable slots.
 
 ## Troubleshooting
 
+- **"SecurityError" / "The relying party ID is not a registrable domain suffix"** — Your `rp_id` includes a port (e.g. `"localhost:4000"`) or a scheme (e.g. `"https://example.com"`). Strip it to the bare hostname.
 - **"NotAllowedError" in the browser** — Usually a mismatch between `rp_id` and the page origin, or the user cancelled the prompt.
+- **WebAuthn prompt never appears in dev** — You're serving over plain HTTP from a hostname other than `localhost` / `127.0.0.1`. Either use `localhost` or run dev over HTTPS.
 - **Credentials missing after deploy** — The `rp_id` likely changed. Credentials are bound to the exact `rp_id` they were registered under.
 - **Hooks not firing** — Verify all three hooks are registered in `app.js` and that the LiveView is using them. Check the browser console for hook initialization errors.
 - **"Failed to register new key"** — Check that the `credential_resource` exists and that the `:create` action accepts the credential attributes.
