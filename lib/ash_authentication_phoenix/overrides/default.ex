@@ -15,14 +15,44 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     Components,
     ConfirmLive,
     MagicSignInLive,
+    RecoveryCodeDisplayLive,
+    RecoveryCodeVerifyLive,
     ResetLive,
     SignInLive,
+    SignOutLive,
     TotpSetupLive,
     TotpVerifyLive
   }
 
   override SignInLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override SignOutLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override Components.SignOut do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :h2_class,
+        "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+
+    set :h2_text, "Sign out"
+    set :info_text, "Are you sure you want to sign out?"
+    set :info_text_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :form_class, nil
+
+    set :button_text, "Sign out"
+
+    set :button_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    """
   end
 
   override ConfirmLive do
@@ -388,6 +418,99 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :error_class, "text-red-500 text-sm mb-4"
     set :sign_in_link_class, "text-blue-500 hover:text-blue-600"
     set :sign_in_link_text, "Sign in"
+    set :recovery_code_link_class, "text-blue-500 hover:text-blue-600 text-sm mt-4 block"
+    set :recovery_code_link_text, "Use a recovery code instead"
+    set :recovery_code_link_path, nil
+  end
+
+  override RecoveryCodeVerifyLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override RecoveryCodeDisplayLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+    set :error_class, "text-red-500 text-center"
+  end
+
+  override Components.RecoveryCode.VerifyForm do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Recovery Code"
+    set :instructions_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :instructions_text, "Enter one of your recovery codes."
+    set :form_class, nil
+    set :slot_class, "my-4"
+    set :button_text, "Verify"
+    set :disable_button_text, "Verifying ..."
+    set :error_class, "text-red-500 text-sm mb-4"
+    set :sign_in_link_class, "text-blue-500 hover:text-blue-600"
+    set :sign_in_link_text, "Sign in"
+    set :totp_link_class, "text-blue-500 hover:text-blue-600 text-sm mt-4 block"
+    set :totp_link_text, "Use authenticator app instead"
+    set :totp_link_path, nil
+  end
+
+  override Components.RecoveryCode.DisplayCodes do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Recovery Codes"
+    set :instructions_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+
+    set :instructions_text,
+        "Save these codes in a safe place. Each code can only be used once."
+
+    set :codes_grid_class, "grid grid-cols-2 gap-2 my-4 font-mono text-sm"
+    set :code_item_class, "p-2 bg-gray-100 dark:bg-gray-800 rounded text-center"
+    set :warning_class, "text-amber-600 dark:text-amber-400 text-sm my-4"
+
+    set :warning_text,
+        "If you lose access to your authenticator app, you can use these codes to sign in."
+
+    set :generate_button_class,
+        "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+
+    set :confirm_button_class,
+        "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+
+    set :confirm_path, "/"
+    set :error_class, "text-red-500 text-sm mb-4"
+  end
+
+  override Components.RecoveryCode.Input do
+    set :field_class, "mt-2"
+    set :label_class, "block text-sm font-medium text-gray-700 dark:text-gray-300"
+
+    set :input_class, """
+    mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300
+    dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400
+    focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+    font-mono tracking-widest uppercase
+    """
+
+    set :code_input_label, "Recovery Code"
+    set :code_input_placeholder, "Enter recovery code"
+
+    set :input_class_with_error, """
+    mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-red-500
+    rounded-md shadow-sm placeholder-gray-400
+    focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm
+    font-mono tracking-widest uppercase
+    """
+
+    set :submit_class,
+        "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 mt-4"
+
+    set :error_ul, "mt-1"
+    set :error_li, "text-red-500 text-xs"
+    set :input_debounce, 350
   end
 
   override Components.WebAuthn do

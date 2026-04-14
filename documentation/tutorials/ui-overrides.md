@@ -110,6 +110,35 @@ Renders sign in mark-up for an authenticated resource.
   * `:strategy_display_order` - Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`.
 
 
+## Sign Out
+### `AshAuthentication.Phoenix.SignOutLive`
+
+A generic, white-label sign-out confirmation page.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.SignOut`
+
+Renders a sign-out confirmation form.
+
+  * `:button_class` - CSS class for the sign-out button.
+
+  * `:button_text` - Text for the sign-out button.
+
+  * `:form_class` - CSS class for the form element.
+
+  * `:h2_class` - CSS class for the heading.
+
+  * `:h2_text` - Heading text.
+
+  * `:info_text` - Informational text displayed below the heading.
+
+  * `:info_text_class` - CSS class for the informational text.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
 ## Password Sign-in
 ### `AshAuthentication.Phoenix.Components.Password`
 
@@ -564,6 +593,12 @@ Generates a verification form for TOTP two-factor authentication.
 
   * `:label_text` - Text for the form heading.
 
+  * `:recovery_code_link_class` - CSS class for the recovery code link.
+
+  * `:recovery_code_link_path` - Path to the recovery code verification page (or `nil` to hide the link).
+
+  * `:recovery_code_link_text` - Text for the link to recovery code verification (or `nil` to hide).
+
   * `:root_class` - CSS class for the root `div` element.
 
   * `:sign_in_link_class` - CSS class for the sign-in link when not authenticated.
@@ -571,6 +606,122 @@ Generates a verification form for TOTP two-factor authentication.
   * `:sign_in_link_text` - Text for the sign-in link.
 
   * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+
+## Recovery Code
+### `AshAuthentication.Phoenix.RecoveryCodeVerifyLive`
+
+A generic, white-label recovery code verification page.
+
+  * `:recovery_code_verify_id` - Element ID for the `VerifyForm` LiveComponent.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.RecoveryCodeDisplayLive`
+
+A generic, white-label page for generating and displaying recovery codes.
+
+  * `:error_class` - CSS class for error messages when unauthenticated.
+
+  * `:recovery_code_display_id` - Element ID for the `DisplayCodes` LiveComponent.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.RecoveryCode.VerifyForm`
+
+Generates a verification form for recovery code authentication.
+
+  * `:button_text` - Text for the submit button.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:error_class` - CSS class for error messages.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:instructions_class` - CSS class for instructions text.
+
+  * `:instructions_text` - Instructions text shown above the code input.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:label_text` - Text for the form heading.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:sign_in_link_class` - CSS class for the sign-in link when not authenticated.
+
+  * `:sign_in_link_text` - Text for the sign-in link.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+  * `:totp_link_class` - CSS class for the TOTP verify link.
+
+  * `:totp_link_path` - Path to the TOTP verification page (or `nil` to hide the link).
+
+  * `:totp_link_text` - Text for the link to TOTP verification (or `nil` to hide).
+
+
+### `AshAuthentication.Phoenix.Components.RecoveryCode.DisplayCodes`
+
+Generates and displays recovery codes for the authenticated user.
+
+  * `:code_item_class` - CSS class for individual code items.
+
+  * `:codes_grid_class` - CSS class for the grid of recovery codes.
+
+  * `:confirm_button_class` - CSS class for the confirmation button.
+
+  * `:confirm_button_text` - Text for the confirmation button.
+
+  * `:confirm_path` - Path to redirect to after confirming codes have been saved.
+
+  * `:error_class` - CSS class for error messages.
+
+  * `:generate_button_class` - CSS class for the generate button.
+
+  * `:generate_button_text` - Text for the generate button.
+
+  * `:instructions_class` - CSS class for instructions text.
+
+  * `:instructions_text` - Instructions text shown above the codes.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:label_text` - Text for the heading.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:warning_class` - CSS class for the warning text.
+
+  * `:warning_text` - Warning text shown after generating codes.
+
+
+### `AshAuthentication.Phoenix.Components.RecoveryCode.Input`
+
+Function components for recovery code form inputs.
+
+  * `:code_input_label` - Label for recovery code field.
+
+  * `:code_input_placeholder` - Placeholder for recovery code field.
+
+  * `:error_li` - CSS class for the `li` elements on error lists.
+
+  * `:error_ul` - CSS class for the `ul` element on error lists.
+
+  * `:field_class` - CSS class for `div` elements surrounding the fields.
+
+  * `:input_class` - CSS class for `input` elements.
+
+  * `:input_class_with_error` - CSS class for `input` elements when there is a validation error.
+
+  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
+
+  * `:label_class` - CSS class for `label` elements.
+
+  * `:submit_class` - CSS class for the form submit `input` element.
 
 
 ## Miscellaneous

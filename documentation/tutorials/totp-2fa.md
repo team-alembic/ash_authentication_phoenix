@@ -60,7 +60,7 @@ defmodule MyApp.Accounts.User do
     attribute :email, :ci_string, allow_nil?: false
     attribute :hashed_password, :string, allow_nil?: true, sensitive?: true
     attribute :totp_secret, :binary, allow_nil?: true, sensitive?: true
-    attribute :last_totp_at, :utc_datetime, allow_nil?: true, sensitive?: true
+    attribute :last_totp_at, :datetime, allow_nil?: true, sensitive?: true
   end
 end
 ```
@@ -78,41 +78,44 @@ defmodule MyAppWeb.Router do
   use MyAppWeb, :router
   use AshAuthentication.Phoenix.Router
 
-  scope "/auth", MyAppWeb do
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {MyAppWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :load_from_session
+    plug :set_actor, :user
+  end
+
+  scope "/", MyAppWeb do
     pipe_through :browser
 
     # Standard auth routes
-    auth_routes AuthController, MyApp.Accounts.User, path: "/"
+    auth_routes AuthController, MyApp.Accounts.User, path: "/auth"
 
     # TOTP verification route - defaults to /totp-verify
-    totp_2fa_route MyApp.Accounts.User, :totp
-  end
-end
-```
-
-Options:
-- `path` - The path to mount at (default: `/totp-verify`)
-- `live_view` - Custom LiveView module (default: `AshAuthentication.Phoenix.TotpVerifyLive`)
-- `auth_routes_prefix` - Prefix for auth routes (e.g., `"/auth"`)
-- `overrides` - Override modules for customisation
-
-### totp_setup_route
-
-Generates a TOTP setup page for users to configure two-factor authentication on their account. This should be protected by authentication middleware.
-
-```elixir
-defmodule MyAppWeb.Router do
-  use MyAppWeb, :router
-  use AshAuthentication.Phoenix.Router
-
-  scope "/auth", MyAppWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    totp_2fa_route MyApp.Accounts.User, :totp, auth_routes_prefix: "/auth"
 
     # TOTP setup route - defaults to /totp-setup
-    totp_setup_route MyApp.Accounts.User, :totp
+    totp_setup_route MyApp.Accounts.User, :totp, auth_routes_prefix: "/auth"
   end
 end
 ```
+
+> ### Browser pipeline {: .info}
+>
+> The `plug :set_actor, :user` is required in the browser pipeline for TOTP
+> verification to work. The `load_from_session` plug loads the user from the
+> session into `conn.assigns`, and `set_actor` makes it available to the TOTP
+> verify action via `Ash.PlugHelpers.get_actor/1`.
+
+Options for both macros:
+- `path` - The path to mount at (defaults to `/totp-verify` and `/totp-setup`)
+- `live_view` - Custom LiveView module
+- `auth_routes_prefix` - Prefix for auth routes (e.g., `"/auth"`). **Required** for the form action URLs to work correctly.
+- `overrides` - Override modules for customisation
 
 Options:
 - `path` - The path to mount at (default: `/totp-setup`)
@@ -120,28 +123,9 @@ Options:
 - `auth_routes_prefix` - Prefix for auth routes
 - `overrides` - Override modules for customisation
 
-### Route Ordering
+### Automatic Route Insertion
 
-When using `auth_routes` alongside custom TOTP routes, route ordering matters. The `auth_routes` macro generates catch-all routes that may intercept requests intended for other routes. Define specific routes **before** `auth_routes`, or place them in a separate scope:
-
-```elixir
-scope "/auth", MyAppWeb do
-  pipe_through :browser
-
-  # Define specific routes FIRST
-  totp_2fa_route MyApp.Accounts.User, :totp, path: "/totp/verify"
-
-  # Then auth_routes (which has catch-all patterns)
-  auth_routes AuthController, MyApp.Accounts.User, path: "/"
-end
-
-# Or use a separate scope for TOTP setup (requires authentication)
-scope "/auth", MyAppWeb do
-  pipe_through [:browser, :require_authenticated_user]
-
-  totp_setup_route MyApp.Accounts.User, :totp, path: "/totp/setup"
-end
-```
+When using the igniter installer (`mix igniter.install ash_authentication_phoenix --auth-strategy totp`), the TOTP routes are automatically added to your router's browser scope alongside the other auth routes. You can also add them manually to an existing project.
 
 ## Requiring TOTP for Routes
 
@@ -222,182 +206,80 @@ on_mount: [{AshAuthentication.Phoenix.LiveSession.RequireTotp,
 | `setup_path` | Path to redirect for TOTP setup | `"/auth/totp/setup"` |
 | `current_user_assign` | Assign key for current user | `:current_user` |
 
-## Hard-Required 2FA with Auth Controller
+## 2FA with Auth Controller
 
-For applications that require TOTP verification immediately after password sign-in (before accessing any authenticated route), use a custom auth controller callback combined with session tracking.
+When using the igniter installer with `--auth-strategy magic_link,totp` (or `password,totp`), the TOTP strategy task automatically generates auth controller clauses that handle the 2FA flow. Here's how the generated code works:
 
-### Custom Auth Controller
+### Generated Auth Controller Clauses
 
-Override the `success/4` callback to check TOTP status after password authentication:
+The installer adds two `success/4` clauses before the default catch-all:
 
 ```elixir
 defmodule MyAppWeb.AuthController do
   use MyAppWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  alias AshAuthentication.Phoenix.TotpHelpers
+  # Sign-in interception: check if TOTP is configured
+  def success(conn, {_, phase} = _activity, user, token)
+      when phase in [:sign_in, :sign_in_with_token] do
+    return_to = get_session(conn, :return_to) || ~p"/"
 
-  def success(conn, {:password, _strategy}, user, _token) do
-    if TotpHelpers.totp_configured?(user) do
-      conn
-      |> put_session(:awaiting_totp_verification, true)
-      |> put_session(:totp_user_id, user.id)
-      |> redirect(to: ~p"/auth/totp/verify")
-    else
+    if AshAuthentication.Phoenix.TotpHelpers.totp_configured?(user) do
+      # TOTP is set up — store user in session and redirect to verify
       conn
       |> store_in_session(user)
+      |> set_live_socket_id(token)
       |> assign(:current_user, user)
-      |> redirect(to: ~p"/")
-    end
-  end
-
-  def success(conn, {:totp, _strategy}, user, _token) do
-    conn
-    |> delete_session(:awaiting_totp_verification)
-    |> delete_session(:totp_user_id)
-    |> store_in_session(user)
-    |> assign(:current_user, user)
-    |> redirect(to: ~p"/")
-  end
-
-  def success(conn, _activity, user, _token) do
-    conn
-    |> store_in_session(user)
-    |> assign(:current_user, user)
-    |> redirect(to: ~p"/")
-  end
-
-  def failure(conn, _activity, _reason) do
-    conn
-    |> put_flash(:error, "Authentication failed")
-    |> redirect(to: ~p"/sign-in")
-  end
-
-  def sign_out(conn, _params) do
-    conn
-    |> clear_session()
-    |> redirect(to: ~p"/")
-  end
-end
-```
-
-### Companion Plug for TOTP Verification
-
-Create a plug that blocks access until TOTP is verified:
-
-```elixir
-defmodule MyAppWeb.Plugs.RequireTotpVerification do
-  import Plug.Conn
-  import Phoenix.Controller
-
-  def init(opts), do: opts
-
-  def call(conn, _opts) do
-    cond do
-      get_session(conn, :awaiting_totp_verification) ->
-        conn
-        |> put_flash(:info, "Please verify your identity")
-        |> redirect(to: "/auth/totp/verify")
-        |> halt()
-
-      true ->
-        conn
-    end
-  end
-end
-```
-
-### Router Configuration
-
-Use the plug in your authenticated pipeline:
-
-```elixir
-defmodule MyAppWeb.Router do
-  use MyAppWeb, :router
-  use AshAuthentication.Phoenix.Router
-
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {MyAppWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-    plug :load_from_session
-  end
-
-  pipeline :require_totp_verified do
-    plug MyAppWeb.Plugs.RequireTotpVerification
-  end
-
-  scope "/auth", MyAppWeb do
-    pipe_through :browser
-
-    auth_routes AuthController, MyApp.Accounts.User, path: "/"
-
-    # TOTP verify page must be accessible during verification
-    get "/totp/verify", TotpVerifyController, :show
-    post "/totp/verify", TotpVerifyController, :verify
-  end
-
-  scope "/", MyAppWeb do
-    pipe_through [:browser, :require_authenticated, :require_totp_verified]
-
-    # All protected routes
-    get "/", PageController, :home
-    get "/dashboard", DashboardController, :index
-  end
-end
-```
-
-### TOTP Verify Controller
-
-```elixir
-defmodule MyAppWeb.TotpVerifyController do
-  use MyAppWeb, :controller
-
-  alias AshAuthentication.Info
-
-  def show(conn, _params) do
-    if get_session(conn, :awaiting_totp_verification) do
-      render(conn, :verify)
+      |> put_session(:return_to, return_to)
+      |> redirect(to: ~p"/totp-verify/#{token}")
     else
-      redirect(conn, to: ~p"/")
+      # No TOTP configured — redirect to setup
+      conn
+      |> store_in_session(user)
+      |> set_live_socket_id(token)
+      |> assign(:current_user, user)
+      |> put_session(:return_to, return_to)
+      |> redirect(to: ~p"/totp-setup")
     end
   end
 
-  def verify(conn, %{"code" => code}) do
-    user_id = get_session(conn, :totp_user_id)
-    {:ok, user} = MyApp.Accounts.get_user_by_id(user_id)
-    {:ok, strategy} = Info.strategy(user.__struct__, :totp)
+  # Registration: always redirect to TOTP setup
+  def success(conn, {_, :register}, user, token) do
+    return_to = get_session(conn, :return_to) || ~p"/"
 
-    case AshAuthentication.Strategy.action(strategy, :sign_in, %{
-      strategy.identity_field => Map.get(user, strategy.identity_field),
-      :code => code
-    }) do
-      {:ok, verified_user} ->
-        conn
-        |> delete_session(:awaiting_totp_verification)
-        |> delete_session(:totp_user_id)
-        |> store_in_session(verified_user)
-        |> assign(:current_user, verified_user)
-        |> redirect(to: ~p"/")
-
-      {:error, _} ->
-        conn
-        |> put_flash(:error, "Invalid code")
-        |> redirect(to: ~p"/auth/totp/verify")
-    end
+    conn
+    |> store_in_session(user)
+    |> set_live_socket_id(token)
+    |> assign(:current_user, user)
+    |> put_session(:return_to, return_to)
+    |> redirect(to: ~p"/totp-setup")
   end
+
+  # Default catch-all for other auth activities
+  def success(conn, activity, user, token) do
+    # ... standard success handling
+  end
+
+  # ...
 end
 ```
 
-This pattern ensures that:
+### How the flow works
 
-1. Password authentication succeeds but doesn't grant full access
-2. The user is redirected to TOTP verification
-3. All protected routes check for completed TOTP verification
-4. Only after TOTP verification does the user get full session access
+1. **Sign-in**: When a user signs in (via password or magic link), the first clause matches `:sign_in` or `:sign_in_with_token`. It stores the user in session, then checks if TOTP is configured:
+   - **TOTP configured**: redirects to `/totp-verify/:token` where the built-in `TotpVerifyLive` presents the code entry form
+   - **TOTP not configured**: redirects to `/totp-setup` where the built-in `TotpSetupLive` shows the QR code setup flow
+
+2. **Registration**: New users (e.g., via magic link with `registration_enabled? true`) match the `:register` clause and are always redirected to TOTP setup.
+
+3. **TOTP verification**: The user is already in the session (so `plug :load_from_session` and `plug :set_actor, :user` find them). The verify form submits to the TOTP strategy's verify action, which checks the code. On success, the controller's catch-all `success/4` runs and redirects to the return path.
+
+> ### Why store_in_session before verify? {: .info}
+>
+> The user is stored in session before TOTP verification so that the verify
+> plug can find the user via `get_actor(conn)`. The `RequireTotp` plug or
+> LiveView hook can be used on protected routes to ensure TOTP verification
+> has been completed before granting access to sensitive resources.
 
 ## Authentication Metadata
 
@@ -669,13 +551,13 @@ defmodule MyAppWeb.AdminLive do
 end
 ```
 
-### Backup Codes
+### Recovery Codes
 
-Consider implementing backup codes for users who lose access to their authenticator app. This is not built into `ash_authentication` by default but can be implemented as a custom strategy.
-
-### Account Recovery
-
-Have a process for users who lose both their password and TOTP access. This typically involves identity verification through support channels.
+Use the [recovery code strategy](recovery-codes.md) to give users one-time
+backup codes for when they lose access to their authenticator app. When both
+TOTP and recovery codes are installed via Igniter, the "Use a recovery code
+instead" link is automatically added to the TOTP verify page, and users are
+redirected to generate recovery codes after completing TOTP setup.
 
 ## Next Steps
 

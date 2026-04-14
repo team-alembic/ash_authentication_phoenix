@@ -6,7 +6,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "3.0.0-rc.0"
+  @version "3.0.0-rc.3"
 
   def project do
     [
@@ -34,6 +34,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
             {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"},
             {"documentation/tutorials/password-change.md", title: "Password-Change UI"},
+            {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"},
             {"documentation/tutorials/webauthn.md", title: "WebAuthn / Passkeys"}
           ],
           redirects: %{

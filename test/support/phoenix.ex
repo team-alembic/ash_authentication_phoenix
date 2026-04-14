@@ -179,7 +179,7 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   auth_routes_prefix: "/auth",
                   as: :nested
 
-    sign_out_route AuthController
+    sign_out_route AuthController, "/sign-out", as: :nested
     reset_route as: :nested
   end
 
@@ -191,7 +191,7 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   auth_routes_prefix: {:unscoped, "/auth"},
                   as: :unscoped
 
-    sign_out_route AuthController
+    sign_out_route AuthController, "/sign-out", as: :unscoped
     reset_route as: :unscoped
   end
 

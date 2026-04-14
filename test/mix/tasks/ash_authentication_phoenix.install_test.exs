@@ -142,8 +142,14 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
               You can confirm your account using the link we sent to you, or by resetting your password.
               \"\"\"
 
-            _ ->
+            {{:password, _}, _} ->
               "Incorrect email or password"
+
+            {{:magic_link, _}, _} ->
+              "Invalid or expired sign-in link"
+
+            _ ->
+              "Authentication failed"
           end
 
         conn
@@ -235,6 +241,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
     + |    plug(:load_from_session)
+    + |    plug(:set_actor, :user)
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
       |  pipeline :api do

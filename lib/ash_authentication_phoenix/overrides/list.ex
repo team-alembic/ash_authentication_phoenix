@@ -10,6 +10,10 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.SignInLive,
       AshAuthentication.Phoenix.Components.SignIn
     ],
+    "Sign Out": [
+      AshAuthentication.Phoenix.SignOutLive,
+      AshAuthentication.Phoenix.Components.SignOut
+    ],
     "Password Sign-in": [
       AshAuthentication.Phoenix.Components.Password,
       AshAuthentication.Phoenix.Components.Password.RegisterForm,
@@ -49,6 +53,13 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.TotpSetupLive,
       AshAuthentication.Phoenix.TotpVerifyLive,
       AshAuthentication.Phoenix.Components.Totp.Verify2faForm
+    ],
+    "Recovery Code": [
+      AshAuthentication.Phoenix.RecoveryCodeVerifyLive,
+      AshAuthentication.Phoenix.RecoveryCodeDisplayLive,
+      AshAuthentication.Phoenix.Components.RecoveryCode.VerifyForm,
+      AshAuthentication.Phoenix.Components.RecoveryCode.DisplayCodes,
+      AshAuthentication.Phoenix.Components.RecoveryCode.Input
     ],
     WebAuthn: [
       AshAuthentication.Phoenix.Components.WebAuthn,

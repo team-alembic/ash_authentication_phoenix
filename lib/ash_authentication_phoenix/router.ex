@@ -410,21 +410,116 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
-  Generates a sign-out route which points to the `sign_out` action in your auth
-  controller.
+  Generates a sign-out route with CSRF protection.
 
-  This is optional, but you probably want it.
+  This generates two routes:
+
+    * A `GET` route that renders a sign-out confirmation page using LiveView.
+      The page displays a form with a button that submits a `DELETE` request.
+    * A `DELETE` route that points to the `sign_out` action in your auth controller.
+
+  This two-step approach prevents logout CSRF attacks, where a malicious site
+  could force users to sign out by embedding a link to the sign-out URL.
+
+  ## Options
+
+    * `path` - the path to mount the sign-out routes at. Defaults to `/sign-out`.
+    * `live_view` - the LiveView module to use for the confirmation page.
+      Defaults to `AshAuthentication.Phoenix.SignOutLive`.
+    * `as` - the alias for the generated routes. Defaults to `:auth`.
+    * `otp_app` - the OTP app to find authenticated resources in.
+    * `overrides` - override modules for customisation. See
+      `AshAuthentication.Phoenix.Overrides` for more information.
+    * `layout` - the layout to use for the LiveView.
+    * `on_mount` - additional `on_mount` hooks for the live session.
+    * `on_mount_prepend` - hooks to run before the default hooks.
+    * `gettext_fn` - a `{module, function}` tuple for text translation.
+    * `gettext_backend` - a `{module, domain}` tuple for Gettext.
+
+  All other options are passed to the generated `scope`.
   """
   @spec sign_out_route(AshAuthentication.Phoenix.Controller.t(), path :: String.t(), [
-          {:as, atom} | {atom, any}
+          {:as, atom}
+          | {:live_view, module}
+          | {:otp_app, atom}
+          | {:overrides, [module]}
+          | {:layout, {module, atom} | false}
+          | {:on_mount, [module]}
+          | {:on_mount_prepend, [module]}
+          | {:gettext_fn, {module, atom}}
+          | {:gettext_backend, {module, String.t()}}
+          | {atom, any}
         ]) :: Macro.t()
   defmacro sign_out_route(auth_controller, path \\ "/sign-out", opts \\ []) do
     {as, opts} = Keyword.pop(opts, :as, :auth)
+    {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignOutLive)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    live_view_opts =
+      opts
+      |> Keyword.put_new(:alias, false)
 
     quote do
-      scope unquote(path), unquote(opts) do
-        get("/", unquote(auth_controller), :sign_out, as: unquote(as))
+      sign_out_path = Phoenix.Router.scoped_path(__MODULE__, unquote(path))
+
+      scope unquote(path), unquote(live_view_opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "overrides" => unquote(overrides),
+                 "otp_app" => unquote(otp_app),
+                 "sign_out_path" => sign_out_path,
+                 "gettext_fn" => unquote(gettext_fn)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_sign_out", live_session_opts do
+          live("/", unquote(live_view), :sign_out, as: :"#{unquote(as)}_sign_out")
+        end
       end
+
+      scope unquote(path), unquote(opts) do
+        delete("/", unquote(auth_controller), :sign_out, as: unquote(as))
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
     end
   end
 
@@ -801,6 +896,232 @@ defmodule AshAuthentication.Phoenix.Router do
 
         live_session :"#{unquote(as)}_totp_setup", live_session_opts do
           live("/", unquote(live_view), :totp_setup, as: unquote(as))
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
+  @doc """
+  Generates a recovery code verification page for two-factor authentication fallback using LiveView.
+
+  This page is used when a user needs to authenticate with a recovery code instead of
+  their TOTP authenticator. It supports both token-based flow (after password sign-in)
+  and step-up authentication (re-verify for protected resources).
+
+  Available options are:
+
+  * `path` the path under which to mount the live-view. Defaults to `/recovery-code-verify`.
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+    Allows disabling `helpers: true`.
+    If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.RecoveryCodeVerifyLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation. See
+    `AshAuthentication.Phoenix.Overrides` for more information.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple pointing to a
+    `(msgid :: String.t(), bindings :: keyword) :: String.t()` typed function that will be called to translate
+    each output text of the live view.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple pointing to a Gettext backend module
+    and specifying the Gettext domain.
+
+  All other options are passed to the generated `scope`.
+
+  ## Example
+
+      scope "/", MyAppWeb do
+        pipe_through :browser
+        recovery_code_verify_route MyApp.Accounts.User, :recovery_code, auth_routes_prefix: "/auth"
+      end
+  """
+  defmacro recovery_code_verify_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/recovery-code-verify")
+
+    {live_view, opts} =
+      Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.RecoveryCodeVerifyLive)
+
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts =
+      opts
+      |> Keyword.put_new(:alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        strategy = AshAuthentication.Info.strategy!(unquote(resource), unquote(strategy))
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "otp_app" => unquote(otp_app),
+                 "strategy" => strategy,
+                 "resource" => unquote(resource)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_recovery_code_verify", live_session_opts do
+          live("/:token", unquote(live_view), :recovery_code_verify, as: unquote(as))
+          live("/", unquote(live_view), :recovery_code_verify, as: :"#{unquote(as)}_step_up")
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
+  @doc """
+  Generates a recovery code display/generation page using LiveView.
+
+  This page is used by authenticated users to generate and view their recovery codes.
+  It should be placed behind authentication middleware.
+
+  Available options are:
+
+  * `path` the path under which to mount the live-view. Defaults to `/recovery-codes`.
+  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
+  * `live_view` the name of the live view to render. Defaults to
+    `AshAuthentication.Phoenix.RecoveryCodeDisplayLive`.
+  * `as` which is passed to the generated `live` route. Defaults to `:auth`.
+  * `overrides` specify any override modules for customisation.
+  * `gettext_fn` as a `{module :: module, function :: atom}` tuple.
+  * `gettext_backend` as a `{module :: module, domain :: String.t()}` tuple.
+
+  All other options are passed to the generated `scope`.
+
+  ## Example
+
+      scope "/", MyAppWeb do
+        pipe_through [:browser, :require_authenticated_user]
+        recovery_code_display_route MyApp.Accounts.User, :recovery_code, auth_routes_prefix: "/auth"
+      end
+  """
+  defmacro recovery_code_display_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/recovery-codes")
+
+    {live_view, opts} =
+      Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.RecoveryCodeDisplayLive)
+
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts =
+      opts
+      |> Keyword.put_new(:alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        strategy = AshAuthentication.Info.strategy!(unquote(resource), unquote(strategy))
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "otp_app" => unquote(otp_app),
+                 "strategy" => strategy,
+                 "resource" => unquote(resource)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_recovery_code_display", live_session_opts do
+          live("/", unquote(live_view), :recovery_code_display, as: unquote(as))
         end
       end
 

@@ -30,6 +30,6 @@ defmodule DevWeb.AuthController do
   def sign_out(conn, _params) do
     conn
     |> clear_session(:ash_authentication_phoenix)
-    |> render("sign_out.html")
+    |> redirect(to: "/")
   end
 end
