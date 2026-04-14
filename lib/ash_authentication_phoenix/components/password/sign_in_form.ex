@@ -103,7 +103,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       strategy.resource
       |> Form.for_action(strategy.sign_in_action_name,
         domain: domain,
-        as: subject_name |> to_string() |> slugify(),
+        as: subject_name |> to_string(),
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
           |> slugify(),
@@ -250,7 +250,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       strategy.resource
       |> Info.authentication_subject_name!()
       |> to_string()
-      |> slugify()
 
     Map.get(params, param_key, %{})
   end

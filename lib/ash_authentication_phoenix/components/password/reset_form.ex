@@ -189,7 +189,6 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
       strategy.resource
       |> Info.authentication_subject_name!()
       |> to_string()
-      |> slugify()
 
     Map.get(params, param_key, %{})
   end

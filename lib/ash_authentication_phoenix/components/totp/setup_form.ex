@@ -271,7 +271,7 @@ if Code.ensure_loaded?(EQRCode) do
         strategy.resource
         |> Form.for_action(strategy.confirm_setup_action_name,
           domain: domain,
-          as: subject_name |> to_string() |> slugify(),
+          as: subject_name |> to_string(),
           id:
             "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.confirm_setup_action_name}"
             |> slugify(),
@@ -342,7 +342,6 @@ if Code.ensure_loaded?(EQRCode) do
         strategy.resource
         |> Info.authentication_subject_name!()
         |> to_string()
-        |> slugify()
 
       Map.get(params, param_key, %{})
     end
