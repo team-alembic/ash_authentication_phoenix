@@ -414,7 +414,9 @@ defmodule AshAuthentication.Phoenix.Router do
           end
 
           if register_path do
-            live(register_route_path, unquote(live_view), :register, as: :"#{unquote(as)}_register")
+            live(register_route_path, unquote(live_view), :register,
+              as: :"#{unquote(as)}_register"
+            )
           end
         end
       end
