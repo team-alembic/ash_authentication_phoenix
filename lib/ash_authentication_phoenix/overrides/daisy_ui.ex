@@ -158,6 +158,56 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :checkbox_label_class, "text-sm font-medium text-gray-700 dark:text-white"
   end
 
+  override Components.Otp do
+    set :root_class, "mt-4 mb-4"
+    set :request_form_module, AshAuthentication.Phoenix.Components.Otp.RequestForm
+    set :verify_form_module, AshAuthentication.Phoenix.Components.Otp.VerifyForm
+  end
+
+  override Components.Otp.RequestForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :form_class, nil
+    set :disable_button_text, "Sending ..."
+
+    set :request_flash_text,
+        "If this user exists in our database, a sign-in code will be sent shortly."
+  end
+
+  override Components.Otp.VerifyForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :form_class, nil
+    set :description_class, "text-sm text-base-content/70 mb-4"
+    set :description_text, "Enter the code we just sent you."
+    set :disable_button_text, "Signing in ..."
+    set :back_link_class, "block mt-4 text-sm text-primary hover:text-primary-focus"
+    set :back_link_text, "Use a different email"
+  end
+
+  override Components.Otp.Input do
+    set :field_class, "mt-2 mb-2"
+    set :label_class, "block text-sm font-medium text-base-content mb-1"
+
+    @otp_base_input_class "input w-full"
+
+    set :input_class, @otp_base_input_class
+
+    set :input_class_with_error, @otp_base_input_class <> " input-error"
+
+    set :submit_class, "btn btn-primary btn-block mt-4 mb-4"
+
+    set :identity_input_label, "Email"
+    set :identity_input_placeholder, nil
+    set :code_input_label, "Code"
+    set :code_input_placeholder, nil
+    set :request_label, "Send code"
+    set :verify_label, "Sign in"
+    set :error_ul, "text-error font-light my-3 italic text-sm"
+    set :error_li, nil
+    set :input_debounce, 350
+  end
+
   override Components.Password do
     set :root_class, "mt-4 mb-4"
     set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
