@@ -205,6 +205,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                 {render_slot(@sign_in_extra, form)}
               </div>
             <% true -> %>
+              {""}
           <% end %>
 
           <div class={override_for(@overrides, :interstitial_class)}>
@@ -264,6 +265,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   {render_slot(@register_extra, form)}
                 </div>
               <% true -> %>
+                {""}
             <% end %>
 
             <div class={override_for(@overrides, :interstitial_class)}>
@@ -320,6 +322,7 @@ defmodule AshAuthentication.Phoenix.Components.Password do
                   {render_slot(@reset_extra, form)}
                 </div>
               <% true -> %>
+                {""}
             <% end %>
 
             <div class={override_for(@overrides, :interstitial_class)}>
