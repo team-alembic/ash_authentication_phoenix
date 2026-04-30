@@ -11,6 +11,27 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.3...v3.0.0-rc.4) (2026-04-30)
+
+
+
+
+### Features:
+
+* add Phoenix integration for the OTP strategy (#732) by [@jimsynz](https://github.com/jimsynz) [(#732)](https://github.com/team-alembic/ash_authentication_phoenix/pull/732)
+
+* extract sign-in setup task, register OAuth strategies (#725) by [@jimsynz](https://github.com/jimsynz) [(#725)](https://github.com/team-alembic/ash_authentication_phoenix/pull/725)
+
+* add Phoenix integration for recovery code strategy (#724) by [@jimsynz](https://github.com/jimsynz) [(#724)](https://github.com/team-alembic/ash_authentication_phoenix/pull/724)
+
+* add convention-named Phoenix strategy tasks for auth integration (#719) by [@jimsynz](https://github.com/jimsynz) [(#719)](https://github.com/team-alembic/ash_authentication_phoenix/pull/719)
+
+### Bug Fixes:
+
+* use raw paths for reset/register route definitions in sign_in_route (#729) by [@jimsynz](https://github.com/jimsynz) [(#729)](https://github.com/team-alembic/ash_authentication_phoenix/pull/729)
+
+* use consistent underscored subject name for form param keys (#728) by [@jimsynz](https://github.com/jimsynz) [(#728)](https://github.com/team-alembic/ash_authentication_phoenix/pull/728)
+
 ## [3.0.0-rc.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.2...3.0.0-rc.3) (2026-04-13)
 
 

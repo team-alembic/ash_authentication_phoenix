@@ -6,7 +6,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "3.0.0-rc.3"
+  @version "3.0.0-rc.4"
 
   def project do
     [
