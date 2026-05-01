@@ -104,14 +104,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     {:noreply, assign(socket, :identity_value, value)}
   end
 
+  alias AshAuthentication.Strategy.WebAuthn
+
   def handle_event("authenticate", _params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
 
-    {:ok, challenge} =
-      AshAuthentication.Strategy.WebAuthn.Actions.authentication_challenge(strategy, [], tenant)
+    {:ok, challenge} = WebAuthn.Actions.authentication_challenge(strategy, [], tenant)
 
-    rp_id = AshAuthentication.Strategy.WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
+    rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
 
     socket =
       socket
@@ -141,7 +142,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       "user_handle" => params["user_handle"]
     }
 
-    case AshAuthentication.Strategy.WebAuthn.Actions.sign_in(
+    case WebAuthn.Actions.sign_in(
            strategy,
            sign_in_params,
            challenge: challenge,

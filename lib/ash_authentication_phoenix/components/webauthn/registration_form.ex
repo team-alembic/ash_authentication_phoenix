@@ -94,15 +94,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     {:noreply, assign(socket, :identity_value, value)}
   end
 
+  alias AshAuthentication.Strategy.WebAuthn
+
   def handle_event("register", _params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
 
-    {:ok, challenge} =
-      AshAuthentication.Strategy.WebAuthn.Actions.registration_challenge(strategy, tenant)
+    {:ok, challenge} = WebAuthn.Actions.registration_challenge(strategy, tenant)
 
-    rp_id = AshAuthentication.Strategy.WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
-    rp_name = AshAuthentication.Strategy.WebAuthn.Helpers.resolve_rp_name(strategy, tenant)
+    rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
+    rp_name = WebAuthn.Helpers.resolve_rp_name(strategy, tenant)
 
     user_id = Base.url_encode64(:crypto.strong_rand_bytes(64), padding: false)
 
@@ -142,7 +143,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       "raw_id" => params["raw_id"]
     }
 
-    case AshAuthentication.Strategy.WebAuthn.Actions.register(
+    case WebAuthn.Actions.register(
            strategy,
            register_params,
            challenge: challenge,

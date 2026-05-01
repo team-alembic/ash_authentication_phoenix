@@ -163,9 +163,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   end
 
   def handle_event("save-label", %{"credential_id" => id, "label" => label}, socket) do
-    unless Enum.any?(socket.assigns.credentials, &(to_string(&1.id) == id)) do
-      {:noreply, assign(socket, error_message: "Credential not found.")}
-    else
+    if Enum.any?(socket.assigns.credentials, &(to_string(&1.id) == id)) do
       strategy = socket.assigns.strategy
 
       case WebAuthn.Actions.update_credential_label(strategy, id, label,
@@ -182,13 +180,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
         {:error, _} ->
           {:noreply, assign(socket, error_message: "Failed to rename credential.")}
       end
+    else
+      {:noreply, assign(socket, error_message: "Credential not found.")}
     end
   end
 
   def handle_event("delete-credential", %{"id" => id}, socket) do
-    unless Enum.any?(socket.assigns.credentials, &(to_string(&1.id) == id)) do
-      {:noreply, assign(socket, error_message: "Credential not found.")}
-    else
+    if Enum.any?(socket.assigns.credentials, &(to_string(&1.id) == id)) do
       strategy = socket.assigns.strategy
       user = socket.assigns.current_user
 
@@ -209,6 +207,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
           {:noreply, assign(socket, error_message: warning)}
       end
+    else
+      {:noreply, assign(socket, error_message: "Credential not found.")}
     end
   end
 

@@ -61,6 +61,7 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   @moduledoc false
   use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
   alias AshAuthentication.Phoenix.Components
+  alias AshAuthentication.Phoenix.Test.WebAuthnHelpers
 
   @impl true
   def mount(_params, session, socket) do
@@ -86,7 +87,7 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   end
 
   defp webauthn_strategy do
-    AshAuthentication.Phoenix.Test.WebAuthnHelpers.mock_webauthn_strategy()
+    WebAuthnHelpers.mock_webauthn_strategy()
   end
 end
 
