@@ -421,6 +421,87 @@ Function components for dealing with form input during magic link sign in.
   * `:submit_label` - A function that takes the strategy and returns text for the sign in button, or a string.
 
 
+## OTP
+### `AshAuthentication.Phoenix.Components.Otp`
+
+Generates a sign-in form for the OTP strategy.
+
+  * `:request_form_module` - The Phoenix component used for the request (step one) form. Defaults to `AshAuthentication.Phoenix.Components.Otp.RequestForm`.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:verify_form_module` - The Phoenix component used for the verify (step two) form. Defaults to `AshAuthentication.Phoenix.Components.Otp.VerifyForm`.
+
+
+### `AshAuthentication.Phoenix.Components.Otp.RequestForm`
+
+Generates the form for requesting an OTP code (step one of the OTP flow).
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:request_flash_text` - Text for the flash message shown after the OTP request is submitted. Set to `nil` to disable.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.Otp.VerifyForm`
+
+Generates the form for verifying an OTP code (step two of the OTP flow).
+
+  * `:back_link_class` - CSS class for the back link.
+
+  * `:back_link_text` - Text for the link that returns to the request form. Set to `nil` to disable.
+
+  * `:description_class` - CSS class for the description paragraph.
+
+  * `:description_text` - Text shown above the OTP code field, e.g. "Enter the code we sent you.". Set to `nil` to disable.
+
+  * `:disable_button_text` - Text for the submit button when the request is happening.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:label_class` - CSS class for the `h2` element.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+
+### `AshAuthentication.Phoenix.Components.Otp.Input`
+
+Function components for dealing with form input during OTP authentication.
+
+  * `:code_input_label` - Label for the OTP code field.
+
+  * `:code_input_placeholder` - Placeholder for the OTP code field.
+
+  * `:error_li` - CSS class for the `li` elements on error lists.
+
+  * `:error_ul` - CSS class for the `ul` element on error lists.
+
+  * `:field_class` - CSS class for `div` elements surrounding the fields.
+
+  * `:identity_input_label` - Label for the identity field.
+
+  * `:identity_input_placeholder` - Placeholder for the identity field.
+
+  * `:input_class` - CSS class for text/code `input` elements.
+
+  * `:input_class_with_error` - CSS class for text/code `input` elements when there is a validation error.
+
+  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
+
+  * `:label_class` - CSS class for `label` elements.
+
+  * `:request_label` - A function that takes the strategy and returns the request submit button text, or a string.
+
+  * `:submit_class` - CSS class for the form submit `input` element.
+
+  * `:verify_label` - A function that takes the strategy and returns the verify submit button text, or a string.
+
+
 ## OAuth2
 ### `AshAuthentication.Phoenix.Components.Apple`
 

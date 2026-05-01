@@ -30,6 +30,7 @@ if Code.ensure_loaded?(Igniter) do
     @phoenix_strategy_tasks %{
       "password" => "ash_authentication_phoenix.add_strategy.password",
       "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
+      "otp" => "ash_authentication_phoenix.add_strategy.otp",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
       "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code"
     }
