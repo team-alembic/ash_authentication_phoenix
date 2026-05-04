@@ -18,6 +18,7 @@ if Code.ensure_loaded?(Igniter) do
       "api_key" => "ash_authentication.add_strategy.api_key",
       "totp" => "ash_authentication.add_strategy.totp",
       "recovery_code" => "ash_authentication.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication.add_strategy.webauthn",
       "github" => "ash_authentication.add_strategy.github",
       "google" => "ash_authentication.add_strategy.google",
       "apple" => "ash_authentication.add_strategy.apple",
@@ -34,6 +35,7 @@ if Code.ensure_loaded?(Igniter) do
       "otp" => "ash_authentication_phoenix.add_strategy.otp",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
       "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication_phoenix.add_strategy.webauthn",
       "github" => "ash_authentication_phoenix.setup",
       "google" => "ash_authentication_phoenix.setup",
       "apple" => "ash_authentication_phoenix.setup",
@@ -56,6 +58,8 @@ if Code.ensure_loaded?(Igniter) do
                             totp: "Authenticate with a time-based one-time password (TOTP).",
                             recovery_code:
                               "Authenticate with one-time recovery codes as a 2FA fallback.",
+                            webauthn:
+                              "Authenticate with hardware security keys, platform authenticators or passkeys.",
                             github: "Sign in with GitHub.",
                             google: "Sign in with Google.",
                             apple: "Sign in with Apple.",
@@ -98,6 +102,12 @@ if Code.ensure_loaded?(Igniter) do
 
       - `--mode`, `-m` - Either `primary` or `2fa`. Defaults to `2fa`.
       - `--name`, `-n` - The name of the TOTP strategy. Defaults to `totp`.
+
+    ## WebAuthn options
+
+      - `--rp-id` - The Relying Party ID (your domain, e.g. `example.com`). Required.
+      - `--rp-name` - The Relying Party display name shown to the user during registration. Required.
+      - `--origin` - The full origin URL (e.g. `https://example.com` or `https://localhost:4001`). Optional.
     """
 
     def info(_argv, _composing_task) do
@@ -121,7 +131,10 @@ if Code.ensure_loaded?(Igniter) do
           authorize_url: :string,
           token_url: :string,
           user_url: :string,
-          team_id: :string
+          team_id: :string,
+          rp_id: :string,
+          rp_name: :string,
+          origin: :string
         ],
         aliases: [
           a: :accounts,

@@ -34,7 +34,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/liveview.md", title: "LiveView Routes"},
             {"documentation/tutorials/ui-overrides.md", title: "UI Overrides"},
             {"documentation/tutorials/password-change.md", title: "Password-Change UI"},
-            {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"}
+            {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"},
+            {"documentation/tutorials/webauthn.md", title: "WebAuthn / Passkeys"}
           ],
           redirects: %{
             "getting-started-with-ash-authentication-phoenix" => "get-started"
@@ -108,7 +109,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
           "https://api.reuse.software/info/github.com/team-alembic/ash_authentication_phoenix"
       },
       source_url: "https://github.com/team-alembic/ash_authentication_phoenix",
-      files: ~w[lib .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation i18n]
+      files: ~w[lib priv .formatter.exs mix.exs README* LICENSE* CHANGELOG* documentation i18n]
     ]
   end
 
@@ -130,7 +131,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc.5"},
+      {:ash_authentication, "~> 5.0.0-rc.6"},
+      {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},
@@ -145,6 +147,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:gettext, "~> 0.26 or ~> 1.0", optional: true},
       {:eqrcode, "~> 0.1", optional: true},
       {:igniter, "~> 0.5 and >= 0.5.25", optional: true},
+      {:igniter_js, "~> 0.4", optional: true},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},
