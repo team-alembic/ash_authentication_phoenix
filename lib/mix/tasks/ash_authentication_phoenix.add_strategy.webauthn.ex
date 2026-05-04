@@ -29,11 +29,13 @@ if Code.ensure_loaded?(Igniter) do
         })
     """
 
-    @missing_igniter_js """
-    Automatic wiring requires `igniter_js`. Add it to your dependencies and
+    @igniter_js_dep {:igniter_js, "~> 0.4"}
+
+    @could_not_install_igniter_js """
+    Could not install `igniter_js`. Add it to your dependencies manually and
     re-run this task to have `#{@app_js_path}` updated for you:
 
-        {:igniter_js, "~> 0.4"}
+        #{inspect(@igniter_js_dep)}
     """
 
     @moduledoc """
@@ -47,9 +49,9 @@ if Code.ensure_loaded?(Igniter) do
     the server. Without them, the WebAuthn components will not function.
 
     Automatic wiring is performed via an AST codemod powered by
-    [`igniter_js`](https://hex.pm/packages/igniter_js), which must be present in
-    your dependencies. If it is not, the task falls back to a warning containing
-    copy-paste instructions for `#{@app_js_path}`.
+    [`igniter_js`](https://hex.pm/packages/igniter_js). If `igniter_js` is not
+    already a dependency, the task adds it to your `mix.exs`, fetches and
+    compiles it, then continues with the codemod in the same run.
 
     Because the codemod re-emits the file in its canonical form, expect cosmetic
     formatting changes (e.g. semicolons, indentation) on the first run.
@@ -96,11 +98,29 @@ if Code.ensure_loaded?(Igniter) do
         not Igniter.exists?(igniter, @app_js_path) ->
           warn_manual(igniter, "Could not find `#{@app_js_path}`.")
 
-        not parser_loaded?() ->
-          Igniter.add_warning(igniter, @missing_igniter_js <> "\n" <> @manual_instructions)
+        parser_loaded?() ->
+          Igniter.update_file(igniter, @app_js_path, &update_app_js_source/1)
 
         true ->
-          Igniter.update_file(igniter, @app_js_path, &update_app_js_source/1)
+          install_and_update(igniter)
+      end
+    end
+
+    defp install_and_update(igniter) do
+      igniter =
+        igniter
+        |> Igniter.Project.Deps.add_dep(@igniter_js_dep, on_exists: :skip)
+        |> Igniter.apply_and_fetch_dependencies(
+          operation: "compiling igniter_js for WebAuthn JS hook wiring"
+        )
+
+      if parser_loaded?() do
+        Igniter.update_file(igniter, @app_js_path, &update_app_js_source/1)
+      else
+        Igniter.add_warning(
+          igniter,
+          @could_not_install_igniter_js <> "\n" <> @manual_instructions
+        )
       end
     end
 
