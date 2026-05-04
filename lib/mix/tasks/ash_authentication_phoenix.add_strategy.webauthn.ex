@@ -29,6 +29,13 @@ if Code.ensure_loaded?(Igniter) do
         })
     """
 
+    @missing_igniter_js """
+    Automatic wiring requires `igniter_js`. Add it to your dependencies and
+    re-run this task to have `#{@app_js_path}` updated for you:
+
+        {:igniter_js, "~> 0.4"}
+    """
+
     @moduledoc """
     #{@shortdoc}
 
@@ -39,19 +46,20 @@ if Code.ensure_loaded?(Igniter) do
     `navigator.credentials.create` / `.get` and return the signed assertion to
     the server. Without them, the WebAuthn components will not function.
 
-    The change is applied via an AST codemod (powered by `igniter_js`), which
-    means the entire file is reparsed and re-emitted in its canonical form —
-    expect cosmetic formatting changes (e.g. semicolons, indentation) on the
-    first run. Re-running the task is a no-op once the hooks are wired up.
+    Automatic wiring is performed via an AST codemod powered by
+    [`igniter_js`](https://hex.pm/packages/igniter_js), which must be present in
+    your dependencies. If it is not, the task falls back to a warning containing
+    copy-paste instructions for `#{@app_js_path}`.
+
+    Because the codemod re-emits the file in its canonical form, expect cosmetic
+    formatting changes (e.g. semicolons, indentation) on the first run.
+    Re-running the task is a no-op once the hooks are wired up.
 
     ## Example
 
     ```bash
     #{@example}
     ```
-
-    If `#{@app_js_path}` cannot be located or modified automatically, the task
-    emits a warning describing what to add manually.
     """
 
     def info(_argv, _composing_task) do
@@ -61,7 +69,6 @@ if Code.ensure_loaded?(Igniter) do
         extra_args?: false,
         only: nil,
         positional: [],
-        installs: [{:igniter_js, "~> 0.4"}],
         schema: [
           accounts: :string,
           user: :string,
@@ -85,10 +92,15 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     def igniter(igniter) do
-      if Igniter.exists?(igniter, @app_js_path) do
-        Igniter.update_file(igniter, @app_js_path, &update_app_js_source/1)
-      else
-        warn_manual(igniter, "Could not find `#{@app_js_path}`.")
+      cond do
+        not Igniter.exists?(igniter, @app_js_path) ->
+          warn_manual(igniter, "Could not find `#{@app_js_path}`.")
+
+        not parser_loaded?() ->
+          Igniter.add_warning(igniter, @missing_igniter_js <> "\n" <> @manual_instructions)
+
+        true ->
+          Igniter.update_file(igniter, @app_js_path, &update_app_js_source/1)
       end
     end
 
@@ -99,7 +111,7 @@ if Code.ensure_loaded?(Igniter) do
         already_wired_up?(content) ->
           source
 
-        not IgniterJs.Parsers.Javascript.Parser.exist_live_socket?(content, :content) ->
+        not call_parser(:exist_live_socket?, [content, :content]) ->
           {:warning,
            manual_instructions(
              "Could not find a `liveSocket = new LiveSocket(...)` declaration in `#{@app_js_path}`."
@@ -117,9 +129,9 @@ if Code.ensure_loaded?(Igniter) do
 
     defp transform_content(source, content) do
       with {:ok, _, content} <-
-             IgniterJs.Parsers.Javascript.Parser.insert_imports(content, @import_line, :content),
+             call_parser(:insert_imports, [content, @import_line, :content]),
            {:ok, _, content} <-
-             IgniterJs.Parsers.Javascript.Parser.extend_hook_object(content, @hooks, :content) do
+             call_parser(:extend_hook_object, [content, @hooks, :content]) do
         Rewrite.Source.update(source, :content, content)
       else
         {:error, _, message} ->
@@ -135,6 +147,12 @@ if Code.ensure_loaded?(Igniter) do
     defp manual_instructions(reason) do
       "#{reason}\n\n#{@manual_instructions}"
     end
+
+    defp parser_loaded?, do: Code.ensure_loaded?(parser_module())
+
+    defp call_parser(fun, args), do: apply(parser_module(), fun, args)
+
+    defp parser_module, do: Module.concat([IgniterJs, Parsers, Javascript, Parser])
   end
 else
   defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.Webauthn do
