@@ -130,7 +130,12 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc.2"},
+      {:ash_authentication,
+       github: "team-alembic/ash_authentication", branch: "oauth2-server", override: true},
+      # AshAuthentication's WebAuthn strategy is currently compiled
+      # unconditionally and requires `wax_`. Remove once the
+      # respect-optional-wax fix (ash_authentication#1162) ships.
+      {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},

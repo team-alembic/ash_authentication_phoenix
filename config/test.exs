@@ -8,7 +8,7 @@ config :bcrypt_elixir, :log_rounds, 4
 
 config :ash, :disable_async?, true
 
-config :ash_authentication_phoenix, ash_domains: [Example.Accounts]
+config :ash_authentication_phoenix, ash_domains: [Example.Accounts, Oauth2ServerTest.Domain]
 
 config :ash_authentication_phoenix,
   signing_secret: "Marty McFly in the past with the Delorean"
