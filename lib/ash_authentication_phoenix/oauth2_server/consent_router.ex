@@ -157,10 +157,15 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ConsentRouter do
           conn.request_path <>
             if conn.query_string != "", do: "?" <> conn.query_string, else: ""
 
-        location = path <> "?" <> URI.encode_query(%{"return_to" => return_to})
-
+        # AshAuthentication.Phoenix sign-in handlers read `:return_to` from
+        # session, not from the query string. Put it in both so any
+        # convention works.
         conn
-        |> put_resp_header("location", location)
+        |> Plug.Conn.put_session(:return_to, return_to)
+        |> put_resp_header(
+          "location",
+          path <> "?" <> URI.encode_query(%{"return_to" => return_to})
+        )
         |> send_resp(302, "")
         |> halt()
 
