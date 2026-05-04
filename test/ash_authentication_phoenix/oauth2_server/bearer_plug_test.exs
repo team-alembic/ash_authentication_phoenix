@@ -32,7 +32,9 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.BearerPlugTest do
     assert conn.status == 401
     [www_auth] = get_resp_header(conn, "www-authenticate")
     assert www_auth =~ "Bearer resource_metadata="
-    assert www_auth =~ Server.resource_url()
+    # PRM lives at host root (RFC 9728), not under the resource's path.
+    %URI{scheme: scheme, host: host} = URI.parse(Server.resource_url())
+    assert www_auth =~ "#{scheme}://#{host}/.well-known/oauth-protected-resource"
   end
 
   test "valid token sets the actor and assigns claims", %{user: user} do

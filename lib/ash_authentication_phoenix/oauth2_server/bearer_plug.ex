@@ -96,7 +96,14 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.BearerPlug do
   defp load_user(_, _), do: {:error, :missing_subject}
 
   defp challenge(conn, server, reason) do
-    metadata_url = server.resource_url() <> "/.well-known/oauth-protected-resource"
+    # PRM lives at the host root per RFC 9728, not under the resource's
+    # path. Strip path/query from the resource URL so the metadata URL
+    # points at <scheme>://<host>/.well-known/oauth-protected-resource.
+    metadata_url =
+      server.resource_url()
+      |> URI.parse()
+      |> Map.merge(%{path: "/.well-known/oauth-protected-resource", query: nil, fragment: nil})
+      |> URI.to_string()
 
     error_param =
       case reason do
