@@ -96,11 +96,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ConsentRouter do
   defp consent_view!(opts), do: Keyword.get(opts, :consent_view, ConsentView)
 
   defp require_user(conn) do
-    # Prefer the explicitly-set actor (the convention for apps using
-    # `plug :set_actor, :user`). Fall back to the conventional
-    # `:current_user` assign that `:load_from_session` populates, so apps
-    # that haven't wired `:set_actor` still work.
-    case Ash.PlugHelpers.get_actor(conn) || conn.assigns[:current_user] do
+    case Ash.PlugHelpers.get_actor(conn) do
       nil -> {:error, :no_user}
       user -> {:ok, user}
     end
