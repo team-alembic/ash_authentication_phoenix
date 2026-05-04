@@ -68,7 +68,7 @@ defmodule AshAuthentication.Phoenix.Components.DynamicOidc do
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     ~H"""
-    <div :if={@connections != []} class={override_for(@overrides, :root_class)}>
+    <div class={if @connections != [], do: override_for(@overrides, :root_class)}>
       <a
         :for={connection <- @connections}
         href={request_url_for(@socket, @subject_name, @auth_routes_prefix, @strategy, connection)}

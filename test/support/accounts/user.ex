@@ -93,6 +93,23 @@ defmodule Example.Accounts.User do
         |> Ash.Changeset.change_attribute(:email, user_info["email"])
       end
     end
+
+    create :register_with_sso do
+      argument :user_info, :map, allow_nil?: false
+      argument :oauth_tokens, :map, allow_nil?: false
+      upsert? true
+      upsert_identity :unique_email
+
+      change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.DynamicOidc.IdentityChange
+
+      change fn changeset, _ ->
+        user_info = Ash.Changeset.get_argument(changeset, :user_info)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:email, user_info["email"])
+      end
+    end
   end
 
   preparations do
@@ -182,6 +199,11 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
+      end
+
+      dynamic_oidc :sso do
+        connection_resource Example.Accounts.OidcConnection
+        redirect_uri "http://localhost:4000/auth"
       end
 
       magic_link do
