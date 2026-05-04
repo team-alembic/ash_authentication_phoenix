@@ -49,6 +49,7 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
     ],
     OAuth2: [
       AshAuthentication.Phoenix.Components.Apple,
+      AshAuthentication.Phoenix.Components.DynamicOidc,
       AshAuthentication.Phoenix.Components.OAuth2
     ],
     TOTP: [
