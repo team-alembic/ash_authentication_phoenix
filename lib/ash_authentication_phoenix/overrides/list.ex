@@ -41,6 +41,12 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.MagicLink.Form,
       AshAuthentication.Phoenix.Components.MagicLink.Input
     ],
+    OTP: [
+      AshAuthentication.Phoenix.Components.Otp,
+      AshAuthentication.Phoenix.Components.Otp.RequestForm,
+      AshAuthentication.Phoenix.Components.Otp.VerifyForm,
+      AshAuthentication.Phoenix.Components.Otp.Input
+    ],
     OAuth2: [
       AshAuthentication.Phoenix.Components.Apple,
       AshAuthentication.Phoenix.Components.OAuth2

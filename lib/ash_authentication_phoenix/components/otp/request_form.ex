@@ -1,36 +1,39 @@
-# SPDX-FileCopyrightText: 2022 Alembic Pty Ltd
+# SPDX-FileCopyrightText: 2026 Alembic Pty Ltd
 #
 # SPDX-License-Identifier: MIT
 
-defmodule AshAuthentication.Phoenix.Components.MagicLink do
+defmodule AshAuthentication.Phoenix.Components.Otp.RequestForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
-    request_flash_text:
-      "Text for the flash message when a request is received.  Set to `nil` to disable.",
     disable_button_text: "Text for the submit button when the request is happening.",
-    checkbox_class: "CSS class for the `remember_me` checkbox",
-    checkbox_label_class: "CSS class for the `remember_me` check box label",
-    remember_me_class: "CSS class for the `div` element surrounding the remember me field."
+    request_flash_text:
+      "Text for the flash message shown after the OTP request is submitted. Set to `nil` to disable."
 
   @moduledoc """
-  Generates a sign-in for for a resource using the "Magic link" strategy.
+  Generates the form for requesting an OTP code (step one of the OTP flow).
+
+  On successful submission this component runs the request action server-side
+  (which fires the configured sender) and notifies the parent
+  `AshAuthentication.Phoenix.Components.Otp` component to advance to the
+  verify phase.
 
   ## Component hierarchy
 
-  This is the top-most strategy-specific component, nested below
-  `AshAuthentication.Phoenix.Components.SignIn`.
+  This is a child of `AshAuthentication.Phoenix.Components.Otp`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
-    * `AshAuthentication.Phoenix.Components.Password.Input.submit/1`
+    * `AshAuthentication.Phoenix.Components.Otp.Input.identity_field/1`
+    * `AshAuthentication.Phoenix.Components.Otp.Input.submit/1`
 
   ## Props
 
-    * `strategy` - the strategy configuration as per
-      `AshAuthentication.Info.strategy/2`.  Required.
+    * `strategy` - The OTP strategy configuration. Required.
+    * `parent_id` - The ID of the parent `Components.Otp` LiveComponent.
+      Required (used for `send_update`).
+    * `label` - Text to show in the `h2` heading. `false` to disable.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
 
@@ -38,18 +41,25 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
+
+  alias AshAuthentication.{
+    Info,
+    Phoenix.Components.Otp,
+    Strategy
+  }
+
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
-  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5, debug_form_errors: 1]
+  import AshAuthentication.Phoenix.Components.Helpers, only: [debug_form_errors: 1]
+  import PhoenixHTMLHelpers.Form
   import Slug
-  require Logger
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
+          required(:parent_id) => String.t(),
+          optional(:label) => String.t() | false,
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t(),
           optional(:overrides) => [module],
           optional(:gettext_fn) => {module, atom}
         }
@@ -64,17 +74,13 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     socket =
       socket
       |> assign(assigns)
-      |> assign(trigger_action: false, subject_name: subject_name)
+      |> assign(:subject_name, subject_name)
+      |> assign_new(:label, fn -> humanize(strategy.request_action_name) end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
-      |> assign_new(:label, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
-      |> assign_new(:auth_routes_prefix, fn -> nil end)
-
-    form = blank_form(strategy, assigns[:context] || %{}, socket)
-
-    socket = assign(socket, form: form)
+      |> assign_new(:form, fn -> blank_form(strategy, assigns[:context] || %{}, assigns) end)
 
     {:ok, socket}
   end
@@ -85,32 +91,28 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <%= if @label do %>
-        <h2 class={override_for(@overrides, :label_class)}>{_gettext(@label)}</h2>
-      <% end %>
+      <h2 :if={@label} class={override_for(@overrides, :label_class)}>{_gettext(@label)}</h2>
 
       <.form
         :let={form}
         for={@form}
+        id={@form.id}
         phx-change="change"
         phx-submit="submit"
-        phx-trigger-action={@trigger_action}
         phx-target={@myself}
-        action={auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :request)}
-        method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Input.identity_field
+        <Otp.Input.identity_field
           strategy={@strategy}
           form={form}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
 
-        <Input.submit
+        <Otp.Input.submit
           strategy={@strategy}
           form={form}
-          action={@strategy.request_action_name}
+          action={:request}
           disable_text={_gettext(override_for(@overrides, :disable_button_text))}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
@@ -138,32 +140,48 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     strategy = socket.assigns.strategy
     params = get_params(params, strategy)
 
-    socket.assigns.form
-    |> Form.submit(params: params)
-    |> case do
+    case Form.submit(socket.assigns.form, params: params) do
       :ok ->
-        :ok
+        notify_parent(socket, params)
+        flash_request_message(socket)
 
       {:ok, _result} ->
-        :ok
+        notify_parent(socket, params)
+        flash_request_message(socket)
 
       {:error, form} ->
         debug_form_errors(form)
+        {:noreply, assign(socket, :form, form)}
     end
+  end
 
+  defp notify_parent(socket, params) do
+    identity_field = socket.assigns.strategy.identity_field
+    identity_value = Map.get(params, to_string(identity_field)) || Map.get(params, identity_field)
+
+    send_update(AshAuthentication.Phoenix.Components.Otp,
+      id: socket.assigns.parent_id,
+      event: :request_succeeded,
+      identity: identity_value
+    )
+  end
+
+  defp flash_request_message(socket) do
     flash = override_for(socket.assigns.overrides, :request_flash_text)
 
     socket =
-      socket
-      |> assign(:form, blank_form(strategy, socket.assigns[:context] || %{}, socket))
-
-    socket =
       if flash do
-        socket
-        |> put_flash!(:info, _gettext(flash))
+        socket |> put_flash!(:info, _gettext(flash))
       else
         socket
       end
+
+    socket =
+      assign(
+        socket,
+        :form,
+        blank_form(socket.assigns.strategy, socket.assigns[:context] || %{}, socket.assigns)
+      )
 
     {:noreply, socket}
   end
@@ -177,7 +195,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
     Map.get(params, param_key, %{})
   end
 
-  defp blank_form(strategy, context, socket) do
+  defp blank_form(strategy, context, assigns) do
     domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
@@ -186,8 +204,9 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
       domain: domain,
       as: subject_name |> to_string(),
       id:
-        "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}" |> slugify(),
-      tenant: socket.assigns.current_tenant,
+        "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.request_action_name}"
+        |> slugify(),
+      tenant: assigns[:current_tenant],
       transform_errors: _transform_errors(),
       context:
         Ash.Helpers.deep_merge_maps(context, %{

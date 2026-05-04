@@ -179,6 +179,73 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :submit_label, "Sign in"
   end
 
+  override Components.Otp do
+    set :root_class, "mt-4 mb-4"
+    set :request_form_module, AshAuthentication.Phoenix.Components.Otp.RequestForm
+    set :verify_form_module, AshAuthentication.Phoenix.Components.Otp.VerifyForm
+  end
+
+  override Components.Otp.RequestForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :form_class, nil
+    set :disable_button_text, "Sending ..."
+
+    set :request_flash_text,
+        "If this user exists in our database, a sign-in code will be sent shortly."
+  end
+
+  override Components.Otp.VerifyForm do
+    set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :form_class, nil
+    set :description_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :description_text, "Enter the code we just sent you."
+    set :disable_button_text, "Signing in ..."
+    set :back_link_class, "block mt-4 text-sm text-blue-500 hover:text-blue-600"
+    set :back_link_text, "Use a different email"
+  end
+
+  override Components.Otp.Input do
+    set :field_class, "mt-2 mb-2 dark:text-white"
+    set :label_class, "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
+
+    @otp_base_input_class """
+    appearance-none block w-full px-3 py-2 border rounded-md
+    shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm
+    bg-white dark:bg-gray-800 dark:text-white dark:placeholder-gray-500
+    """
+
+    set :input_class,
+        @otp_base_input_class <>
+          """
+          border-gray-300 focus:ring-blue-400 focus:border-blue-500
+          """
+
+    set :input_class_with_error,
+        @otp_base_input_class <>
+          """
+          border-red-400 focus:border-red-400 focus:ring-red-300
+          """
+
+    set :submit_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    mt-4 mb-4
+    """
+
+    set :identity_input_label, "Email"
+    set :identity_input_placeholder, nil
+    set :code_input_label, "Code"
+    set :code_input_placeholder, nil
+    set :request_label, "Send code"
+    set :verify_label, "Sign in"
+    set :error_ul, "text-red-400 font-light my-3 italic text-sm"
+    set :error_li, nil
+    set :input_debounce, 350
+  end
+
   override Components.Password do
     set :root_class, "mt-4 mb-4"
     set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"

@@ -351,11 +351,25 @@ defmodule AshAuthentication.Phoenix.Router do
             value -> Phoenix.Router.scoped_path(__MODULE__, value)
           end
 
+        register_route_path =
+          case unquote(register_path) do
+            nil -> nil
+            {:unscoped, value} -> value
+            value -> value
+          end
+
         reset_path =
           case unquote(reset_path) do
             nil -> nil
             {:unscoped, value} -> value
             value -> Phoenix.Router.scoped_path(__MODULE__, value)
+          end
+
+        reset_route_path =
+          case unquote(reset_path) do
+            nil -> nil
+            {:unscoped, value} -> value
+            value -> value
           end
 
         auth_routes_prefix =
@@ -396,11 +410,13 @@ defmodule AshAuthentication.Phoenix.Router do
           live(unquote(path), unquote(live_view), :sign_in, as: unquote(as))
 
           if reset_path do
-            live(reset_path, unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
+            live(reset_route_path, unquote(live_view), :reset, as: :"#{unquote(as)}_reset")
           end
 
           if register_path do
-            live(register_path, unquote(live_view), :register, as: :"#{unquote(as)}_register")
+            live(register_route_path, unquote(live_view), :register,
+              as: :"#{unquote(as)}_register"
+            )
           end
         end
       end

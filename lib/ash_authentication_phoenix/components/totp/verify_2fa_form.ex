@@ -120,7 +120,7 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
           resource
           |> Form.for_action(strategy.verify_action_name,
             domain: domain,
-            as: subject_name |> to_string() |> slugify(),
+            as: subject_name |> to_string(),
             id:
               "#{subject_name}-#{Strategy.name(strategy)}-verify-2fa"
               |> slugify(),
@@ -276,7 +276,6 @@ defmodule AshAuthentication.Phoenix.Components.Totp.Verify2faForm do
       strategy.resource
       |> Info.authentication_subject_name!()
       |> to_string()
-      |> slugify()
 
     Map.get(params, param_key, %{})
   end

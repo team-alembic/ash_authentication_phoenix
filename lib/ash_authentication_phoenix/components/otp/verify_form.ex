@@ -1,36 +1,45 @@
-# SPDX-FileCopyrightText: 2024 Alembic Pty Ltd
+# SPDX-FileCopyrightText: 2026 Alembic Pty Ltd
 #
 # SPDX-License-Identifier: MIT
 
-defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
+defmodule AshAuthentication.Phoenix.Components.Otp.VerifyForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the `h2` element.",
     form_class: "CSS class for the `form` element.",
-    slot_class: "CSS class for the `div` surrounding the slot.",
-    button_text: "Text for the submit button.",
-    disable_button_text: "Text for the submit button when the request is happening."
+    description_class: "CSS class for the description paragraph.",
+    description_text:
+      "Text shown above the OTP code field, e.g. \"Enter the code we sent you.\". Set to `nil` to disable.",
+    disable_button_text: "Text for the submit button when the request is happening.",
+    back_link_class: "CSS class for the back link.",
+    back_link_text: "Text for the link that returns to the request form. Set to `nil` to disable."
 
   @moduledoc """
-  Generates a sign in form for TOTP authentication.
+  Generates the form for verifying an OTP code (step two of the OTP flow).
+
+  The form posts directly to the strategy's sign-in endpoint via
+  `phx-trigger-action` so the JWT lands in the session through the standard
+  `AuthController` pipeline.
 
   ## Component hierarchy
 
-  This is a child of `AshAuthentication.Phoenix.Components.Totp`.
+  This is a child of `AshAuthentication.Phoenix.Components.Otp`.
 
   Children:
 
-    * `AshAuthentication.Phoenix.Components.Totp.Input.identity_field/1`
-    * `AshAuthentication.Phoenix.Components.Totp.Input.code_field/1`
-    * `AshAuthentication.Phoenix.Components.Totp.Input.submit/1`
+    * `AshAuthentication.Phoenix.Components.Otp.Input.code_field/1`
+    * `AshAuthentication.Phoenix.Components.Otp.Input.submit/1`
 
   ## Props
 
-    * `strategy` - The configuration map as per
-      `AshAuthentication.Info.strategy/2`. Required.
-    * `label` - The text to show in the submit label. Generated from the
-      configured action name (via `Phoenix.Naming.humanize/1`) if not supplied.
-      Set to `false` to disable.
+    * `strategy` - The OTP strategy configuration. Required.
+    * `identity` - The identity value (e.g. email address) submitted in the
+      request phase. Pre-filled into a hidden field on the verify form.
+      Required.
+    * `parent_id` - The ID of the parent `Components.Otp` LiveComponent.
+      Required.
+    * `auth_routes_prefix` - Optional prefix for authentication routes.
+    * `label` - Text to show in the `h2` heading. `false` to disable.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
 
@@ -38,22 +47,27 @@ defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.Totp, Strategy}
+
+  alias AshAuthentication.{
+    Info,
+    Phoenix.Components.Otp,
+    Strategy
+  }
+
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
-
-  import AshAuthentication.Phoenix.Components.Helpers,
-    only: [auth_path: 5]
-
+  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
   import PhoenixHTMLHelpers.Form
   import Slug
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),
+          required(:identity) => String.t(),
+          required(:parent_id) => String.t(),
+          optional(:auth_routes_prefix) => String.t(),
           optional(:label) => String.t() | false,
           optional(:current_tenant) => String.t(),
           optional(:context) => map(),
-          optional(:auth_routes_prefix) => String.t(),
           optional(:overrides) => [module],
           optional(:gettext_fn) => {module, atom}
         }
@@ -63,7 +77,6 @@ defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
   @spec update(props, Socket.t()) :: {:ok, Socket.t()}
   def update(assigns, socket) do
     strategy = assigns.strategy
-    domain = Info.authentication_domain!(strategy.resource)
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     socket =
@@ -71,46 +84,49 @@ defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
       |> assign(assigns)
       |> assign(trigger_action: false, subject_name: subject_name)
       |> assign_new(:label, fn -> humanize(strategy.sign_in_action_name) end)
-      |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
-    context =
-      Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
-        strategy: strategy,
-        private: %{ash_authentication?: true}
-      })
-
     form =
       strategy.resource
       |> Form.for_action(strategy.sign_in_action_name,
-        domain: domain,
+        domain: Info.authentication_domain!(strategy.resource),
         as: subject_name |> to_string(),
         id:
           "#{subject_name}-#{Strategy.name(strategy)}-#{strategy.sign_in_action_name}"
           |> slugify(),
-        tenant: assigns[:current_tenant],
+        tenant: socket.assigns.current_tenant,
         transform_errors: _transform_errors(),
-        context: context
+        params: %{to_string(strategy.identity_field) => assigns[:identity]},
+        context:
+          Ash.Helpers.deep_merge_maps(socket.assigns[:context] || %{}, %{
+            strategy: strategy,
+            private: %{ash_authentication?: true}
+          })
       )
 
-    socket = assign(socket, form: form, trigger_action: false, subject_name: subject_name)
+    socket = assign(socket, form: form)
 
     {:ok, socket}
   end
 
   @doc false
   @impl true
-  @spec render(Socket.assigns()) :: Rendered.t() | no_return
+  @spec render(props) :: Rendered.t() | no_return
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <%= if @label do %>
-        <h2 class={override_for(@overrides, :label_class)}>{_gettext(@label)}</h2>
-      <% end %>
+      <h2 :if={@label} class={override_for(@overrides, :label_class)}>{_gettext(@label)}</h2>
+
+      <p
+        :if={override_for(@overrides, :description_text)}
+        class={override_for(@overrides, :description_class)}
+      >
+        {_gettext(override_for(@overrides, :description_text))}
+      </p>
 
       <.form
         :let={form}
@@ -124,34 +140,33 @@ defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
         method="POST"
         class={override_for(@overrides, :form_class)}
       >
-        <Totp.Input.identity_field
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-          gettext_fn={@gettext_fn}
-        />
-        <Totp.Input.code_field
-          strategy={@strategy}
-          form={form}
-          overrides={@overrides}
-          gettext_fn={@gettext_fn}
-        />
-        <%= if @inner_block do %>
-          <div class={override_for(@overrides, :slot_class)}>
-            {render_slot(@inner_block, form)}
-          </div>
-        <% end %>
+        {hidden_input(form, @strategy.identity_field, value: @identity)}
 
-        <Totp.Input.submit
+        <Otp.Input.code_field
           strategy={@strategy}
-          id={@form.id <> "-submit"}
           form={form}
-          action={:sign_in}
-          label={override_for(@overrides, :button_text)}
-          disable_text={override_for(@overrides, :disable_button_text)}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
+
+        <Otp.Input.submit
+          strategy={@strategy}
+          form={form}
+          action={:verify}
+          disable_text={_gettext(override_for(@overrides, :disable_button_text))}
+          overrides={@overrides}
+          gettext_fn={@gettext_fn}
+        />
+
+        <a
+          :if={override_for(@overrides, :back_link_text)}
+          href="#"
+          phx-click="back"
+          phx-target={@myself}
+          class={override_for(@overrides, :back_link_class)}
+        >
+          {_gettext(override_for(@overrides, :back_link_text))}
+        </a>
       </.form>
     </div>
     """
@@ -161,7 +176,6 @@ defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
   @impl true
   @spec handle_event(String.t(), %{required(String.t()) => String.t()}, Socket.t()) ::
           {:noreply, Socket.t()}
-
   def handle_event("change", params, socket) do
     params = get_params(params, socket.assigns.strategy)
 
@@ -180,6 +194,15 @@ defmodule AshAuthentication.Phoenix.Components.Totp.SignInForm do
       socket
       |> assign(:form, form)
       |> assign(:trigger_action, form.valid?)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("back", _params, socket) do
+    send_update(AshAuthentication.Phoenix.Components.Otp,
+      id: socket.assigns.parent_id,
+      event: :reset_to_request
+    )
 
     {:noreply, socket}
   end
