@@ -131,7 +131,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   defp deps do
     [
       {:ash_authentication,
-       path: "../../../../ash_authentication/.claude/worktrees/dynamic-oidc", override: true},
+       github: "team-alembic/ash_authentication", branch: "dynamic-oidc", override: true},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
       {:jason, "~> 1.0"},
