@@ -47,7 +47,6 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
         value={@value}
         placeholder={override_for(@overrides, :identity_input_placeholder, "you@example.com")}
         class={override_for(@overrides, :input_class)}
-        phx-change="update-identity"
         autocomplete="username webauthn"
       />
     </div>

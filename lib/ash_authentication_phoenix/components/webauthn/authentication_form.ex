@@ -67,7 +67,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
 
     ~H"""
     <div class={override_for(@overrides, :root_class)} id={@id} phx-hook="WebAuthnAuthenticationHook">
-      <div class={override_for(@overrides, :form_class)}>
+      <form
+        phx-change="update-identity"
+        phx-submit="authenticate"
+        phx-target={@myself}
+        class={override_for(@overrides, :form_class)}
+      >
         <%= if @show_identity do %>
           <WebAuthn.Input.identity_field
             identity_field={@strategy.identity_field}
@@ -88,7 +93,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
-      </div>
+      </form>
 
       <%= if @inner_block do %>
         <div class={override_for(@overrides, :slot_class)}>
@@ -100,7 +105,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   end
 
   @impl true
-  def handle_event("update-identity", %{"value" => value}, socket) do
+  def handle_event("update-identity", params, socket) do
+    identity_field_name = to_string(socket.assigns.strategy.identity_field)
+    value = Map.get(params, identity_field_name, "")
     {:noreply, assign(socket, :identity_value, value)}
   end
 
