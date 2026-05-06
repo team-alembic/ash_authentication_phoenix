@@ -57,12 +57,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   @spec register_button(map) :: Rendered.t()
   def register_button(assigns) do
     ~H"""
-    <button
-      type="button"
-      phx-click="register"
-      disabled={@disabled}
-      class={override_for(@overrides, :submit_class)}
-    >
+    <button type="submit" disabled={@disabled} class={override_for(@overrides, :submit_class)}>
       <%= if icon = override_for(@overrides, :register_button_icon) do %>
         {Phoenix.HTML.raw(icon)}
       <% end %>
@@ -75,12 +70,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   @spec sign_in_button(map) :: Rendered.t()
   def sign_in_button(assigns) do
     ~H"""
-    <button
-      type="button"
-      phx-click="authenticate"
-      disabled={@disabled}
-      class={override_for(@overrides, :submit_class)}
-    >
+    <button type="submit" disabled={@disabled} class={override_for(@overrides, :submit_class)}>
       <%= if icon = override_for(@overrides, :sign_in_button_icon) do %>
         {Phoenix.HTML.raw(icon)}
       <% end %>
