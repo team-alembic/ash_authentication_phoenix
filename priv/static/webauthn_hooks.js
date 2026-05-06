@@ -60,12 +60,12 @@ export const WebAuthnSupportHook = {
       typeof window !== "undefined" &&
       typeof window.PublicKeyCredential !== "undefined";
 
-    this.pushEvent("passkeys-supported", { supported });
+    this.pushEventTo(this.el, "passkeys-supported", { supported });
 
     if (supported && window.PublicKeyCredential.isConditionalMediationAvailable) {
       window.PublicKeyCredential.isConditionalMediationAvailable().then(
         (available) => {
-          this.pushEvent("conditional-ui-available", { available });
+          this.pushEventTo(this.el, "conditional-ui-available", { available });
         }
       );
     }
@@ -141,7 +141,7 @@ export const WebAuthnRegistrationHook = {
       });
 
       if (!credential) {
-        this.pushEvent("registration-error", {
+        this.pushEventTo(this.el, "registration-error", {
           message: "No credential was returned by the browser.",
           name: "NullCredential",
         });
@@ -155,13 +155,13 @@ export const WebAuthnRegistrationHook = {
       const clientDataJSON = arrayBufferToBase64Url(response.clientDataJSON);
       const rawId = arrayBufferToBase64Url(credential.rawId);
 
-      this.pushEvent("registration-attestation", {
+      this.pushEventTo(this.el, "registration-attestation", {
         attestation_object: attestationObject,
         client_data_json: clientDataJSON,
         raw_id: rawId,
       });
     } catch (error) {
-      this.pushEvent("registration-error", {
+      this.pushEventTo(this.el, "registration-error", {
         message: error.message,
         name: error.name,
       });
@@ -211,7 +211,7 @@ export const WebAuthnAuthenticationHook = {
       });
 
       if (!credential) {
-        this.pushEvent("authentication-error", {
+        this.pushEventTo(this.el, "authentication-error", {
           message: "No credential was returned by the browser.",
           name: "NullCredential",
         });
@@ -229,7 +229,7 @@ export const WebAuthnAuthenticationHook = {
         ? arrayBufferToBase64Url(response.userHandle)
         : null;
 
-      this.pushEvent("authentication-assertion", {
+      this.pushEventTo(this.el, "authentication-assertion", {
         raw_id: rawId,
         authenticator_data: authenticatorData,
         signature: signature,
@@ -237,7 +237,7 @@ export const WebAuthnAuthenticationHook = {
         user_handle: userHandle,
       });
     } catch (error) {
-      this.pushEvent("authentication-error", {
+      this.pushEventTo(this.el, "authentication-error", {
         message: error.message,
         name: error.name,
       });
