@@ -128,13 +128,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.WebauthnTest do
       |> Igniter.Project.Formatter.add_formatter_plugin(Spark.Formatter)
       |> Igniter.compose_task("ash_authentication.install", ["--yes"])
       |> apply_igniter!()
-      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
-        "webauthn",
-        "--rp-id",
-        "example.com",
-        "--rp-name",
-        "Test"
-      ])
+      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["webauthn"])
       |> assert_has_patch("assets/js/app.js", """
       + |import { WebAuthnRegistrationHook, WebAuthnAuthenticationHook, WebAuthnSupportHook } from "ash_authentication_phoenix/priv/static/webauthn_hooks.js";
       """)

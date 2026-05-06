@@ -47,10 +47,7 @@ if Code.ensure_loaded?(Igniter) do
           yes: :boolean,
           auth_strategy: :csv,
           mode: :string,
-          name: :string,
-          rp_id: :string,
-          rp_name: :string,
-          origin: :string
+          name: :string
         ],
         composes:
           ["ash_authentication.install", "ash_authentication_phoenix.setup"] ++

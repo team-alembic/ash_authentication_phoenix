@@ -102,12 +102,6 @@ if Code.ensure_loaded?(Igniter) do
 
       - `--mode`, `-m` - Either `primary` or `2fa`. Defaults to `2fa`.
       - `--name`, `-n` - The name of the TOTP strategy. Defaults to `totp`.
-
-    ## WebAuthn options
-
-      - `--rp-id` - The Relying Party ID (your domain, e.g. `example.com`). Required.
-      - `--rp-name` - The Relying Party display name shown to the user during registration. Required.
-      - `--origin` - The full origin URL (e.g. `https://example.com` or `https://localhost:4001`). Optional.
     """
 
     def info(_argv, _composing_task) do
@@ -131,10 +125,7 @@ if Code.ensure_loaded?(Igniter) do
           authorize_url: :string,
           token_url: :string,
           user_url: :string,
-          team_id: :string,
-          rp_id: :string,
-          rp_name: :string,
-          origin: :string
+          team_id: :string
         ],
         aliases: [
           a: :accounts,

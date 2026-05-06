@@ -7,7 +7,7 @@ if Code.ensure_loaded?(Igniter) do
   defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.Webauthn do
     use Igniter.Mix.Task
 
-    @example "mix ash_authentication_phoenix.add_strategy webauthn --rp-id example.com --rp-name \"My App\""
+    @example "mix ash_authentication_phoenix.add_strategy webauthn"
 
     @shortdoc "Adds Phoenix integration for the WebAuthn authentication strategy"
 
@@ -75,10 +75,7 @@ if Code.ensure_loaded?(Igniter) do
           accounts: :string,
           user: :string,
           identity_field: :string,
-          name: :string,
-          rp_id: :string,
-          rp_name: :string,
-          origin: :string
+          name: :string
         ],
         aliases: [
           a: :accounts,
