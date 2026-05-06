@@ -32,7 +32,8 @@ if Code.ensure_loaded?(Igniter) do
       "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
       "otp" => "ash_authentication_phoenix.add_strategy.otp",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
-      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code"
+      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication_phoenix.add_strategy.webauthn"
     }
 
     def info(_argv, _composing_task) do
@@ -46,7 +47,10 @@ if Code.ensure_loaded?(Igniter) do
           yes: :boolean,
           auth_strategy: :csv,
           mode: :string,
-          name: :string
+          name: :string,
+          rp_id: :string,
+          rp_name: :string,
+          origin: :string
         ],
         composes:
           ["ash_authentication.install", "ash_authentication_phoenix.setup"] ++
