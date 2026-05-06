@@ -148,6 +148,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:eqrcode, "~> 0.1", optional: true},
       {:igniter, "~> 0.5 and >= 0.5.25", optional: true},
       {:igniter_js, "~> 0.4", optional: true},
+      {:rustler, ">= 0.0.0", optional: true, runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},
