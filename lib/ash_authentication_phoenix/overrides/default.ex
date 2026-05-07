@@ -21,7 +21,9 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     SignInLive,
     SignOutLive,
     TotpSetupLive,
-    TotpVerifyLive
+    TotpVerifyLive,
+    WebAuthnSetupLive,
+    WebAuthnVerifyLive
   }
 
   override SignInLive do
@@ -466,6 +468,41 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   override TotpSetupLive do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
     set :error_class, "text-red-500 text-center"
+  end
+
+  override WebAuthnVerifyLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override WebAuthnSetupLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override Components.WebAuthn.Verify2faForm do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Verify with passkey"
+    set :instructions_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :instructions_text, "Use the passkey on your device to confirm your identity."
+    set :form_class, nil
+
+    set :submit_class,
+        "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+
+    set :submit_text, "Verify with passkey"
+    set :submit_disabled_text, "Verifying ..."
+    set :error_class, "text-red-500 text-sm mb-4"
+
+    set :error_unauthenticated_text,
+        "You must be signed in to verify your second factor."
+
+    set :sign_in_link_class, "text-blue-500 hover:text-blue-600"
+    set :sign_in_link_text, "Sign in"
+    set :sign_in_link_path, "/sign-in"
   end
 
   override Components.Totp.Verify2faForm do
