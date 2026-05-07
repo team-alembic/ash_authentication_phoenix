@@ -144,17 +144,8 @@ if Code.ensure_loaded?(Igniter) do
         )
 
       if router do
-        web_module = Igniter.Libs.Phoenix.web_module(igniter)
-        user = inspect(Module.concat(web_module, "Accounts.User"))
-        # The user resource isn't easy to derive from the AAP installer alone, so
-        # rely on Igniter's web-module convention. Users can edit the args after.
-        user =
-          case igniter.args.options[:user] do
-            value when is_binary(value) -> value
-            _ -> user
-          end
-
-        strategy_name = inspect(igniter.args.options[:name] || "webauthn")
+        user = inspect(resolve_user_module(igniter))
+        strategy_name = inspect(strategy_name(igniter))
         overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
 
         override_module =
@@ -176,12 +167,40 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           routes,
           with_pipelines: [:browser],
-          arg2: web_module,
+          arg2: Igniter.Libs.Phoenix.web_module(igniter),
           router: router
         )
       else
         igniter
       end
+    end
+
+    defp resolve_user_module(igniter) do
+      case igniter.args.options[:user] do
+        value when is_binary(value) ->
+          Igniter.Project.Module.parse(value)
+
+        nil ->
+          accounts =
+            case igniter.args.options[:accounts] do
+              value when is_binary(value) ->
+                Igniter.Project.Module.parse(value)
+
+              _ ->
+                Igniter.Project.Module.module_name(igniter, "Accounts")
+            end
+
+          Module.concat(accounts, User)
+      end
+    end
+
+    defp strategy_name(igniter) do
+      case igniter.args.options[:name] do
+        value when is_binary(value) -> value
+        nil -> "webauthn"
+        atom when is_atom(atom) -> Atom.to_string(atom)
+      end
+      |> String.to_atom()
     end
 
     defp maybe_modify_controller(igniter, :primary), do: igniter
