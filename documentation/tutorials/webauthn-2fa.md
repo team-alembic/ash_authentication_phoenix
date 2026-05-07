@@ -425,9 +425,10 @@ end
 Mounting both `webauthn_2fa_route` and `totp_2fa_route` on the same resource
 is supported, but the installed `AuthController.success/4` clauses currently
 favour whichever strategy was added last. A user-facing chooser ("verify
-with passkey or TOTP code?") is on the roadmap; until it lands, you can pick
-one as the canonical path or hand-write a `success/4` clause that branches
-on user preference.
+with passkey or TOTP code?") is being tracked in
+[#740](https://github.com/team-alembic/ash_authentication_phoenix/issues/740);
+until it lands, pick one as the canonical path or hand-write a
+`success/4` clause that branches on user preference.
 
 See the [TOTP as 2FA guide](totp-2fa.md) for the parallel TOTP plumbing.
 
