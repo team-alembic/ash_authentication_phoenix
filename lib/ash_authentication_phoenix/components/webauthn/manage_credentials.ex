@@ -108,7 +108,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
                 <div>
                   <strong>{credential.label || "Security Key"}</strong>
                   <span class={override_for(@overrides, :timestamp_class)}>
-                    Added: {Calendar.strftime(credential.inserted_at, "%B %d, %Y")}
+                    <%= if added = Map.get(credential, :inserted_at) do %>
+                      Added: {Calendar.strftime(added, "%B %d, %Y")}
+                    <% end %>
                     <%= if credential.last_used_at do %>
                       | Last used: {Calendar.strftime(credential.last_used_at, "%B %d, %Y %H:%M")}
                     <% end %>
