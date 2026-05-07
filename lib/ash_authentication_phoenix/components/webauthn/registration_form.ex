@@ -45,6 +45,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       |> assign_new(:identity_value, fn -> "" end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:submitting, fn -> false end)
+      |> assign_new(:trigger_action, fn -> false end)
+      |> assign_new(:sign_in_token, fn -> nil end)
       |> assign_new(:inner_block, fn -> nil end)
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
@@ -84,6 +86,26 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
           gettext_fn={@gettext_fn}
         />
       </form>
+
+      <.form
+        for={%{}}
+        as={:user}
+        action={
+          auth_path(
+            @socket,
+            @subject_name_slug,
+            @auth_routes_prefix,
+            @strategy,
+            :sign_in_with_token,
+            %{}
+          )
+        }
+        method="POST"
+        phx-trigger-action={@trigger_action}
+        style="display:none"
+      >
+        <input type="hidden" name="token" value={@sign_in_token || ""} />
+      </.form>
 
       <%= if @inner_block do %>
         <div class={override_for(@overrides, :slot_class)}>
@@ -159,19 +181,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
            tenant: socket.assigns.current_tenant
          ) do
       {:ok, user} ->
-        subject_name_slug = socket.assigns.subject_name_slug
-
-        redirect_path =
-          auth_path(
-            socket,
-            subject_name_slug,
-            socket.assigns.auth_routes_prefix,
-            strategy,
-            :sign_in_with_token,
-            %{token: user.__metadata__.token}
-          )
-
-        {:noreply, socket |> assign(:challenge, nil) |> redirect(to: redirect_path)}
+        {:noreply,
+         assign(socket,
+           challenge: nil,
+           sign_in_token: user.__metadata__.token,
+           trigger_action: true
+         )}
 
       {:error, _error} ->
         {:noreply,
