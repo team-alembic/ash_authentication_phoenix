@@ -6,6 +6,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
   @moduledoc false
   use ExUnit.Case
 
+  alias AshAuthentication.Phoenix.StrategyRouter
+
   test "sign_in_routes adds a route according to its scope" do
     route =
       AshAuthentication.Phoenix.Test.Router
@@ -98,7 +100,7 @@ defmodule AshAuthentication.Phoenix.RouterTest do
         |> Plug.Test.conn("/user/sso/abc-123/request")
         |> Map.put(:path_info, ["user", "sso", "abc-123", "request"])
 
-      AshAuthentication.Phoenix.StrategyRouter.call(conn,
+      StrategyRouter.call(conn,
         resources: [Example.Accounts.User],
         controller: CapturingController
       )
