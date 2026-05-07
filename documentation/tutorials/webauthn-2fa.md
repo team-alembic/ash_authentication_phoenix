@@ -233,8 +233,8 @@ do:
 | Situation | Action |
 | --- | --- |
 | No current user | Pass through (let your auth pipeline handle it) |
-| User has no registered passkeys (`webauthn_configured?` is `false`) | `on_unconfigured` (default `:halt`) |
-| User has passkeys but token has no `webauthn_verified_at` claim | `on_unverified` (default `:halt`) |
+| User has no registered passkeys (`webauthn_configured?` is `false`) | `on_unconfigured` (default `:redirect_to_setup`) |
+| User has passkeys but token has no `webauthn_verified_at` claim | `on_unverified` (default `:redirect_to_verify`) |
 | Token has `webauthn_verified_at` and freshness check passes | Pass through |
 
 #### Plug options
@@ -243,8 +243,8 @@ do:
 | --- | --- | --- |
 | `resource` | The user resource module | Required |
 | `strategy` | WebAuthn strategy name | First WebAuthn strategy on the resource |
-| `on_unconfigured` | `:halt` \| `:redirect_to_setup` \| `{:redirect, path}` | `:halt` |
-| `on_unverified` | `:halt` \| `:redirect_to_verify` \| `{:redirect, path}` | `:halt` |
+| `on_unconfigured` | `:halt` \| `:redirect_to_setup` \| `{:redirect, path}` | `:redirect_to_setup` |
+| `on_unverified` | `:halt` \| `:redirect_to_verify` \| `{:redirect, path}` | `:redirect_to_verify` |
 | `setup_path` | Path to redirect to when unconfigured | `"/webauthn-setup"` |
 | `verify_path` | Path to redirect to when unverified | `"/webauthn-verify"` |
 | `max_age` | Maximum age of `webauthn_verified_at` (seconds) before requiring re-verification | `nil` (no expiry) |
