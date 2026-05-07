@@ -52,13 +52,12 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
   defp merge_path_bindings(conn, bindings) when bindings == %{}, do: conn
 
   defp merge_path_bindings(conn, bindings) do
-    path_params = Map.merge(conn.path_params || %{}, bindings)
+    path_params = Map.merge(conn.path_params, bindings)
 
     params =
       case conn.params do
         %Plug.Conn.Unfetched{} -> conn.params
-        params when is_map(params) -> Map.merge(params, bindings)
-        _ -> conn.params
+        params -> Map.merge(params, bindings)
       end
 
     %{conn | path_params: path_params, params: params}
