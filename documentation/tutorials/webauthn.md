@@ -6,7 +6,14 @@ SPDX-License-Identifier: MIT
 
 # WebAuthn / Passkey Authentication
 
-WebAuthn lets users sign in with hardware security keys (YubiKey), platform authenticators (Touch ID, Windows Hello, Face ID), or passkeys. This guide covers end-to-end setup: backend strategy, Phoenix components, and the JavaScript hooks required for the WebAuthn ceremony.
+WebAuthn lets users sign in with hardware security keys (YubiKey), platform authenticators (Touch ID, Windows Hello, Face ID), or passkeys. This guide covers end-to-end setup for using a passkey as the **primary** authentication credential — backend strategy, Phoenix components, and the JavaScript hooks required for the WebAuthn ceremony.
+
+> ### Looking for second-factor (2FA) setup? {: .info}
+>
+> If you want a passkey to act as a *second* factor on top of an existing
+> primary credential (typically a password), see the
+> [Passkeys as 2FA](webauthn-2fa.md) guide. The same WebAuthn strategy
+> supports both modes via the `--mode` installer flag.
 
 ## Overview
 
