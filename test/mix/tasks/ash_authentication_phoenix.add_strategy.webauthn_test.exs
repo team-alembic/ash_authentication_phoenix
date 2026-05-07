@@ -134,4 +134,15 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.WebauthnTest do
       """)
     end
   end
+
+  describe "--mode primary (default)" do
+    test "doesn't add the 2FA-specific routes" do
+      result =
+        project_with_app_js()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.webauthn", [])
+
+      refute diff(result) =~ "webauthn_2fa_route"
+      refute diff(result) =~ "webauthn_setup_route"
+    end
+  end
 end
