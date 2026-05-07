@@ -20,7 +20,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     empty_state_text: "Text shown when no credentials exist.",
     last_credential_warning: "Warning when trying to delete the last credential.",
     label_input_class: "CSS class for the label input.",
-    timestamp_class: "CSS class for timestamp text."
+    timestamp_class: "CSS class for timestamp text.",
+    continue_button_text: "Text for the continue button shown after at least one credential is registered.",
+    continue_button_class: "CSS class for the continue button."
 
   @moduledoc """
   Credential management panel for authenticated users.
@@ -59,6 +61,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:adding, fn -> false end)
       |> assign_new(:current_tenant, fn -> nil end)
+      |> assign_new(:continue_path, fn -> nil end)
 
     unless assigns[:current_user] do
       raise ArgumentError, "ManageCredentials requires a :current_user assign"
@@ -152,6 +155,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
           {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
         </button>
       </div>
+
+      <%= if @continue_path && @credentials != [] do %>
+        <a
+          href={@continue_path}
+          class={override_for(@overrides, :continue_button_class)}
+        >
+          {_gettext(override_for(@overrides, :continue_button_text, "Continue"))}
+        </a>
+      <% end %>
     </div>
     """
   end

@@ -40,6 +40,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnSetupLive do
       |> assign(:gettext_fn, session["gettext_fn"])
       |> assign(:strategy, session["strategy"])
       |> assign(:resource, session["resource"])
+      |> assign(:continue_path, Map.get(session, "return_to") || "/")
 
     {:ok, socket}
   end
@@ -57,6 +58,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnSetupLive do
           current_user={@current_user}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
+          continue_path={@continue_path}
         />
       <% else %>
         <p>You must be signed in to manage your passkeys.</p>

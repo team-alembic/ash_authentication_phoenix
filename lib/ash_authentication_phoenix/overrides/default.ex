@@ -705,5 +705,12 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :label_input_class, "px-2 py-1 border border-gray-300 rounded text-sm"
     set :timestamp_class, "text-sm text-gray-500 ml-2"
+    set :continue_button_text, "Continue"
+
+    set :continue_button_class, """
+    mt-4 w-full flex justify-center py-2 px-4 border border-transparent
+    rounded-md shadow-sm text-sm font-medium text-white bg-blue-600
+    hover:bg-blue-700 disabled:opacity-50
+    """
   end
 end
