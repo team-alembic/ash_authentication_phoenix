@@ -84,4 +84,27 @@ defmodule AshAuthentication.Phoenix.WebAuthnHelpersTest do
       refute WebAuthnHelpers.webauthn_configured?(nil)
     end
   end
+
+  describe "webauthn_verified?/2 with a user struct" do
+    test "returns false for nil" do
+      refute WebAuthnHelpers.webauthn_verified?(nil)
+    end
+
+    test "returns false when the user has no `:webauthn_verified_at` metadata" do
+      user = %FakeUser{__metadata__: %{}}
+      refute WebAuthnHelpers.webauthn_verified?(user)
+    end
+
+    test "returns true when the user has a recent timestamp" do
+      user = %FakeUser{__metadata__: %{webauthn_verified_at: DateTime.utc_now()}}
+      assert WebAuthnHelpers.webauthn_verified?(user)
+    end
+
+    test "respects `:max_age` for a user struct" do
+      verified_at = DateTime.add(DateTime.utc_now(), -120, :second)
+      user = %FakeUser{__metadata__: %{webauthn_verified_at: verified_at}}
+      refute WebAuthnHelpers.webauthn_verified?(user, max_age: 60)
+      assert WebAuthnHelpers.webauthn_verified?(user, max_age: 300)
+    end
+  end
 end

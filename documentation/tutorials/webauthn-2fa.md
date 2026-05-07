@@ -130,7 +130,7 @@ The verification page. Mounted by default at `/webauthn-verify`. Two flows:
 
 The setup page. Mounted by default at `/webauthn-setup`. An authenticated user
 registers a new passkey to their account here. Wraps the existing
-`AshAuthentication.Phoenix.Components.Webauthn.ManageCredentials` component, so
+`AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials` component, so
 the same screen also lets users see, label, and revoke existing credentials.
 
 ```elixir
@@ -183,16 +183,17 @@ returns a fresh JWT for the user with one extra claim:
 ```json
 {
   "sub": "user?id=...",
-  "purpose": "user",
+  "purpose": "sign_in",
   "webauthn_verified_at": "2026-05-07T12:34:56Z"
 }
 ```
 
 That claim is the source of truth for "this session has been verified by a
-passkey". It travels with the token — written into the session cookie via
-`store_in_session` for browser flows, and visible in the `Authorization:
-Bearer …` token for headless / API flows. Subsequent token refreshes preserve
-it.
+passkey". `store_in_session` also stamps the matching
+`:webauthn_verified_at` value onto the user's metadata, which survives
+`load_from_session` round-trips for browser flows. The JWT claim covers
+headless / `Authorization: Bearer …` flows. Both forms get preserved
+through the `sign_in_with_token` exchange.
 
 > ### What's deliberately *not* in the claim {: .warning}
 >
@@ -202,7 +203,7 @@ it.
 
 ## Requiring WebAuthn for protected routes
 
-### `Plug.RequireWebauthn`
+### `Plug.RequireWebAuthn`
 
 Use this for controller-based routes:
 
@@ -212,7 +213,7 @@ defmodule MyAppWeb.Router do
   use AshAuthentication.Phoenix.Router
 
   pipeline :require_webauthn do
-    plug AshAuthentication.Phoenix.Plug.RequireWebauthn,
+    plug AshAuthentication.Phoenix.Plug.RequireWebAuthn,
       resource: MyApp.Accounts.User,
       on_unverified: :redirect_to_verify,
       on_unconfigured: :redirect_to_setup
@@ -226,7 +227,7 @@ defmodule MyAppWeb.Router do
 end
 ```
 
-`RequireWebauthn` reads the user's authentication token claims via
+`RequireWebAuthn` reads the user's authentication token claims via
 `AshAuthentication.Plug.Helpers.retrieve_from_session/2` and decides what to
 do:
 
@@ -250,35 +251,36 @@ do:
 | `max_age` | Maximum age of `webauthn_verified_at` (seconds) before requiring re-verification | `nil` (no expiry) |
 | `current_user_assign` | Assign holding the user | `:current_user` |
 
-### `LiveSession.RequireWebauthn`
+### `LiveSession.RequireWebAuthn`
 
-The LiveView equivalent:
+The LiveView equivalent — wire it into `ash_authentication_live_session`'s
+`on_mount`:
 
 ```elixir
-import AshAuthentication.Phoenix.LiveSession.RequireWebauthn
-
 scope "/", MyAppWeb do
   pipe_through :browser
 
   ash_authentication_live_session :admin,
-    on_mount: [{AshAuthentication.Phoenix.LiveSession.RequireWebauthn, :require_webauthn}] do
+    on_mount: [
+      {AshAuthentication.Phoenix.LiveSession.RequireWebAuthn, :require_webauthn}
+    ] do
     live "/admin/dashboard", AdminLive
   end
 end
 ```
 
-Pass the same options as a tuple if you need to tune behaviour:
+Pass options as a tuple to tune behaviour:
 
 ```elixir
 on_mount: [
-  {AshAuthentication.Phoenix.LiveSession.RequireWebauthn,
+  {AshAuthentication.Phoenix.LiveSession.RequireWebAuthn,
     {:require_webauthn, max_age: 300, verify_path: "/step-up"}}
 ]
 ```
 
 ## Auth controller integration
 
-When using the `--mode 2fa` installer, the following clauses get added to your
+When using the `--mode 2fa` installer, this clause gets prepended to your
 `AuthController`:
 
 ```elixir
@@ -286,76 +288,76 @@ defmodule MyAppWeb.AuthController do
   use MyAppWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  # Primary sign-in succeeded; route the user through the second factor.
   def success(conn, {_, phase} = _activity, user, token)
       when phase in [:sign_in, :sign_in_with_token] do
     return_to = get_session(conn, :return_to) || ~p"/"
 
-    if AshAuthentication.Phoenix.WebauthnHelpers.webauthn_configured?(user) do
-      conn
-      |> store_in_session(user)
-      |> set_live_socket_id(token)
-      |> assign(:current_user, user)
-      |> put_session(:return_to, return_to)
-      |> redirect(to: ~p"/webauthn-verify/#{token}")
-    else
-      conn
-      |> store_in_session(user)
-      |> set_live_socket_id(token)
-      |> assign(:current_user, user)
-      |> put_session(:return_to, return_to)
-      |> redirect(to: ~p"/webauthn-setup")
+    cond do
+      AshAuthentication.Phoenix.WebAuthnHelpers.webauthn_verified?(user) ->
+        conn
+        |> store_in_session(user)
+        |> set_live_socket_id(token)
+        |> assign(:current_user, user)
+        |> redirect(to: return_to)
+
+      AshAuthentication.Phoenix.WebAuthnHelpers.webauthn_configured?(user) ->
+        conn
+        |> store_in_session(user)
+        |> set_live_socket_id(token)
+        |> assign(:current_user, user)
+        |> put_session(:return_to, return_to)
+        |> redirect(to: ~p"/webauthn-verify/#{token}")
+
+      true ->
+        conn
+        |> store_in_session(user)
+        |> set_live_socket_id(token)
+        |> assign(:current_user, user)
+        |> put_session(:return_to, return_to)
+        |> redirect(to: ~p"/webauthn-setup")
     end
   end
 
-  # Verify completed: the token now carries the webauthn_verified_at claim.
-  def success(conn, {_, :verify}, user, token) do
-    return_to = get_session(conn, :return_to) || ~p"/"
-
-    conn
-    |> store_in_session(user)
-    |> set_live_socket_id(token)
-    |> assign(:current_user, user)
-    |> redirect(to: return_to)
-  end
-
-  # Default catch-all for other auth activities.
+  # Default catch-all for other auth activities (registration, sign-out, …).
   def success(conn, activity, user, token), do: # ...
 end
 ```
 
-The flow:
+The single clause matches both the *initial* primary sign-in and the
+*follow-up* `sign_in_with_token` that the WebAuthn LiveView triggers after a
+successful ceremony, distinguished by the user's
+`:webauthn_verified_at` metadata:
 
-1. **Primary sign-in succeeds** — the first clause matches. The user goes
-   into the session immediately so the verify ceremony can find them, then
-   the controller redirects to the verify page (or setup if the user has no
-   passkeys yet).
-2. **WebAuthn verify succeeds** — the strategy issues a *fresh* token with
-   `webauthn_verified_at` baked in, the second clause writes that token to
-   the session, and the user is redirected to their original destination.
-3. **Subsequent requests** — `RequireWebauthn` reads the claim from the
-   session token. The user is "fully authenticated" until either the session
-   expires or the optional `max_age` window elapses.
+1. **Primary sign-in succeeds, no `:webauthn_verified_at` yet** — fall
+   through to the second `cond` arm and route to `/webauthn-verify` (or
+   `/webauthn-setup` if the user has no passkeys yet).
+2. **WebAuthn ceremony completes** — the strategy returns a fresh user
+   with `:webauthn_verified_at` set; the LiveView trigger-submits the token
+   to `sign_in_with_token`; the first arm matches; the user is redirected
+   to their original destination.
+3. **Subsequent requests** — `RequireWebAuthn` reads the metadata (browser
+   flows) or the JWT claim (bearer flows) and lets the user through until
+   the session expires or the optional `:max_age` window elapses.
 
-## `WebauthnHelpers`
+## `WebAuthnHelpers`
 
 ```elixir
-alias AshAuthentication.Phoenix.WebauthnHelpers
+alias AshAuthentication.Phoenix.WebAuthnHelpers
 
 # Does the user have at least one registered passkey?
-WebauthnHelpers.webauthn_configured?(user)
+WebAuthnHelpers.webauthn_configured?(user)
 #=> true
 
 # Does the *current request* have a valid webauthn_verified_at claim?
-WebauthnHelpers.webauthn_verified?(conn_or_socket)
+WebAuthnHelpers.webauthn_verified?(conn_or_socket)
 #=> true
 
 # Same as above, with a freshness window in seconds.
-WebauthnHelpers.webauthn_verified?(conn_or_socket, max_age: 300)
+WebAuthnHelpers.webauthn_verified?(conn_or_socket, max_age: 300)
 #=> false   # last verification was 6 minutes ago
 
 # Get the WebAuthn strategy on a resource.
-{:ok, strategy} = WebauthnHelpers.get_webauthn_strategy(MyApp.Accounts.User)
+{:ok, strategy} = WebAuthnHelpers.get_webauthn_strategy(MyApp.Accounts.User)
 ```
 
 ## Setup page
@@ -364,12 +366,18 @@ The installer mounts a setup page at `/webauthn-setup` that wraps the
 existing `ManageCredentials` component, so users can register, label, and
 revoke passkeys from one screen.
 
+In the post-primary-sign-in flow, the AuthController stashes the original
+destination in the session as `:return_to` before redirecting to setup.
+`WebAuthnSetupLive` reads it and threads it into `ManageCredentials` as
+`continue_path`; once the user has registered at least one credential, a
+"Continue" button appears that takes them on to that destination.
+
 If you want to render the setup form yourself (e.g. inside a settings page):
 
 ```elixir
 defmodule MyAppWeb.SecuritySettingsLive do
   use MyAppWeb, :live_view
-  alias AshAuthentication.Phoenix.Components.Webauthn.ManageCredentials
+  alias AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials
 
   def mount(_params, _session, socket) do
     {:ok, strategy} =
@@ -393,32 +401,44 @@ defmodule MyAppWeb.SecuritySettingsLive do
 end
 ```
 
+Pass `continue_path={"/some/path"}` to the live component to surface the
+"Continue" affordance in your own setup screens too.
+
 ## Step-up authentication
 
 The same verify page handles "I'm signed in but I need to re-prove this is
 me before doing X". Send the user to `/webauthn-verify` (no `:token` —
-that's the trigger) and they get a one-shot ceremony. On success the JWT is
-re-issued with a fresh `webauthn_verified_at`, and `RequireWebauthn`'s
-`max_age` check passes again.
+that's the trigger for step-up mode) and they get a one-shot ceremony. On
+success the JWT is re-issued with a fresh `:webauthn_verified_at` and
+`RequireWebAuthn`'s `:max_age` check passes again.
 
 ```elixir
 defmodule MyAppWeb.AdminLive do
   use MyAppWeb, :live_view
-  alias AshAuthentication.Phoenix.WebauthnHelpers
+  alias AshAuthentication.Phoenix.WebAuthnHelpers
 
   def handle_event("delete_user", %{"id" => id}, socket) do
-    if WebauthnHelpers.webauthn_verified?(socket, max_age: 300) do
+    if WebAuthnHelpers.webauthn_verified?(socket, max_age: 300) do
       # Recently verified — proceed.
       {:noreply, do_delete(socket, id)}
     else
+      # Stash where to come back to, then redirect.
       {:noreply,
        socket
        |> put_flash(:info, "Please re-verify with your passkey to continue.")
-       |> push_navigate(to: ~p"/webauthn-verify?return_to=/admin")}
+       |> push_navigate(to: "/webauthn-verify")}
     end
   end
 end
 ```
+
+`RequireWebAuthn` writes the original destination into `:return_to` for
+you when it does the redirect; for hand-rolled redirects like the example
+above you'll need to thread that yourself if you want to land back on the
+original page. (We're tracking a nicer step-up affordance —
+`AshAuthentication.Phoenix.WebAuthnHelpers.step_up/2` — alongside the
+multi-factor chooser in
+[#740](https://github.com/team-alembic/ash_authentication_phoenix/issues/740).)
 
 ## Combining with TOTP
 
@@ -435,11 +455,19 @@ See the [TOTP as 2FA guide](totp-2fa.md) for the parallel TOTP plumbing.
 ## Recovery
 
 When a user loses access to their passkey, the
-[recovery code add-on](recovery-codes.md) works strategy-agnostically — a
-verified recovery code stamps a `recovery_verified_at` claim that
-`RequireWebauthn` will accept in lieu of `webauthn_verified_at`. Generate
-recovery codes during onboarding and surface them in the security settings
-page.
+[recovery code add-on](recovery-codes.md) gives them a one-time fallback.
+Generate recovery codes during onboarding and surface them in the security
+settings page.
+
+> ### Heads up — recovery currently bypasses, not replaces, the WebAuthn check {: .warning}
+>
+> `RequireWebAuthn` only honours `:webauthn_verified_at`. A successful
+> recovery code completes primary sign-in but doesn't satisfy the WebAuthn
+> requirement on its own — so recovery should usually be paired with a
+> setup-or-disable flow that lets the user register a fresh passkey before
+> they hit a `RequireWebAuthn`-protected route. Cross-strategy verification
+> ("recovery counts as second factor") is being tracked alongside the
+> [multi-factor chooser](https://github.com/team-alembic/ash_authentication_phoenix/issues/740).
 
 ## Headless / API clients
 
@@ -465,14 +493,14 @@ It's worth being explicit about the model:
   successful WebAuthn ceremony?
 
 Protected routes should require **verified**, not just configured. The
-default `RequireWebauthn` plug enforces this. (Compare with the TOTP
+default `RequireWebAuthn` plug enforces this. (Compare with the TOTP
 helpers, where the equivalent `RequireTotp` only checks *configured* — see
 the [TOTP 2FA guide](totp-2fa.md) for the rationale.)
 
 ### Freshness
 
 For high-impact actions (deleting an account, transferring funds, changing
-passwords), set a short `max_age` on `RequireWebauthn` so the user has to
+passwords), set a short `max_age` on `RequireWebAuthn` so the user has to
 touch their passkey again, even within an otherwise-valid session.
 
 ### Replay

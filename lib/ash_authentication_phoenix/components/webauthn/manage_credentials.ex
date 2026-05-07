@@ -21,7 +21,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     last_credential_warning: "Warning when trying to delete the last credential.",
     label_input_class: "CSS class for the label input.",
     timestamp_class: "CSS class for timestamp text.",
-    continue_button_text: "Text for the continue button shown after at least one credential is registered.",
+    continue_button_text:
+      "Text for the continue button shown after at least one credential is registered.",
     continue_button_class: "CSS class for the continue button."
 
   @moduledoc """

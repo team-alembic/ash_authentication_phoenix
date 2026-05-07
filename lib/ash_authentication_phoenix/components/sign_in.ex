@@ -240,6 +240,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategy_style(%Strategy.Otp{}), do: :form
   defp strategy_style(%Strategy.Totp{}), do: :form
   defp strategy_style(%Strategy.RememberMe{}), do: nil
+
   defp strategy_style(%AshAuthentication.Strategy.WebAuthn{} = strategy) do
     # 2FA mode: registration and sign-in are both disabled. The strategy only
     # exposes `:verify`, which is reached via the dedicated 2FA page rather
@@ -253,6 +254,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       nil
     end
   end
+
   defp strategy_style(_), do: :link
 
   defp component_for_strategy(%{strategy_module: Strategy.Apple}), do: Components.Apple

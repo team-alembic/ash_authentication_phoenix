@@ -269,20 +269,29 @@ if Code.ensure_loaded?(Igniter) do
           when phase in [:sign_in, :sign_in_with_token] do
         return_to = get_session(conn, :return_to) || ~p"/"
 
-        if AshAuthentication.Phoenix.WebAuthnHelpers.webauthn_configured?(user) do
-          conn
-          |> store_in_session(user)
-          |> set_live_socket_id(token)
-          |> assign(:current_user, user)
-          |> put_session(:return_to, return_to)
-          |> redirect(to: ~p"/webauthn-verify/#{token}")
-        else
-          conn
-          |> store_in_session(user)
-          |> set_live_socket_id(token)
-          |> assign(:current_user, user)
-          |> put_session(:return_to, return_to)
-          |> redirect(to: ~p"/webauthn-setup")
+        cond do
+          AshAuthentication.Phoenix.WebAuthnHelpers.webauthn_verified?(user) ->
+            conn
+            |> store_in_session(user)
+            |> set_live_socket_id(token)
+            |> assign(:current_user, user)
+            |> redirect(to: return_to)
+
+          AshAuthentication.Phoenix.WebAuthnHelpers.webauthn_configured?(user) ->
+            conn
+            |> store_in_session(user)
+            |> set_live_socket_id(token)
+            |> assign(:current_user, user)
+            |> put_session(:return_to, return_to)
+            |> redirect(to: ~p"/webauthn-verify/#{token}")
+
+          true ->
+            conn
+            |> store_in_session(user)
+            |> set_live_socket_id(token)
+            |> assign(:current_user, user)
+            |> put_session(:return_to, return_to)
+            |> redirect(to: ~p"/webauthn-setup")
         end
       end
       """

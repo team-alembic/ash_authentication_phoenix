@@ -70,25 +70,32 @@ defmodule AshAuthentication.Phoenix.WebAuthnHelpers do
   @doc """
   Returns `true` if the current request has a WebAuthn verification on it.
 
-  Inspects either:
+  Accepts either:
 
-    * a `Plug.Conn` — checks the current user's `:webauthn_verified_at`
-      metadata, falling back to the JWT claim if the user came in via a
-      bearer token.
+    * a `Plug.Conn` — looks at the assign named by `:current_user_assign`
+      (default `:current_user`).
     * a `Phoenix.LiveView.Socket` — same, against `socket.assigns`.
+    * a user struct — checks its `__metadata__[:webauthn_verified_at]`
+      directly. Useful in `AuthController.success/4` clauses where you
+      have the user but no conn / socket.
 
   ## Options
 
     * `:max_age` — maximum age of the verification in seconds. `nil`
       (default) means no expiry; any timestamp counts.
-    * `:current_user_assign` — assign holding the user. Defaults to
-      `:current_user`.
+    * `:current_user_assign` — assign holding the user (conn / socket
+      forms only). Defaults to `:current_user`.
   """
-  @spec webauthn_verified?(Conn.t() | Socket.t(), keyword()) :: boolean()
-  def webauthn_verified?(conn_or_socket, opts \\ [])
+  @spec webauthn_verified?(Conn.t() | Socket.t() | struct() | nil, keyword()) :: boolean()
+  def webauthn_verified?(conn_or_socket_or_user, opts \\ [])
 
+  def webauthn_verified?(nil, _opts), do: false
   def webauthn_verified?(%Conn{} = conn, opts), do: verified?(conn.assigns, opts)
   def webauthn_verified?(%Socket{} = socket, opts), do: verified?(socket.assigns, opts)
+
+  def webauthn_verified?(%_{} = user, opts) do
+    within_max_age?(verified_at(user), Keyword.get(opts, :max_age))
+  end
 
   defp verified?(assigns, opts) do
     user_assign = Keyword.get(opts, :current_user_assign, :current_user)
