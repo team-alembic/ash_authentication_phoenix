@@ -101,13 +101,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     {:noreply, assign(socket, :identity_value, value)}
   end
 
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias AshAuthentication.Strategy.WebAuthn
 
   def handle_event("register", _params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
+    origin = PhoenixWebAuthn.origin_from_socket(socket)
 
-    {:ok, challenge} = WebAuthn.Actions.registration_challenge(strategy, tenant)
+    {:ok, challenge} = WebAuthn.Actions.registration_challenge(strategy, tenant, origin: origin)
 
     rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
     rp_name = WebAuthn.Helpers.resolve_rp_name(strategy, tenant)
