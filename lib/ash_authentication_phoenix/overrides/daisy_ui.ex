@@ -22,7 +22,9 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     SignInLive,
     SignOutLive,
     TotpSetupLive,
-    TotpVerifyLive
+    TotpVerifyLive,
+    WebAuthnSetupLive,
+    WebAuthnVerifyLive
   }
 
   override SignInLive do
@@ -448,6 +450,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :last_credential_warning, "Cannot delete your last security key. You would be locked out."
     set :label_input_class, "input input-bordered input-sm"
     set :timestamp_class, "text-sm text-base-content/60 ml-2"
+    set :continue_button_text, "Continue"
+    set :continue_button_class, "btn btn-primary mt-4 w-full"
   end
 
   override Components.Totp.Verify2faForm do
@@ -470,6 +474,38 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :recovery_code_link_class, "link link-primary text-sm mt-4 block"
     set :recovery_code_link_text, "Use a recovery code instead"
     set :recovery_code_link_path, nil
+  end
+
+  override WebAuthnVerifyLive do
+    set :root_class, "grid h-screen place-items-center bg-base-100"
+  end
+
+  override WebAuthnSetupLive do
+    set :root_class, "grid h-screen place-items-center bg-base-100"
+  end
+
+  override Components.WebAuthn.Verify2faForm do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :label_text, "Verify with passkey"
+    set :instructions_class, "text-sm text-base-content/70 mb-4"
+    set :instructions_text, "Use the passkey on your device to confirm your identity."
+    set :form_class, nil
+    set :submit_class, "btn btn-primary w-full"
+    set :submit_text, "Verify with passkey"
+    set :submit_disabled_text, "Verifying ..."
+    set :error_class, "text-error text-sm mb-4"
+
+    set :error_unauthenticated_text,
+        "You must be signed in to verify your second factor."
+
+    set :sign_in_link_class, "link link-primary"
+    set :sign_in_link_text, "Sign in"
+    set :sign_in_link_path, "/sign-in"
   end
 
   override RecoveryCodeVerifyLive do
