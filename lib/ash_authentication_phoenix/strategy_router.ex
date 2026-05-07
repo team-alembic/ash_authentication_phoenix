@@ -20,23 +20,23 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
       {:not_found, conn},
       fn {resource, strategy, path, phase}, {:not_found, conn} ->
         strategy_path_split = Path.split(String.trim_leading(path, "/"))
+        expected_method = String.upcase(to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase)))
 
-        if paths_match?(strategy_path_split, conn.path_info) &&
-             conn.method ==
-               String.upcase(
-                 to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))
-               ) do
-          {:halt, {:found, resource, strategy, path, phase}}
-        else
-          {:cont, {:not_found, conn}}
+        case match_path(strategy_path_split, conn.path_info, %{}) do
+          {:match, bindings} when conn.method == expected_method ->
+            {:halt, {:found, resource, strategy, path, phase, bindings}}
+
+          _ ->
+            {:cont, {:not_found, conn}}
         end
       end
     )
     |> case do
-      {:found, resource, strategy, _path, phase} ->
+      {:found, resource, strategy, _path, phase, bindings} ->
         subject_name = AshAuthentication.Info.authentication_subject_name!(resource)
 
         conn
+        |> Map.update!(:path_params, &Map.merge(&1, bindings))
         |> Plug.Conn.put_private(:strategy, strategy)
         |> opts[:controller].call(
           {subject_name, AshAuthentication.Strategy.name(strategy), phase}
@@ -75,19 +75,24 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
     end
   end
 
-  defp paths_match?([], []), do: true
+  # Walks the strategy's declared path against the request's `path_info`,
+  # collecting any `:segment` captures into a bindings map. Returns
+  # `{:match, bindings}` if every position lines up, `:no_match` otherwise.
+  # Mirrors the behaviour of `Phoenix.Router` for dynamic segments so
+  # downstream plugs can read captured values from `conn.path_params`.
+  defp match_path([], [], bindings), do: {:match, bindings}
 
-  defp paths_match?([":" <> _ | strategy_rest], [_ | actual_rest]) do
-    paths_match?(strategy_rest, actual_rest)
+  defp match_path([":" <> name | strategy_rest], [value | actual_rest], bindings) do
+    match_path(strategy_rest, actual_rest, Map.put(bindings, name, value))
   end
 
-  defp paths_match?([":*"], _), do: true
+  defp match_path([":*"], _, bindings), do: {:match, bindings}
 
-  defp paths_match?([item | strategy_rest], [item | actual_rest]) do
-    paths_match?(strategy_rest, actual_rest)
+  defp match_path([item | strategy_rest], [item | actual_rest], bindings) do
+    match_path(strategy_rest, actual_rest, bindings)
   end
 
-  defp paths_match?(_, _), do: false
+  defp match_path(_, _, _), do: :no_match
 
   defp routes(opts) do
     opts[:resources]
