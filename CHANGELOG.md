@@ -11,6 +11,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [3.0.0-rc.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.4...3.0.0-rc.5) (2026-05-08)
+
+
+
+
+### Features:
+
+* add WebAuthn/Passkey Phoenix components (#734) by [@jimsynz](https://github.com/jimsynz) and [@raul-gracia](https://github.com/raul-gracia) [(#734)](https://github.com/team-alembic/ash_authentication_phoenix/pull/734)
+
 ## [v3.0.0-rc.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.3...v3.0.0-rc.4) (2026-04-30)
 
 
