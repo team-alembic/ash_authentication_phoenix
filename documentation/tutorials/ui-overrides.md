@@ -805,6 +805,200 @@ Function components for recovery code form inputs.
   * `:submit_class` - CSS class for the form submit `input` element.
 
 
+## WebAuthn
+### `AshAuthentication.Phoenix.Components.WebAuthn`
+
+Generates sign in and registration forms for WebAuthn/Passkey authentication.
+
+  * `:authentication_form_module` - The Phoenix component to be used for the authentication form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`.
+
+  * `:hide_class` - CSS class to apply to hide an element.
+
+  * `:interstitial_class` - CSS class for the `div` element between the form and the toggle.
+
+  * `:register_toggle_text` - Toggle text to display when the register form is not showing (or `nil` to disable).
+
+  * `:registration_form_module` - The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:show_first` - The form to show on first load. Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.
+
+  * `:sign_in_toggle_text` - Toggle text to display when the sign in form is not showing (or `nil` to disable).
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+  * `:toggler_class` - CSS class for the toggler `a` element.
+
+
+### `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`
+
+Registration form for WebAuthn.
+
+  * `:button_text` - Text for the registration button.
+
+  * `:disable_button_text` - Text shown while the registration ceremony is in progress.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+
+### `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`
+
+Authentication form for WebAuthn.
+
+  * `:button_text` - Text for the authentication button.
+
+  * `:disable_button_text` - Text shown while the authentication ceremony is in progress.
+
+  * `:form_class` - CSS class for the `form` element.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:show_identity_field` - Whether to show the identity input (false for discoverable credentials).
+
+  * `:slot_class` - CSS class for the `div` surrounding the slot.
+
+
+### `AshAuthentication.Phoenix.Components.WebAuthn.Input`
+
+Function components for WebAuthn form inputs.
+
+  * `:disable_button_text` - Text shown on the button while submitting.
+
+  * `:error_li` - CSS class for the error list `li` elements.
+
+  * `:error_ul` - CSS class for the error list `ul` element.
+
+  * `:field_class` - CSS class for the field wrapper `div`.
+
+  * `:identity_input_label` - Label for the identity (email) input field.
+
+  * `:identity_input_placeholder` - Placeholder for the identity input field.
+
+  * `:input_class` - CSS class for `input` elements.
+
+  * `:input_class_with_error` - CSS class for `input` elements when there is an error.
+
+  * `:label_class` - CSS class for `label` elements.
+
+  * `:register_button_icon` - SVG icon for the register button (or nil to hide). Must be trusted static SVG — rendered with Phoenix.HTML.raw().
+
+  * `:register_button_text` - Text for the register button.
+
+  * `:sign_in_button_icon` - SVG icon for the sign in button (or nil to hide). Must be trusted static SVG — rendered with Phoenix.HTML.raw().
+
+  * `:sign_in_button_text` - Text for the sign in button.
+
+  * `:submit_class` - CSS class for the submit `button` element.
+
+
+### `AshAuthentication.Phoenix.Components.WebAuthn.Support`
+
+Detects WebAuthn browser support via a JS hook.
+
+  * `:root_class` - CSS class for the root element.
+
+  * `:unsupported_message` - Message shown when WebAuthn is not supported by the browser.
+
+
+### `AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials`
+
+Credential management panel for authenticated users.
+
+  * `:add_button_class` - CSS class for the add button.
+
+  * `:add_button_text` - Text for the add credential button.
+
+  * `:cancel_button_text` - Text for the cancel rename button.
+
+  * `:continue_button_class` - CSS class for the continue button.
+
+  * `:continue_button_text` - Text for the continue button shown after at least one credential is registered.
+
+  * `:credential_item_class` - CSS class for each credential row.
+
+  * `:credential_list_class` - CSS class for the credential list.
+
+  * `:delete_button_class` - CSS class for the delete button.
+
+  * `:delete_button_text` - Text for the delete button.
+
+  * `:empty_state_text` - Text shown when no credentials exist.
+
+  * `:heading_class` - CSS class for the heading.
+
+  * `:heading_text` - Heading text for the panel.
+
+  * `:label_input_class` - CSS class for the label input.
+
+  * `:last_credential_warning` - Warning when trying to delete the last credential.
+
+  * `:rename_button_class` - CSS class for the rename button.
+
+  * `:rename_button_text` - Text for the rename button.
+
+  * `:root_class` - CSS class for the management panel root `div`.
+
+  * `:save_button_text` - Text for the save label button.
+
+  * `:timestamp_class` - CSS class for timestamp text.
+
+
+### `AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm`
+
+Drives the WebAuthn second-factor ceremony.
+
+  * `:error_class` - CSS class for error messages.
+
+  * `:error_unauthenticated_text` - Text shown when the user is neither authenticated nor presenting a valid token.
+
+  * `:form_class` - CSS class for the visible form wrapping the verify button.
+
+  * `:instructions_class` - CSS class for the instructions paragraph.
+
+  * `:instructions_text` - Instructions shown above the verify button.
+
+  * `:label_class` - CSS class for the heading.
+
+  * `:label_text` - Heading text.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:sign_in_link_class` - CSS class for the sign-in fallback link.
+
+  * `:sign_in_link_path` - Path of the sign-in page.
+
+  * `:sign_in_link_text` - Text for the sign-in fallback link.
+
+  * `:submit_class` - CSS class for the submit button.
+
+  * `:submit_disabled_text` - Text shown on the verify button while the ceremony is in flight.
+
+  * `:submit_text` - Text shown on the verify button.
+
+
+### `AshAuthentication.Phoenix.WebAuthnVerifyLive`
+
+A generic, white-label WebAuthn second-factor verification page.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:webauthn_verify_id` - Element ID for the `WebAuthnVerify` LiveComponent.
+
+
+### `AshAuthentication.Phoenix.WebAuthnSetupLive`
+
+A generic, white-label WebAuthn passkey setup page for second-factor flows.
+
+  * `:root_class` - CSS class for the root `div` element.
+
+  * `:webauthn_setup_id` - Element ID for the `ManageCredentials` LiveComponent.
+
+
 ## Miscellaneous
 ### `AshAuthentication.Phoenix.Components.HorizontalRule`
 
