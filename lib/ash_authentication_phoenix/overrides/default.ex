@@ -21,7 +21,9 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     SignInLive,
     SignOutLive,
     TotpSetupLive,
-    TotpVerifyLive
+    TotpVerifyLive,
+    WebAuthnSetupLive,
+    WebAuthnVerifyLive
   }
 
   override SignInLive do
@@ -468,6 +470,41 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :error_class, "text-red-500 text-center"
   end
 
+  override WebAuthnVerifyLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override WebAuthnSetupLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+  end
+
+  override Components.WebAuthn.Verify2faForm do
+    set :root_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Verify with passkey"
+    set :instructions_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :instructions_text, "Use the passkey on your device to confirm your identity."
+    set :form_class, nil
+
+    set :submit_class,
+        "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+
+    set :submit_text, "Verify with passkey"
+    set :submit_disabled_text, "Verifying ..."
+    set :error_class, "text-red-500 text-sm mb-4"
+
+    set :error_unauthenticated_text,
+        "You must be signed in to verify your second factor."
+
+    set :sign_in_link_class, "text-blue-500 hover:text-blue-600"
+    set :sign_in_link_text, "Sign in"
+    set :sign_in_link_path, "/sign-in"
+  end
+
   override Components.Totp.Verify2faForm do
     set :root_class, """
     flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
@@ -578,5 +615,102 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :error_ul, "mt-1"
     set :error_li, "text-red-500 text-xs"
     set :input_debounce, 350
+  end
+
+  override Components.WebAuthn do
+    set :root_class, "mt-4 mb-4"
+    set :hide_class, "hidden"
+    set :show_first, :sign_in
+    set :sign_in_toggle_text, "Already have a passkey? Sign in"
+    set :register_toggle_text, "New here? Register a passkey"
+    set :toggler_class, "text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
+    set :interstitial_class, "mt-4 text-center"
+    set :slot_class, "mt-4"
+  end
+
+  override Components.WebAuthn.RegistrationForm do
+    set :root_class, "mt-2"
+    set :form_class, "space-y-4"
+    set :button_text, "Register with Passkey"
+    set :disable_button_text, "Registering..."
+    set :slot_class, "mt-2"
+  end
+
+  override Components.WebAuthn.AuthenticationForm do
+    set :root_class, "mt-2"
+    set :form_class, "space-y-4"
+    set :button_text, "Sign in with Passkey"
+    set :disable_button_text, "Signing in..."
+    set :slot_class, "mt-2"
+    set :show_identity_field, false
+  end
+
+  override Components.WebAuthn.Input do
+    set :identity_input_label, "Email"
+    set :identity_input_placeholder, "you@example.com"
+    set :field_class, "mb-4"
+    set :label_class, "block text-sm font-medium text-gray-700 mb-1"
+
+    set :input_class,
+        "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+
+    set :input_class_with_error,
+        "w-full px-3 py-2 border border-red-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+
+    set :submit_class, """
+    w-full flex justify-center items-center py-2 px-4 border border-transparent
+    rounded-md shadow-sm text-sm font-medium text-white bg-blue-600
+    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2
+    focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+    """
+
+    set :error_ul, "mt-1 text-sm text-red-600"
+    set :error_li, ""
+    set :register_button_text, "Register with Passkey"
+    set :register_button_icon, nil
+    set :sign_in_button_text, "Sign in with Passkey"
+    set :sign_in_button_icon, nil
+    set :disable_button_text, "Please wait..."
+  end
+
+  override Components.WebAuthn.Support do
+    set :root_class, ""
+    set :unsupported_message, "Your browser does not support passkeys."
+  end
+
+  override Components.WebAuthn.ManageCredentials do
+    set :root_class, "max-w-lg mx-auto"
+    set :heading_text, "Your Security Keys"
+    set :heading_class, "text-xl font-semibold mb-4"
+    set :credential_list_class, "divide-y divide-gray-200"
+    set :credential_item_class, "py-4 flex justify-between items-center"
+    set :add_button_text, "+ Add another security key"
+
+    set :add_button_class, """
+    mt-4 w-full flex justify-center py-2 px-4 border-2 border-dashed
+    border-gray-300 rounded-md text-sm text-gray-600 hover:border-gray-400
+    hover:text-gray-700
+    """
+
+    set :delete_button_text, "Delete"
+    set :delete_button_class, "text-sm text-red-600 hover:text-red-800 ml-2"
+    set :rename_button_text, "Rename"
+    set :rename_button_class, "text-sm text-blue-600 hover:text-blue-800"
+    set :save_button_text, "Save"
+    set :cancel_button_text, "Cancel"
+    set :empty_state_text, "No security keys registered."
+
+    set :last_credential_warning,
+        "Cannot delete your last security key. You would be locked out."
+
+    set :label_input_class, "px-2 py-1 border border-gray-300 rounded text-sm"
+    set :timestamp_class, "text-sm text-gray-500 ml-2"
+    set :continue_button_text, "Continue"
+
+    set :continue_button_class, """
+    mt-4 w-full flex justify-center py-2 px-4 border border-transparent
+    rounded-md shadow-sm text-sm font-medium text-white bg-blue-600
+    hover:bg-blue-700 disabled:opacity-50
+    """
   end
 end

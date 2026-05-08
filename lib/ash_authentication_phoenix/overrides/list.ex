@@ -67,6 +67,17 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.RecoveryCode.DisplayCodes,
       AshAuthentication.Phoenix.Components.RecoveryCode.Input
     ],
+    WebAuthn: [
+      AshAuthentication.Phoenix.Components.WebAuthn,
+      AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm,
+      AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm,
+      AshAuthentication.Phoenix.Components.WebAuthn.Input,
+      AshAuthentication.Phoenix.Components.WebAuthn.Support,
+      AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials,
+      AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm,
+      AshAuthentication.Phoenix.WebAuthnVerifyLive,
+      AshAuthentication.Phoenix.WebAuthnSetupLive
+    ],
     Miscellaneous: [
       AshAuthentication.Phoenix.Components.HorizontalRule,
       AshAuthentication.Phoenix.Components.Banner,

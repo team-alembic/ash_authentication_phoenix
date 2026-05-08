@@ -562,5 +562,6 @@ redirected to generate recovery codes after completing TOTP setup.
 ## Next Steps
 
 - [TOTP Authentication](totp.md) - Using TOTP as primary authentication
+- [Passkeys as 2FA](webauthn-2fa.md) - The WebAuthn analogue of this guide
 - [LiveView Integration](liveview.md) - Setting up authentication in LiveView
 - [UI Overrides](ui-overrides.md) - Customising authentication UI

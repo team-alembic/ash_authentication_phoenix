@@ -18,6 +18,7 @@ if Code.ensure_loaded?(Igniter) do
       "api_key" => "ash_authentication.add_strategy.api_key",
       "totp" => "ash_authentication.add_strategy.totp",
       "recovery_code" => "ash_authentication.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication.add_strategy.webauthn",
       "github" => "ash_authentication.add_strategy.github",
       "google" => "ash_authentication.add_strategy.google",
       "apple" => "ash_authentication.add_strategy.apple",
@@ -34,6 +35,7 @@ if Code.ensure_loaded?(Igniter) do
       "otp" => "ash_authentication_phoenix.add_strategy.otp",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
       "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication_phoenix.add_strategy.webauthn",
       "github" => "ash_authentication_phoenix.setup",
       "google" => "ash_authentication_phoenix.setup",
       "apple" => "ash_authentication_phoenix.setup",
@@ -56,6 +58,8 @@ if Code.ensure_loaded?(Igniter) do
                             totp: "Authenticate with a time-based one-time password (TOTP).",
                             recovery_code:
                               "Authenticate with one-time recovery codes as a 2FA fallback.",
+                            webauthn:
+                              "Authenticate with hardware security keys, platform authenticators or passkeys.",
                             github: "Sign in with GitHub.",
                             google: "Sign in with Google.",
                             apple: "Sign in with Apple.",
