@@ -36,36 +36,31 @@ defmodule AshAuthentication.Phoenix.WebAuthnHelpers do
   def webauthn_configured?(nil, _opts), do: false
 
   def webauthn_configured?(user, opts) when is_struct(user) do
-    case get_webauthn_strategy(user.__struct__, opts) do
-      {:ok, strategy} ->
-        case Map.get(user, strategy.credentials_relationship_name) do
-          %Ash.NotLoaded{} ->
-            case Ash.load(user, [strategy.credentials_relationship_name],
-                   authorize?: false,
-                   domain: Info.domain!(user.__struct__)
-                 ) do
-              {:ok, loaded} ->
-                loaded
-                |> Map.get(strategy.credentials_relationship_name, [])
-                |> credentials_present?()
-
-              _ ->
-                false
-            end
-
-          credentials when is_list(credentials) ->
-            credentials_present?(credentials)
-
-          _ ->
-            false
-        end
-
-      _ ->
-        false
+    with {:ok, strategy} <- get_webauthn_strategy(user.__struct__, opts),
+         {:ok, credentials} <- fetch_credentials(user, strategy.credentials_relationship_name) do
+      Enum.any?(credentials)
+    else
+      _ -> false
     end
   end
 
-  defp credentials_present?(credentials), do: Enum.any?(credentials)
+  defp fetch_credentials(user, relationship_name) do
+    case Map.get(user, relationship_name) do
+      %Ash.NotLoaded{} -> load_credentials(user, relationship_name)
+      credentials when is_list(credentials) -> {:ok, credentials}
+      _ -> :error
+    end
+  end
+
+  defp load_credentials(user, relationship_name) do
+    case Ash.load(user, [relationship_name],
+           authorize?: false,
+           domain: Info.domain!(user.__struct__)
+         ) do
+      {:ok, loaded} -> {:ok, Map.get(loaded, relationship_name, [])}
+      _ -> :error
+    end
+  end
 
   @doc """
   Returns `true` if the current request has a WebAuthn verification on it.
