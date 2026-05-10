@@ -139,6 +139,13 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
     </svg>
     """
 
+  defp icon_svg(:okta, class),
+    do: ~s"""
+    <svg class="#{class}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 0C5.385 0 0 5.385 0 12s5.385 12 12 12 12-5.385 12-12S18.615 0 12 0zm0 18c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6z"/>
+    </svg>
+    """
+
   defp icon_svg(_, class),
     do: ~s"""
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="#{class}">
