@@ -132,7 +132,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, path: "../ash_authentication", override: true},
+      {:ash_authentication,
+       github: "team-alembic/ash_authentication", branch: "main", override: true},
       {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.0"},
