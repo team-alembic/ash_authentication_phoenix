@@ -6,6 +6,8 @@ defmodule AshAuthentication.Phoenix.RouterTest do
   @moduledoc false
   use ExUnit.Case
 
+  alias AshAuthentication.Phoenix.StrategyRouter
+
   test "sign_in_routes adds a route according to its scope" do
     route =
       AshAuthentication.Phoenix.Test.Router
@@ -81,6 +83,32 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "resources" => nil
                 }
               ]}
+  end
+
+  describe "path parameter bindings" do
+    defmodule CapturingController do
+      @moduledoc false
+      def call(conn, dispatch_args) do
+        send(self(), {:dispatched, conn, dispatch_args})
+        conn
+      end
+    end
+
+    test "binds `:name` segments into path_params and params" do
+      conn =
+        :get
+        |> Plug.Test.conn("/user/sso/abc-123/request")
+        |> Map.put(:path_info, ["user", "sso", "abc-123", "request"])
+
+      StrategyRouter.call(conn,
+        resources: [Example.Accounts.User],
+        controller: CapturingController
+      )
+
+      assert_received {:dispatched, dispatched_conn, {:user, :sso, :request}}
+      assert dispatched_conn.path_params["connection_id"] == "abc-123"
+      assert dispatched_conn.params["connection_id"] == "abc-123"
+    end
   end
 
   describe "auth_routes filtering" do

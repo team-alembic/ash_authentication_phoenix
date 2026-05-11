@@ -8,6 +8,7 @@ defmodule Example.Accounts do
 
   resources do
     resource Example.Accounts.Admin
+    resource Example.Accounts.OidcConnection
     resource Example.Accounts.Token
     resource Example.Accounts.User
   end

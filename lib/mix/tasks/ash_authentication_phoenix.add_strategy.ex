@@ -24,9 +24,11 @@ if Code.ensure_loaded?(Igniter) do
       "apple" => "ash_authentication.add_strategy.apple",
       "auth0" => "ash_authentication.add_strategy.auth0",
       "microsoft" => "ash_authentication.add_strategy.microsoft",
+      "okta" => "ash_authentication.add_strategy.okta",
       "slack" => "ash_authentication.add_strategy.slack",
       "oidc" => "ash_authentication.add_strategy.oidc",
-      "oauth2" => "ash_authentication.add_strategy.oauth2"
+      "oauth2" => "ash_authentication.add_strategy.oauth2",
+      "dynamic_oidc" => "ash_authentication.add_strategy.dynamic_oidc"
     }
 
     @aap_strategy_tasks %{
@@ -41,9 +43,11 @@ if Code.ensure_loaded?(Igniter) do
       "apple" => "ash_authentication_phoenix.setup",
       "auth0" => "ash_authentication_phoenix.setup",
       "microsoft" => "ash_authentication_phoenix.setup",
+      "okta" => "ash_authentication_phoenix.setup",
       "slack" => "ash_authentication_phoenix.setup",
       "oidc" => "ash_authentication_phoenix.setup",
-      "oauth2" => "ash_authentication_phoenix.setup"
+      "oauth2" => "ash_authentication_phoenix.setup",
+      "dynamic_oidc" => "ash_authentication_phoenix.setup"
     }
 
     @strategy_names Map.keys(@aa_strategy_tasks)
@@ -65,9 +69,12 @@ if Code.ensure_loaded?(Igniter) do
                             apple: "Sign in with Apple.",
                             auth0: "Sign in with Auth0.",
                             microsoft: "Sign in with Microsoft.",
+                            okta: "Sign in with Okta.",
                             slack: "Sign in with Slack.",
                             oidc: "Sign in with a generic OpenID Connect provider.",
-                            oauth2: "Sign in with a generic OAuth2 provider."
+                            oauth2: "Sign in with a generic OAuth2 provider.",
+                            dynamic_oidc:
+                              "Sign in with database-driven OIDC connections (B2B/multi-tenant SSO)."
                           ]
                           |> Enum.map_join("\n", fn {name, description} ->
                             "  * `#{name}` - #{description}"
