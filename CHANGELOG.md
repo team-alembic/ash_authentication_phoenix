@@ -11,6 +11,25 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.5...v3.0.0-rc.6) (2026-05-11)
+
+
+
+
+### Features:
+
+* add DynamicOidc sign-in component by [@zachdaniel](https://github.com/zachdaniel) [(#739)](https://github.com/team-alembic/ash_authentication_phoenix/pull/739)
+
+### Bug Fixes:
+
+* capture path-param bindings in StrategyRouter by [@zachdaniel](https://github.com/zachdaniel) [(#739)](https://github.com/team-alembic/ash_authentication_phoenix/pull/739)
+
+* LiveView 1.2 compatibility (#733) by [@frankdugan3](https://github.com/frankdugan3) [(#733)](https://github.com/team-alembic/ash_authentication_phoenix/pull/733)
+
+### Improvements:
+
+* register `okta` and `dynamic_oidc` strategies in `add_strategy` dispatcher by [@jimsynz](https://github.com/jimsynz) [(#739)](https://github.com/team-alembic/ash_authentication_phoenix/pull/739)
+
 ## [3.0.0-rc.5](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.4...3.0.0-rc.5) (2026-05-08)
 
 
