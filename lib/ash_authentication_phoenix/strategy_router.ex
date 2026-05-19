@@ -21,22 +21,24 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
       fn {resource, strategy, path, phase}, {:not_found, conn} ->
         strategy_path_split = Path.split(String.trim_leading(path, "/"))
 
-        if paths_match?(strategy_path_split, conn.path_info) &&
-             conn.method ==
-               String.upcase(
-                 to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))
-               ) do
-          {:halt, {:found, resource, strategy, path, phase}}
+        with {:match, bindings} <- match_path(strategy_path_split, conn.path_info, %{}),
+             true <-
+               conn.method ==
+                 String.upcase(
+                   to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))
+                 ) do
+          {:halt, {:found, resource, strategy, path, phase, bindings}}
         else
-          {:cont, {:not_found, conn}}
+          _ -> {:cont, {:not_found, conn}}
         end
       end
     )
     |> case do
-      {:found, resource, strategy, _path, phase} ->
+      {:found, resource, strategy, _path, phase, bindings} ->
         subject_name = AshAuthentication.Info.authentication_subject_name!(resource)
 
         conn
+        |> merge_path_bindings(bindings)
         |> Plug.Conn.put_private(:strategy, strategy)
         |> opts[:controller].call(
           {subject_name, AshAuthentication.Strategy.name(strategy), phase}
@@ -45,6 +47,20 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
       {:not_found, conn} ->
         not_found(conn, opts)
     end
+  end
+
+  defp merge_path_bindings(conn, bindings) when bindings == %{}, do: conn
+
+  defp merge_path_bindings(conn, bindings) do
+    path_params = Map.merge(conn.path_params, bindings)
+
+    params =
+      case conn.params do
+        %Plug.Conn.Unfetched{} -> conn.params
+        params -> Map.merge(params, bindings)
+      end
+
+    %{conn | path_params: path_params, params: params}
   end
 
   if Code.ensure_loaded?(Phoenix.Router) &&
@@ -75,19 +91,19 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
     end
   end
 
-  defp paths_match?([], []), do: true
+  defp match_path([], [], bindings), do: {:match, bindings}
 
-  defp paths_match?([":" <> _ | strategy_rest], [_ | actual_rest]) do
-    paths_match?(strategy_rest, actual_rest)
+  defp match_path([":*"], _, bindings), do: {:match, bindings}
+
+  defp match_path([":" <> name | strategy_rest], [value | actual_rest], bindings) do
+    match_path(strategy_rest, actual_rest, Map.put(bindings, name, value))
   end
 
-  defp paths_match?([":*"], _), do: true
-
-  defp paths_match?([item | strategy_rest], [item | actual_rest]) do
-    paths_match?(strategy_rest, actual_rest)
+  defp match_path([item | strategy_rest], [item | actual_rest], bindings) do
+    match_path(strategy_rest, actual_rest, bindings)
   end
 
-  defp paths_match?(_, _), do: false
+  defp match_path(_, _, _), do: :no_match
 
   defp routes(opts) do
     opts[:resources]

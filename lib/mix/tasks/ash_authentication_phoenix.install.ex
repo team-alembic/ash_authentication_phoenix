@@ -32,7 +32,8 @@ if Code.ensure_loaded?(Igniter) do
       "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
       "otp" => "ash_authentication_phoenix.add_strategy.otp",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
-      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code"
+      "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication_phoenix.add_strategy.webauthn"
     }
 
     def info(_argv, _composing_task) do

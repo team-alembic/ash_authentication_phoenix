@@ -142,12 +142,10 @@ defmodule AshAuthentication.Phoenix.Components.Totp do
             context={@context}
             gettext_fn={@gettext_fn}
           >
-            <%= cond do %>
-              <% @sign_in_extra != [] -> %>
-                <div class={override_for(@overrides, :slot_class)}>
-                  {render_slot(@sign_in_extra, form)}
-                </div>
-              <% true -> %>
+            <%= if @sign_in_extra != [] do %>
+              <div class={override_for(@overrides, :slot_class)}>
+                {render_slot(@sign_in_extra, form)}
+              </div>
             <% end %>
 
             <div class={override_for(@overrides, :interstitial_class)}>
@@ -179,12 +177,10 @@ defmodule AshAuthentication.Phoenix.Components.Totp do
             context={@context}
             gettext_fn={@gettext_fn}
           >
-            <%= cond do %>
-              <% @setup_extra != [] -> %>
-                <div class={override_for(@overrides, :slot_class)}>
-                  {render_slot(@setup_extra, form)}
-                </div>
-              <% true -> %>
+            <%= if @setup_extra != [] do %>
+              <div class={override_for(@overrides, :slot_class)}>
+                {render_slot(@setup_extra, form)}
+              </div>
             <% end %>
 
             <div class={override_for(@overrides, :interstitial_class)}>

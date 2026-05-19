@@ -18,14 +18,17 @@ if Code.ensure_loaded?(Igniter) do
       "api_key" => "ash_authentication.add_strategy.api_key",
       "totp" => "ash_authentication.add_strategy.totp",
       "recovery_code" => "ash_authentication.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication.add_strategy.webauthn",
       "github" => "ash_authentication.add_strategy.github",
       "google" => "ash_authentication.add_strategy.google",
       "apple" => "ash_authentication.add_strategy.apple",
       "auth0" => "ash_authentication.add_strategy.auth0",
       "microsoft" => "ash_authentication.add_strategy.microsoft",
+      "okta" => "ash_authentication.add_strategy.okta",
       "slack" => "ash_authentication.add_strategy.slack",
       "oidc" => "ash_authentication.add_strategy.oidc",
-      "oauth2" => "ash_authentication.add_strategy.oauth2"
+      "oauth2" => "ash_authentication.add_strategy.oauth2",
+      "dynamic_oidc" => "ash_authentication.add_strategy.dynamic_oidc"
     }
 
     @aap_strategy_tasks %{
@@ -34,14 +37,17 @@ if Code.ensure_loaded?(Igniter) do
       "otp" => "ash_authentication_phoenix.add_strategy.otp",
       "totp" => "ash_authentication_phoenix.add_strategy.totp",
       "recovery_code" => "ash_authentication_phoenix.add_strategy.recovery_code",
+      "webauthn" => "ash_authentication_phoenix.add_strategy.webauthn",
       "github" => "ash_authentication_phoenix.setup",
       "google" => "ash_authentication_phoenix.setup",
       "apple" => "ash_authentication_phoenix.setup",
       "auth0" => "ash_authentication_phoenix.setup",
       "microsoft" => "ash_authentication_phoenix.setup",
+      "okta" => "ash_authentication_phoenix.setup",
       "slack" => "ash_authentication_phoenix.setup",
       "oidc" => "ash_authentication_phoenix.setup",
-      "oauth2" => "ash_authentication_phoenix.setup"
+      "oauth2" => "ash_authentication_phoenix.setup",
+      "dynamic_oidc" => "ash_authentication_phoenix.setup"
     }
 
     @strategy_names Map.keys(@aa_strategy_tasks)
@@ -56,14 +62,19 @@ if Code.ensure_loaded?(Igniter) do
                             totp: "Authenticate with a time-based one-time password (TOTP).",
                             recovery_code:
                               "Authenticate with one-time recovery codes as a 2FA fallback.",
+                            webauthn:
+                              "Authenticate with hardware security keys, platform authenticators or passkeys.",
                             github: "Sign in with GitHub.",
                             google: "Sign in with Google.",
                             apple: "Sign in with Apple.",
                             auth0: "Sign in with Auth0.",
                             microsoft: "Sign in with Microsoft.",
+                            okta: "Sign in with Okta.",
                             slack: "Sign in with Slack.",
                             oidc: "Sign in with a generic OpenID Connect provider.",
-                            oauth2: "Sign in with a generic OAuth2 provider."
+                            oauth2: "Sign in with a generic OAuth2 provider.",
+                            dynamic_oidc:
+                              "Sign in with database-driven OIDC connections (B2B/multi-tenant SSO)."
                           ]
                           |> Enum.map_join("\n", fn {name, description} ->
                             "  * `#{name}` - #{description}"

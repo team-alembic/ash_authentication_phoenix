@@ -920,6 +920,241 @@ defmodule AshAuthentication.Phoenix.Router do
   end
 
   @doc """
+  Generates a WebAuthn second-factor verification page using LiveView.
+
+  Mirrors `totp_2fa_route/3` but for the WebAuthn strategy. Mounts
+  `AshAuthentication.Phoenix.WebAuthnVerifyLive` and offers two flows:
+
+    * `/<path>/:token` — token flow, used after a primary sign-in.
+    * `/<path>` — step-up flow, used by an already-signed-in user.
+
+  ## Options
+
+    * `path` — the path under which to mount. Defaults to `/webauthn-verify`.
+    * `auth_routes_prefix` — required, makes the form action URLs work.
+    * `live_view` — defaults to `AshAuthentication.Phoenix.WebAuthnVerifyLive`.
+    * `as` — passed to the generated `live` route. Defaults to `:auth`.
+    * `overrides`, `on_mount`, `on_mount_prepend`, `gettext_fn`,
+      `gettext_backend`, `layout` — same as `totp_2fa_route/3`.
+
+  ## Example
+
+      scope "/", MyAppWeb do
+        pipe_through :browser
+        webauthn_2fa_route MyApp.Accounts.User, :webauthn, auth_routes_prefix: "/auth"
+      end
+  """
+  @spec webauthn_2fa_route(
+          resource :: Ash.Resource.t(),
+          strategy :: atom(),
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
+            | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro webauthn_2fa_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/webauthn-verify")
+
+    {live_view, opts} =
+      Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.WebAuthnVerifyLive)
+
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts = Keyword.put_new(opts, :alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        strategy = AshAuthentication.Info.strategy!(unquote(resource), unquote(strategy))
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "otp_app" => unquote(otp_app),
+                 "strategy" => strategy,
+                 "resource" => unquote(resource)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_webauthn_verify", live_session_opts do
+          live("/:token", unquote(live_view), :webauthn_verify, as: unquote(as))
+
+          live("/", unquote(live_view), :webauthn_verify, as: :"#{unquote(as)}_step_up")
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
+  @doc """
+  Generates a WebAuthn passkey setup page using LiveView.
+
+  Mirrors `totp_setup_route/3`. Mounts
+  `AshAuthentication.Phoenix.WebAuthnSetupLive` (which wraps
+  `ManageCredentials`) so authenticated users can register, label, or revoke
+  passkeys.
+
+  Pair with your authenticated-user pipeline so only signed-in users hit it.
+
+  ## Options
+
+    * `path` — defaults to `/webauthn-setup`.
+    * `auth_routes_prefix` — required.
+    * `live_view`, `as`, `overrides`, etc. — see `totp_setup_route/3`.
+  """
+  @spec webauthn_setup_route(
+          resource :: Ash.Resource.t(),
+          strategy :: atom(),
+          opts :: [
+            {:path, String.t()}
+            | {:live_view, module}
+            | {:as, atom}
+            | {:overrides, [module]}
+            | {:gettext_fn, {module, atom}}
+            | {:gettext_backend, {module, String.t()}}
+            | {:on_mount, [module]}
+            | {:on_mount_prepend, [module]}
+            | {atom, any}
+          ]
+        ) :: Macro.t()
+  defmacro webauthn_setup_route(resource, strategy, opts \\ []) do
+    {path, opts} = Keyword.pop(opts, :path, "/webauthn-setup")
+
+    {live_view, opts} =
+      Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.WebAuthnSetupLive)
+
+    {as, opts} = Keyword.pop(opts, :as, :auth)
+    {otp_app, opts} = Keyword.pop(opts, :otp_app)
+    {layout, opts} = Keyword.pop(opts, :layout)
+    {on_mount, opts} = Keyword.pop(opts, :on_mount)
+    {on_mount_prepend, opts} = Keyword.pop(opts, :on_mount_prepend)
+    {auth_routes_prefix, opts} = Keyword.pop(opts, :auth_routes_prefix)
+    {gettext_fn, opts} = Keyword.pop(opts, :gettext_fn)
+    {gettext_backend, opts} = Keyword.pop(opts, :gettext_backend)
+
+    {overrides, opts} =
+      Keyword.pop(opts, :overrides, [AshAuthentication.Phoenix.Overrides.Default])
+
+    gettext_fn =
+      maybe_generate_gettext_fn_pointer(gettext_fn, gettext_backend, __CALLER__.module, path)
+
+    opts = Keyword.put_new(opts, :alias, false)
+
+    quote do
+      auth_routes_prefix =
+        case unquote(auth_routes_prefix) do
+          nil -> nil
+          {:unscoped, value} -> value
+          value -> Phoenix.Router.scoped_path(__MODULE__, value)
+        end
+
+      scope unquote(path), unquote(opts) do
+        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+
+        on_mount =
+          (List.wrap(unquote(on_mount_prepend)) ++
+             [
+               AshAuthentication.Phoenix.Router.OnLiveViewMount,
+               AshAuthentication.Phoenix.LiveSession | unquote(on_mount || [])
+             ])
+          |> Enum.uniq_by(fn
+            {mod, _} -> mod
+            mod -> mod
+          end)
+
+        strategy = AshAuthentication.Info.strategy!(unquote(resource), unquote(strategy))
+
+        live_session_opts = [
+          session:
+            {AshAuthentication.Phoenix.Router, :generate_session,
+             [
+               %{
+                 "auth_routes_prefix" => auth_routes_prefix,
+                 "overrides" => unquote(overrides),
+                 "gettext_fn" => unquote(gettext_fn),
+                 "otp_app" => unquote(otp_app),
+                 "strategy" => strategy,
+                 "resource" => unquote(resource)
+               }
+             ]},
+          on_mount: on_mount
+        ]
+
+        live_session_opts =
+          case unquote(layout) do
+            nil ->
+              live_session_opts
+
+            layout ->
+              Keyword.put(live_session_opts, :layout, layout)
+          end
+
+        live_session :"#{unquote(as)}_webauthn_setup", live_session_opts do
+          live("/", unquote(live_view), :webauthn_setup, as: unquote(as))
+        end
+      end
+
+      unquote(generate_gettext_fn(gettext_backend, path))
+    end
+  end
+
+  @doc """
   Generates a recovery code verification page for two-factor authentication fallback using LiveView.
 
   This page is used when a user needs to authenticate with a recovery code instead of
