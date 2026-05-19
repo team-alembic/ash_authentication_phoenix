@@ -42,12 +42,13 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
   get "/oauth-authorization-server", do: serve_authorization_server_metadata(conn)
   get "/openid-configuration", do: serve_authorization_server_metadata(conn)
 
+  # sobelow_skip ["XSS.SendResp"]
   get "/oauth-protected-resource" do
     server = server!(conn.assigns.oauth2_server_router_opts)
 
     conn
     |> put_resp_header("content-type", "application/json")
-    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_header("cache-control", "public, max-age=3600")
     |> send_resp(200, Jason.encode!(Metadata.protected_resource(server)))
     |> halt()
   end
@@ -110,12 +111,13 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
 
   defp server!(opts), do: Keyword.fetch!(opts, :oauth2_server)
 
+  # sobelow_skip ["XSS.SendResp"]
   defp serve_authorization_server_metadata(conn) do
     server = server!(conn.assigns.oauth2_server_router_opts)
 
     conn
     |> put_resp_header("content-type", "application/json")
-    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_header("cache-control", "public, max-age=3600")
     |> send_resp(200, Jason.encode!(Metadata.authorization_server(server)))
     |> halt()
   end

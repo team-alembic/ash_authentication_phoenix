@@ -15,6 +15,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.Errors do
   Codes: `"invalid_request"`, `"invalid_client"`, `"invalid_grant"`,
   `"unsupported_grant_type"`, `"invalid_scope"`, etc.
   """
+  # sobelow_skip ["XSS.SendResp"]
   @spec send_oauth_error(Plug.Conn.t(), pos_integer(), String.t(), String.t() | nil) ::
           Plug.Conn.t()
   def send_oauth_error(conn, status, code, description \\ nil) do

@@ -13,13 +13,15 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ConsentView do
   ## Assigns
 
     * `:client_name` — registered client display name
-    * `:client_id` — UUID
-    * `:redirect_uri` — where approval will redirect
-    * `:scope` — the space-separated scope string requested
-    * `:resource` — the resource URL the token will bind to
+    * `:client_id` — UUID (for display)
+    * `:redirect_uri` — where approval will redirect (for display)
+    * `:scope` — the space-separated scope string requested (for display)
+    * `:resource` — the resource URL the token will bind to (for display)
     * `:action_path` — POST destination for the consent form
     * `:csrf_token` — CSRF token to embed
-    * Plus the verbatim `code_challenge`, `state` to round-trip
+    * `:consent_request` — sealed token capturing the validated request;
+      the POST handler reconstructs all protocol fields from this rather
+      than trusting form-submitted values.
   """
 
   require EEx
@@ -59,14 +61,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ConsentView do
         </dl>
         <form method="POST" action="<%= h(@action_path) %>">
           <input type="hidden" name="_csrf_token" value="<%= h(@csrf_token) %>" />
-          <input type="hidden" name="response_type" value="code" />
-          <input type="hidden" name="client_id" value="<%= h(@client_id) %>" />
-          <input type="hidden" name="redirect_uri" value="<%= h(@redirect_uri) %>" />
-          <input type="hidden" name="code_challenge" value="<%= h(@code_challenge) %>" />
-          <input type="hidden" name="code_challenge_method" value="S256" />
-          <input type="hidden" name="scope" value="<%= h(@scope) %>" />
-          <input type="hidden" name="state" value="<%= h(@state) %>" />
-          <input type="hidden" name="resource" value="<%= h(@resource) %>" />
+          <input type="hidden" name="consent_request" value="<%= h(@consent_request) %>" />
           <div class="actions">
             <button type="submit" name="action" value="approve" class="primary">Approve</button>
             <button type="submit" name="action" value="deny" class="secondary">Deny</button>

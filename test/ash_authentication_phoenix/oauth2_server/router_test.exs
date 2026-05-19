@@ -45,7 +45,11 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
     {:ok, user: user}
   end
 
-  defp call_consent(conn), do: ConsentRouter.call(conn, @consent_opts)
+  defp call_consent(conn) do
+    conn
+    |> Plug.Test.init_test_session(%{})
+    |> ConsentRouter.call(@consent_opts)
+  end
   defp call_protocol(conn), do: ProtocolRouter.call(conn, @protocol_opts)
 
   defp register_client(redirect_uri \\ "https://chat.example.com/cb") do
@@ -173,12 +177,10 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       {client_id, redirect_uri} = create_client_for_authorize()
       {_v, challenge} = pkce()
 
-      params =
-        authorize_query(client_id, redirect_uri, challenge)
-        |> Map.put("action", "approve")
+      consent_request = obtain_consent_request(user, client_id, redirect_uri, challenge)
 
       conn =
-        conn(:post, "/", params)
+        conn(:post, "/", %{"consent_request" => consent_request, "action" => "approve"})
         |> put_req_header("content-type", "application/x-www-form-urlencoded")
         |> Ash.PlugHelpers.set_actor(user)
         |> call_consent()
@@ -194,12 +196,10 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       {client_id, redirect_uri} = create_client_for_authorize()
       {_v, challenge} = pkce()
 
-      params =
-        authorize_query(client_id, redirect_uri, challenge)
-        |> Map.put("action", "deny")
+      consent_request = obtain_consent_request(user, client_id, redirect_uri, challenge)
 
       conn =
-        conn(:post, "/", params)
+        conn(:post, "/", %{"consent_request" => consent_request, "action" => "deny"})
         |> put_req_header("content-type", "application/x-www-form-urlencoded")
         |> Ash.PlugHelpers.set_actor(user)
         |> call_consent()
@@ -209,6 +209,28 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       query = location |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
       assert query["error"] == "access_denied"
     end
+
+    test "rejects POST without consent_request token", %{user: user} do
+      conn =
+        conn(:post, "/", %{"action" => "approve"})
+        |> put_req_header("content-type", "application/x-www-form-urlencoded")
+        |> Ash.PlugHelpers.set_actor(user)
+        |> call_consent()
+
+      assert conn.status == 400
+      assert Jason.decode!(conn.resp_body)["error"] == "invalid_request"
+    end
+
+    test "rejects POST with tampered consent_request token", %{user: user} do
+      conn =
+        conn(:post, "/", %{"consent_request" => "not-a-valid-token", "action" => "approve"})
+        |> put_req_header("content-type", "application/x-www-form-urlencoded")
+        |> Ash.PlugHelpers.set_actor(user)
+        |> call_consent()
+
+      assert conn.status == 400
+      assert Jason.decode!(conn.resp_body)["error"] == "invalid_request"
+    end
   end
 
   describe "ProtocolRouter: POST /token (authorization_code grant)" do
@@ -216,10 +238,10 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       {client_id, redirect_uri} = create_client_for_authorize()
       {verifier, challenge} = pkce()
 
-      params = authorize_query(client_id, redirect_uri, challenge) |> Map.put("action", "approve")
+      consent_request = obtain_consent_request(user, client_id, redirect_uri, challenge)
 
       authorize_conn =
-        conn(:post, "/", params)
+        conn(:post, "/", %{"consent_request" => consent_request, "action" => "approve"})
         |> put_req_header("content-type", "application/x-www-form-urlencoded")
         |> Ash.PlugHelpers.set_actor(user)
         |> call_consent()
@@ -296,5 +318,18 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       "state" => "csrf-state",
       "resource" => Server.resource_url()
     }
+  end
+
+  # Walks the GET /authorize → consent screen → extracts the sealed
+  # consent_request token. POSTs to /authorize must use this token rather
+  # than re-submitting the raw protocol params.
+  defp obtain_consent_request(user, client_id, redirect_uri, challenge) do
+    conn =
+      conn(:get, "/?" <> URI.encode_query(authorize_query(client_id, redirect_uri, challenge)))
+      |> Ash.PlugHelpers.set_actor(user)
+      |> call_consent()
+
+    [_, token] = Regex.run(~r/name="consent_request" value="([^"]+)"/, conn.resp_body)
+    token
   end
 end
