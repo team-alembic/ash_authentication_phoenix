@@ -514,6 +514,17 @@ Generates a sign-in button for Apple.
   * `:root_class` - CSS classes for the root `div` element.
 
 
+### `AshAuthentication.Phoenix.Components.DynamicOidc`
+
+Renders a sign-in button per database-stored OIDC connection.
+
+  * `:icon_class` - CSS classes for the icon SVG / `img`.
+
+  * `:link_class` - CSS classes for each connection's `a` element.
+
+  * `:root_class` - CSS classes for the root `div` element.
+
+
 ### `AshAuthentication.Phoenix.Components.OAuth2`
 
 Generates a sign-in button for OAuth2.

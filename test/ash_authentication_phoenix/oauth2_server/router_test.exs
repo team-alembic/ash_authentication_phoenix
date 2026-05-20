@@ -50,13 +50,18 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
     |> Plug.Test.init_test_session(%{})
     |> ConsentRouter.call(@consent_opts)
   end
+
   defp call_protocol(conn), do: ProtocolRouter.call(conn, @protocol_opts)
 
   defp register_client(redirect_uri \\ "https://chat.example.com/cb") do
-    conn(:post, "/register", Jason.encode!(%{
-      "client_name" => "Test",
-      "redirect_uris" => [redirect_uri]
-    }))
+    conn(
+      :post,
+      "/register",
+      Jason.encode!(%{
+        "client_name" => "Test",
+        "redirect_uris" => [redirect_uri]
+      })
+    )
     |> put_req_header("content-type", "application/json")
     |> call_protocol()
   end
@@ -111,7 +116,9 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
 
     test "rejects bogus redirect_uris with 400 + invalid_redirect_uri" do
       conn =
-        conn(:post, "/register",
+        conn(
+          :post,
+          "/register",
           Jason.encode!(%{"redirect_uris" => ["http://evil.example.com/cb"]})
         )
         |> put_req_header("content-type", "application/json")

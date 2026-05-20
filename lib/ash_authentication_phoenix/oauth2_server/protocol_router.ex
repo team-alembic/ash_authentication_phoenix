@@ -39,8 +39,8 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
 
   # ── metadata ───────────────────────────────────────────────────────────────
 
-  get "/oauth-authorization-server", do: serve_authorization_server_metadata(conn)
-  get "/openid-configuration", do: serve_authorization_server_metadata(conn)
+  get("/oauth-authorization-server", do: serve_authorization_server_metadata(conn))
+  get("/openid-configuration", do: serve_authorization_server_metadata(conn))
 
   # sobelow_skip ["XSS.SendResp"]
   get "/oauth-protected-resource" do
