@@ -16,7 +16,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
   import Plug.Test
   import Plug.Conn
 
-  alias AshAuthentication.Oauth2Server.PKCE
+  alias AshAuthentication.Oauth2Server.{Jwt, PKCE}
 
   alias AshAuthentication.Phoenix.Oauth2Server.{ConsentRouter, ProtocolRouter}
   alias Oauth2ServerTest.Server
@@ -131,7 +131,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
 
     test "404s when DCR is disabled on the server" do
       opts =
-        AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.init(
+        ProtocolRouter.init(
           oauth2_server: Oauth2ServerTest.DcrDisabledServer
         )
 
@@ -145,14 +145,14 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
           })
         )
         |> put_req_header("content-type", "application/json")
-        |> AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.call(opts)
+        |> ProtocolRouter.call(opts)
 
       assert conn.status == 404
     end
 
     test "401 + WWW-Authenticate when initial access token is wrong (RFC 7591 §3.2.2)" do
       opts =
-        AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.init(
+        ProtocolRouter.init(
           oauth2_server: Oauth2ServerTest.GatedServer
         )
 
@@ -167,7 +167,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
         )
         |> put_req_header("content-type", "application/json")
         |> put_req_header("authorization", "Bearer wrong-token")
-        |> AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.call(opts)
+        |> ProtocolRouter.call(opts)
 
       assert conn.status == 401
       [www_auth] = get_resp_header(conn, "www-authenticate")
@@ -176,9 +176,40 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       assert body["error"] == "invalid_token"
     end
 
+    test "returns 429 + oauth-error body when the rate limit is exceeded" do
+      opts = ProtocolRouter.init(oauth2_server: Oauth2ServerTest.RateLimitedServer)
+      # Distinct from other rate-limit tests so the per-IP bucket is fresh.
+      ip = {198, 51, 100, 42}
+
+      body =
+        Jason.encode!(%{
+          "client_name" => "X",
+          "redirect_uris" => ["https://app.example.com/cb"]
+        })
+
+      conn1 =
+        conn(:post, "/register", body)
+        |> put_req_header("content-type", "application/json")
+        |> Map.put(:remote_ip, ip)
+        |> ProtocolRouter.call(opts)
+
+      assert conn1.status == 201
+
+      conn2 =
+        conn(:post, "/register", body)
+        |> put_req_header("content-type", "application/json")
+        |> Map.put(:remote_ip, ip)
+        |> ProtocolRouter.call(opts)
+
+      assert conn2.status == 429
+      json = Jason.decode!(conn2.resp_body)
+      assert json["error"] == "temporarily_unavailable"
+      assert json["error_description"] =~ "rate limit"
+    end
+
     test "accepts a registration with the correct initial access token" do
       opts =
-        AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.init(
+        ProtocolRouter.init(
           oauth2_server: Oauth2ServerTest.GatedServer
         )
 
@@ -193,7 +224,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
         )
         |> put_req_header("content-type", "application/json")
         |> put_req_header("authorization", "Bearer test-initial-access-token-shhh")
-        |> AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.call(opts)
+        |> ProtocolRouter.call(opts)
 
       assert conn.status == 201
     end
@@ -347,7 +378,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       assert body["expires_in"] == Server.access_token_lifetime()
 
       assert {:ok, claims} =
-               AshAuthentication.Oauth2Server.Jwt.verify(Server, body["access_token"])
+               Jwt.verify(Server, body["access_token"])
 
       assert claims["sub"] == user.id
     end
