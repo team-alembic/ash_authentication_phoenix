@@ -229,6 +229,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ConsentRouter do
     conn
     |> put_resp_header("content-type", "text/html; charset=utf-8")
     |> put_resp_header("x-frame-options", "DENY")
+    |> put_resp_header("content-security-policy", "frame-ancestors 'none'")
     |> send_resp(200, body)
     |> halt()
   end

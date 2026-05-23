@@ -14,6 +14,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
     * `GET /openid-configuration`       — alias for OIDC-conformant tooling
     * `POST /register`                  — RFC 7591 Dynamic Client Registration
     * `POST /token`                     — authorization_code + refresh_token grants
+    * `POST /revoke`                    — RFC 7009 token revocation
 
   Mount this behind your API pipeline (no CSRF, no session needed). For the
   human-driven consent step (`/authorize`), see
@@ -99,6 +100,20 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
         {status, code, desc} = Errors.describe_token_error(reason)
         Errors.send_oauth_error(conn, status, code, desc)
     end
+  end
+
+  # ── revocation (RFC 7009) ──────────────────────────────────────────────────
+
+  # Always 200, regardless of whether the token existed or matched the client
+  # — RFC 7009 §2.2 requires the endpoint not to leak token state.
+  post "/revoke" do
+    server = server!(conn.assigns.oauth2_server_router_opts)
+    :ok = Token.revoke(server, conn.params || %{})
+
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> send_resp(200, "")
+    |> halt()
   end
 
   # ── default ────────────────────────────────────────────────────────────────
