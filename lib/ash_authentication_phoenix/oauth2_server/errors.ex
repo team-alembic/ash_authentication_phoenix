@@ -38,6 +38,39 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.Errors do
   end
 
   @doc """
+  Send a Bearer-auth error per RFC 6750 §3 — JSON body + a
+  `WWW-Authenticate: Bearer error="…", error_description="…"` header.
+
+  Used for failures of Bearer-authenticated endpoints (e.g. RFC 7591
+  initial-access-token failures on `/oauth/register`).
+  """
+  # sobelow_skip ["XSS.SendResp"]
+  @spec send_bearer_error(Plug.Conn.t(), pos_integer(), String.t(), String.t() | nil) ::
+          Plug.Conn.t()
+  def send_bearer_error(conn, status, code, description \\ nil) do
+    challenge =
+      [{"error", code}, {"error_description", description}]
+      |> Enum.reject(fn {_, v} -> is_nil(v) end)
+      |> Enum.map_join(", ", fn {k, v} -> ~s|#{k}="#{escape_quoted(v)}"| end)
+
+    body = %{"error" => code} |> maybe_put("error_description", description)
+
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_header("www-authenticate", "Bearer " <> challenge)
+    |> send_resp(status, Jason.encode!(body))
+    |> halt()
+  end
+
+  # WWW-Authenticate quoted-string values: backslash-escape `"` and `\`.
+  defp escape_quoted(value) do
+    value
+    |> String.replace("\\", "\\\\")
+    |> String.replace("\"", "\\\"")
+  end
+
+  @doc """
   Translate a `:reason` atom returned from a core module into an
   `{http_status, error_code, description}` triple suitable for an OAuth
   error response.

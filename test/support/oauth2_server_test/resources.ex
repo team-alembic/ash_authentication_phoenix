@@ -225,6 +225,9 @@ defmodule Oauth2ServerTest.Secrets do
   def secret_for([:signing_secret], _, _, _),
     do: {:ok, "test-signing-secret-test-signing-secret"}
 
+  def secret_for([:initial_access_token], _, _, _),
+    do: {:ok, "test-initial-access-token-shhh"}
+
   def secret_for(_, _, _, _), do: :error
 end
 
@@ -240,5 +243,38 @@ defmodule Oauth2ServerTest.Server do
     authorization_code_resource: Oauth2ServerTest.OAuthAuthorizationCode,
     refresh_token_resource: Oauth2ServerTest.OAuthRefreshToken,
     consent_resource: Oauth2ServerTest.OAuthConsent,
+    scopes: ["mcp"],
+    dcr_enabled?: true
+end
+
+defmodule Oauth2ServerTest.DcrDisabledServer do
+  @moduledoc false
+  use AshAuthentication.Oauth2Server,
+    otp_app: :ash_authentication_phoenix,
+    user_resource: Oauth2ServerTest.User,
+    issuer_url: {Oauth2ServerTest.Secrets, []},
+    resource_url: {Oauth2ServerTest.Secrets, []},
+    signing_secret: {Oauth2ServerTest.Secrets, []},
+    client_resource: Oauth2ServerTest.OAuthClient,
+    authorization_code_resource: Oauth2ServerTest.OAuthAuthorizationCode,
+    refresh_token_resource: Oauth2ServerTest.OAuthRefreshToken,
+    consent_resource: Oauth2ServerTest.OAuthConsent,
     scopes: ["mcp"]
+end
+
+defmodule Oauth2ServerTest.GatedServer do
+  @moduledoc false
+  use AshAuthentication.Oauth2Server,
+    otp_app: :ash_authentication_phoenix,
+    user_resource: Oauth2ServerTest.User,
+    issuer_url: {Oauth2ServerTest.Secrets, []},
+    resource_url: {Oauth2ServerTest.Secrets, []},
+    signing_secret: {Oauth2ServerTest.Secrets, []},
+    client_resource: Oauth2ServerTest.OAuthClient,
+    authorization_code_resource: Oauth2ServerTest.OAuthAuthorizationCode,
+    refresh_token_resource: Oauth2ServerTest.OAuthRefreshToken,
+    consent_resource: Oauth2ServerTest.OAuthConsent,
+    initial_access_token: {Oauth2ServerTest.Secrets, []},
+    scopes: ["mcp"],
+    dcr_enabled?: true
 end

@@ -58,14 +58,29 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
 
   post "/register" do
     server = server!(conn.assigns.oauth2_server_router_opts)
+    opts = [initial_access_token: extract_bearer(conn)]
 
-    case Register.register(server, conn.params) do
+    case Register.register(server, conn.params, opts) do
       {:ok, _client, body} ->
         conn
         |> put_resp_header("content-type", "application/json")
         |> put_resp_header("cache-control", "no-store")
         |> send_resp(201, Jason.encode!(body))
         |> halt()
+
+      {:error, :dcr_disabled} ->
+        # DCR is off on this server. Treat the route as not present —
+        # consistent with the metadata document not advertising it.
+        conn |> send_resp(404, "") |> halt()
+
+      {:error, :invalid_initial_access_token} ->
+        # RFC 7591 §3.2.2 — Bearer-auth failure, not a metadata error.
+        Errors.send_bearer_error(
+          conn,
+          401,
+          "invalid_token",
+          "registration requires a valid initial access token"
+        )
 
       {:error, code, desc} ->
         Errors.send_dcr_error(conn, code, desc)
@@ -125,6 +140,17 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
   # ── helpers ───────────────────────────────────────────────────────────────
 
   defp server!(opts), do: Keyword.fetch!(opts, :oauth2_server)
+
+  # Pull the bearer token out of `Authorization: Bearer <token>` if
+  # present. Used by `/register` to forward an RFC 7591 initial access
+  # token into the protocol core.
+  defp extract_bearer(conn) do
+    case Plug.Conn.get_req_header(conn, "authorization") do
+      ["Bearer " <> token | _] when token != "" -> token
+      ["bearer " <> token | _] when token != "" -> token
+      _ -> nil
+    end
+  end
 
   # sobelow_skip ["XSS.SendResp"]
   defp serve_authorization_server_metadata(conn) do

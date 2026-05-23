@@ -179,6 +179,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
         "hex.audit",
         "test"
       ],
+      # this is used as a dev only dependency
+      "deps.audit": ["deps.audit --ignore-package-names cowlib"],
       credo: "credo --strict",
       sobelow: "sobelow --skip",
       docs: [

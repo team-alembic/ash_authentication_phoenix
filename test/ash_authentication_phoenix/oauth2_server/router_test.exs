@@ -128,6 +128,75 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
       body = Jason.decode!(conn.resp_body)
       assert body["error"] == "invalid_redirect_uri"
     end
+
+    test "404s when DCR is disabled on the server" do
+      opts =
+        AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.init(
+          oauth2_server: Oauth2ServerTest.DcrDisabledServer
+        )
+
+      conn =
+        conn(
+          :post,
+          "/register",
+          Jason.encode!(%{
+            "client_name" => "X",
+            "redirect_uris" => ["https://app.example.com/cb"]
+          })
+        )
+        |> put_req_header("content-type", "application/json")
+        |> AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.call(opts)
+
+      assert conn.status == 404
+    end
+
+    test "401 + WWW-Authenticate when initial access token is wrong (RFC 7591 §3.2.2)" do
+      opts =
+        AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.init(
+          oauth2_server: Oauth2ServerTest.GatedServer
+        )
+
+      conn =
+        conn(
+          :post,
+          "/register",
+          Jason.encode!(%{
+            "client_name" => "X",
+            "redirect_uris" => ["https://app.example.com/cb"]
+          })
+        )
+        |> put_req_header("content-type", "application/json")
+        |> put_req_header("authorization", "Bearer wrong-token")
+        |> AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.call(opts)
+
+      assert conn.status == 401
+      [www_auth] = get_resp_header(conn, "www-authenticate")
+      assert www_auth =~ ~s|Bearer error="invalid_token"|
+      body = Jason.decode!(conn.resp_body)
+      assert body["error"] == "invalid_token"
+    end
+
+    test "accepts a registration with the correct initial access token" do
+      opts =
+        AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.init(
+          oauth2_server: Oauth2ServerTest.GatedServer
+        )
+
+      conn =
+        conn(
+          :post,
+          "/register",
+          Jason.encode!(%{
+            "client_name" => "Trusted",
+            "redirect_uris" => ["https://app.example.com/cb"]
+          })
+        )
+        |> put_req_header("content-type", "application/json")
+        |> put_req_header("authorization", "Bearer test-initial-access-token-shhh")
+        |> AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter.call(opts)
+
+      assert conn.status == 201
+    end
   end
 
   describe "ConsentRouter: GET /authorize" do
