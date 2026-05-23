@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule Oauth2ServerTest.Hammer do
-  @moduledoc false
-  use Hammer, backend: :ets
-end
-
 defmodule Oauth2ServerTest.User do
   @moduledoc false
   use Ash.Resource,
@@ -213,7 +208,6 @@ defmodule Oauth2ServerTest.Domain do
   resources do
     resource Oauth2ServerTest.User
     resource Oauth2ServerTest.OAuthClient
-    resource Oauth2ServerTest.RateLimitedOAuthClient
     resource Oauth2ServerTest.OAuthAuthorizationCode
     resource Oauth2ServerTest.OAuthRefreshToken
     resource Oauth2ServerTest.OAuthConsent
@@ -281,73 +275,6 @@ defmodule Oauth2ServerTest.GatedServer do
     refresh_token_resource: Oauth2ServerTest.OAuthRefreshToken,
     consent_resource: Oauth2ServerTest.OAuthConsent,
     initial_access_token: {Oauth2ServerTest.Secrets, []},
-    scopes: ["mcp"],
-    dcr_enabled?: true
-end
-
-defmodule Oauth2ServerTest.RateLimitedOAuthClient do
-  @moduledoc """
-  Variant of `Oauth2ServerTest.OAuthClient` with a very low
-  `:register` rate limit so `ProtocolRouter`'s 429 path can be
-  exercised in a test.
-  """
-
-  use Ash.Resource,
-    domain: Oauth2ServerTest.Domain,
-    data_layer: Ash.DataLayer.Ets,
-    extensions: [AshRateLimiter]
-
-  alias AshAuthentication.Oauth2Server.RateLimit
-
-  rate_limit do
-    backend Oauth2ServerTest.Hammer
-
-    action :register,
-      limit: 1,
-      per: :timer.minutes(1),
-      key: &RateLimit.key_by_ip/2
-  end
-
-  attributes do
-    uuid_v7_primary_key :id
-    attribute :client_name, :string, public?: true, allow_nil?: false
-    attribute :redirect_uris, {:array, :string}, public?: true, allow_nil?: false, default: []
-    attribute :grant_types, {:array, :string}, public?: true, default: ["authorization_code"]
-    attribute :response_types, {:array, :string}, public?: true, default: ["code"]
-    attribute :token_endpoint_auth_method, :string, public?: true, default: "none"
-    attribute :scope, :string, public?: true, default: "mcp"
-    create_timestamp :inserted_at
-    update_timestamp :updated_at
-  end
-
-  actions do
-    defaults [:read, :destroy]
-
-    create :register do
-      accept [
-        :client_name,
-        :redirect_uris,
-        :grant_types,
-        :response_types,
-        :token_endpoint_auth_method,
-        :scope
-      ]
-    end
-  end
-end
-
-defmodule Oauth2ServerTest.RateLimitedServer do
-  @moduledoc false
-  use AshAuthentication.Oauth2Server,
-    otp_app: :ash_authentication_phoenix,
-    user_resource: Oauth2ServerTest.User,
-    issuer_url: {Oauth2ServerTest.Secrets, []},
-    resource_url: {Oauth2ServerTest.Secrets, []},
-    signing_secret: {Oauth2ServerTest.Secrets, []},
-    client_resource: Oauth2ServerTest.RateLimitedOAuthClient,
-    authorization_code_resource: Oauth2ServerTest.OAuthAuthorizationCode,
-    refresh_token_resource: Oauth2ServerTest.OAuthRefreshToken,
-    consent_resource: Oauth2ServerTest.OAuthConsent,
     scopes: ["mcp"],
     dcr_enabled?: true
 end

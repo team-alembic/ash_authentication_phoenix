@@ -58,11 +58,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
 
   post "/register" do
     server = server!(conn.assigns.oauth2_server_router_opts)
-
-    opts = [
-      initial_access_token: extract_bearer(conn),
-      remote_ip: conn.remote_ip
-    ]
+    opts = [initial_access_token: extract_bearer(conn)]
 
     case Register.register(server, conn.params, opts) do
       {:ok, _client, body} ->
@@ -84,15 +80,6 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.ProtocolRouter do
           401,
           "invalid_token",
           "registration requires a valid initial access token"
-        )
-
-      {:error, :rate_limited} ->
-        # The action-level `AshRateLimiter` block rejected this call.
-        Errors.send_oauth_error(
-          conn,
-          429,
-          "temporarily_unavailable",
-          "registration rate limit exceeded"
         )
 
       {:error, code, desc} ->

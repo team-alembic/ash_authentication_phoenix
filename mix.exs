@@ -134,8 +134,6 @@ defmodule AshAuthentication.Phoenix.MixProject do
     [
       {:ash_authentication,
        github: "team-alembic/ash_authentication", branch: "oauth2-server", override: true},
-      {:ash_rate_limiter, "~> 1.0", only: [:dev, :test]},
-      {:hammer, "~> 7.0", only: [:dev, :test]},
       # AshAuthentication's WebAuthn strategy is currently compiled
       # unconditionally and requires `wax_`. Remove once the
       # respect-optional-wax fix (ash_authentication#1162) ships.
