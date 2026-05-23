@@ -131,9 +131,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
 
     test "404s when DCR is disabled on the server" do
       opts =
-        ProtocolRouter.init(
-          oauth2_server: Oauth2ServerTest.DcrDisabledServer
-        )
+        ProtocolRouter.init(oauth2_server: Oauth2ServerTest.DcrDisabledServer)
 
       conn =
         conn(
@@ -152,9 +150,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
 
     test "401 + WWW-Authenticate when initial access token is wrong (RFC 7591 §3.2.2)" do
       opts =
-        ProtocolRouter.init(
-          oauth2_server: Oauth2ServerTest.GatedServer
-        )
+        ProtocolRouter.init(oauth2_server: Oauth2ServerTest.GatedServer)
 
       conn =
         conn(
@@ -178,9 +174,7 @@ defmodule AshAuthentication.Phoenix.Oauth2Server.RouterTest do
 
     test "accepts a registration with the correct initial access token" do
       opts =
-        ProtocolRouter.init(
-          oauth2_server: Oauth2ServerTest.GatedServer
-        )
+        ProtocolRouter.init(oauth2_server: Oauth2ServerTest.GatedServer)
 
       conn =
         conn(
