@@ -29,7 +29,7 @@ defmodule AshAuthentication.Phoenix.RecoveryCodeHelpers do
     * `:strategy` - The recovery code strategy to check against. If not provided,
       the first recovery code strategy for the resource will be used.
   """
-  @spec recovery_codes_configured?(Ash.Resource.record(), keyword()) :: boolean()
+  @spec recovery_codes_configured?(Ash.Resource.Record.t(), keyword()) :: boolean()
   def recovery_codes_configured?(user, opts \\ []) when is_struct(user) do
     with {:ok, strategy} <- get_recovery_code_strategy(user.__struct__, opts),
          {:ok, codes} <- load_recovery_codes(user, strategy) do

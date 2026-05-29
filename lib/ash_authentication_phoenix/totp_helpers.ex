@@ -68,7 +68,7 @@ defmodule AshAuthentication.Phoenix.TotpHelpers do
       iex> totp_configured?(user, strategy: :backup_totp)
       false
   """
-  @spec totp_configured?(Ash.Resource.record(), keyword()) :: boolean()
+  @spec totp_configured?(Ash.Resource.Record.t(), keyword()) :: boolean()
   def totp_configured?(user, opts \\ []) when is_struct(user) do
     case get_totp_strategy(user.__struct__, opts) do
       {:ok, strategy} ->

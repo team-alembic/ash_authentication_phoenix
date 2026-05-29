@@ -108,7 +108,7 @@ defmodule AshAuthentication.Phoenix.Controller do
   @type t :: module
 
   @type activity :: {strategy_name :: atom, phase :: atom}
-  @type user :: Ash.Resource.record() | nil
+  @type user :: Ash.Resource.Record.t() | nil
   @type token :: String.t() | nil
 
   @doc """
