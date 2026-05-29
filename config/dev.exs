@@ -17,6 +17,7 @@ config :git_ops,
   version_tag_prefix: "v"
 
 config :ash_authentication_phoenix, DevWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
   url: [host: "localhost"],
   render_errors: [view: DevWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: Dev.PubSub,

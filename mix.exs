@@ -150,6 +150,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:igniter, "~> 0.5 and >= 0.5.25", optional: true},
       {:igniter_js, "~> 0.4", optional: true},
       {:rustler, ">= 0.0.0", optional: true, runtime: false},
+      {:bandit, "~> 1.0", only: [:dev, :test]},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.18", only: [:dev, :test]},
@@ -159,7 +160,6 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:makeup_html, ">= 0.0.0", only: :dev, runtime: false},
       {:mimic, "~> 2.1", only: [:dev, :test]},
       {:mix_audit, "~> 2.1", only: [:dev, :test]},
-      {:plug_cowboy, "~> 2.5", only: [:dev, :test]},
       {:sobelow, "~> 0.13", only: [:dev, :test]},
       {:floki, ">= 0.30.0", only: :test}
     ]
