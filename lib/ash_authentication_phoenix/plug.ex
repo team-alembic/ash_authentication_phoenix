@@ -82,7 +82,7 @@ defmodule AshAuthentication.Phoenix.Plug do
   @doc """
   Store the actor in the connections' session.
   """
-  @spec store_in_session(Conn.t(), Ash.Resource.record()) :: Conn.t()
+  @spec store_in_session(Conn.t(), Ash.Resource.Record.t()) :: Conn.t()
   defdelegate store_in_session(conn, actor), to: AshAuthentication.Plug.Helpers
 
   @doc """

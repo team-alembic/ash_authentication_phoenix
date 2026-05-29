@@ -31,7 +31,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnHelpers do
     * `:strategy` — the WebAuthn strategy to check against. Defaults to the
       first WebAuthn strategy on the user's resource.
   """
-  @spec webauthn_configured?(nil | Ash.Resource.record(), keyword()) :: boolean()
+  @spec webauthn_configured?(nil | Ash.Resource.Record.t(), keyword()) :: boolean()
   def webauthn_configured?(user, opts \\ [])
   def webauthn_configured?(nil, _opts), do: false
 

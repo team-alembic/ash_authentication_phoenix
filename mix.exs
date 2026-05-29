@@ -135,7 +135,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:ash_authentication, "~> 5.0.0-rc.9"},
       {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
-      {:ash, "~> 3.0"},
+      {:ash, "~> 3.26"},
       {:jason, "~> 1.0"},
       {:lazy_html, ">= 0.0.0", only: :test},
       {:phoenix_html, "~> 4.0"},
