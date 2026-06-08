@@ -142,6 +142,15 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
               You can confirm your account using the link we sent to you, or by resetting your password.
               \"\"\"
 
+            {_,
+             %AshAuthentication.Errors.AuthenticationFailed{
+               caused_by: %AshAuthentication.Errors.ConfirmationRequired{}
+             }} ->
+              \"\"\"
+              An account with this email already exists. We've sent a link to that
+              address - confirm it to finish linking this provider to your account.
+              \"\"\"
+
             {{:password, _}, _} ->
               "Incorrect email or password"
 
