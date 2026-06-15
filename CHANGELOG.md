@@ -11,6 +11,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [2.17.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.16.0...2.17.0) (2026-06-15)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by [@jimsynz](https://github.com/jimsynz)
+
+
+
+### Improvements:
+
+* handle `ConfirmationRequired` in the generated auth controller (#744) by [@jimsynz](https://github.com/jimsynz) [(#744)](https://github.com/team-alembic/ash_authentication_phoenix/pull/744)
+
 ## [v2.16.0](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.15.0...v2.16.0) (2026-04-07)
 ### Breaking Changes:
 
