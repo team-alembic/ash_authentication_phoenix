@@ -11,6 +11,71 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.6...v3.0.0-rc.7) (2026-06-15)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by James Harton
+
+* add TOTP authentication components and routes (#706) by James Harton
+
+
+
+### Features:
+
+* add DynamicOidc sign-in component by Zach Daniel
+
+* add WebAuthn/Passkey Phoenix components (#734) by James Harton
+
+* add Phoenix integration for the OTP strategy (#732) by James Harton
+
+* extract sign-in setup task, register OAuth strategies (#725) by James Harton
+
+* add Phoenix integration for recovery code strategy (#724) by James Harton
+
+* add convention-named Phoenix strategy tasks for auth integration (#719) by James Harton
+
+* After user sign out all other tabs will disconnect (#662) by Abdessabour Moutik
+
+* Allow filtering auth routes (#696) by Andrés
+
+### Bug Fixes:
+
+* Update type for Ash records. by James Harton
+
+* capture path-param bindings in StrategyRouter by Zach Daniel
+
+* LiveView 1.2 compatibility (#733) by Frank Polasek Dugan III
+
+* use raw paths for reset/register route definitions in sign_in_route (#729) by James Harton
+
+* use consistent underscored subject name for form param keys (#728) by James Harton
+
+* read session data from Plug session in generate_session (#716) by Jinkyou Son
+
+* respect override for submit_label in Confirm.Input component (#717) by Jinkyou Son
+
+* improve TOTP helpers and documentation (#715) by James Harton
+
+* add dark mode background to input fields (#713) by James Harton
+
+* setting `image_url` to nil now also suppresses dark mode image (#708) by James Harton
+
+* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by James Harton
+
+* check override for `submit_label` in Confirm.Input component (#709) by James Harton
+
+* remove double translation in MagicLink.Form disable_text (#707) by James Harton
+
+* only show separator when alternative strategies are visible (#705) by James Harton
+
+### Improvements:
+
+* handle `ConfirmationRequired` in the generated auth controller by James Harton
+
+* generated confirmation sender demonstrates identity-link copy by James Harton
+
+* register `okta` and `dynamic_oidc` strategies in `add_strategy` dispatcher by James Harton
+
 ## [v3.0.0-rc.6](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.5...v3.0.0-rc.6) (2026-05-11)
 
 
