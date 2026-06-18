@@ -7,9 +7,13 @@ defmodule AshAuthentication.Phoenix.Router.OnLiveViewMount do
   import Phoenix.Component
 
   @doc false
-  def on_mount(:default, _params, %{"otp_app" => otp_app}, socket) when not is_nil(otp_app) do
-    {:cont, assign(socket, :otp_app, otp_app)}
-  end
+  def on_mount(action, _params, session, socket) do
+    case {action, session} do
+      {:default, %{"otp_app" => otp_app}} when not is_nil(otp_app) ->
+        {:cont, assign(socket, :otp_app, otp_app)}
 
-  def on_mount(_, _params, _session, socket), do: {:cont, socket}
+      _ ->
+        {:cont, socket}
+    end
+  end
 end

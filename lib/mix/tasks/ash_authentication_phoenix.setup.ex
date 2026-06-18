@@ -280,34 +280,39 @@ if Code.ensure_loaded?(Igniter) do
         import Phoenix.Component
         use #{inspect(web_module)}, :verified_routes
 
+        # Clauses are dispatched via a single `on_mount/4` head with an
+        # internal `case` rather than separate function heads. Multiple
+        # `on_mount/4` heads trigger pathological compile-time slowdowns in
+        # Elixir 1.19+'s type checker during router verification.
+        #
         # This is used for nested liveviews to fetch the current user.
         # To use, place the following at the top of that liveview:
         # on_mount {#{inspect(live_user_auth)}, :current_user}
-        def on_mount(:current_user, _params, session, socket) do
-          {:cont, AshAuthentication.Phoenix.LiveSession.assign_new_resources(socket, session)}
-        end
+        def on_mount(action, _params, session, socket) do
+          case action do
+            :current_user ->
+              {:cont, AshAuthentication.Phoenix.LiveSession.assign_new_resources(socket, session)}
 
-        def on_mount(:live_user_optional, _params, _session, socket) do
-          if socket.assigns[:current_user] do
-            {:cont, socket}
-          else
-            {:cont, assign(socket, :current_user, nil)}
-          end
-        end
+            :live_user_optional ->
+              if socket.assigns[:current_user] do
+                {:cont, socket}
+              else
+                {:cont, assign(socket, :current_user, nil)}
+              end
 
-        def on_mount(:live_user_required, _params, _session, socket) do
-          if socket.assigns[:current_user] do
-            {:cont, socket}
-          else
-            {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
-          end
-        end
+            :live_user_required ->
+              if socket.assigns[:current_user] do
+                {:cont, socket}
+              else
+                {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/sign-in")}
+              end
 
-        def on_mount(:live_no_user, _params, _session, socket) do
-          if socket.assigns[:current_user] do
-            {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
-          else
-            {:cont, assign(socket, :current_user, nil)}
+            :live_no_user ->
+              if socket.assigns[:current_user] do
+                {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+              else
+                {:cont, assign(socket, :current_user, nil)}
+              end
           end
         end
         """
