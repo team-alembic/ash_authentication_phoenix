@@ -150,12 +150,21 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           Socket.t()
         ) ::
           {:cont | :halt, Socket.t()}
-  def on_mount({:set_otp_app, otp_app}, _params, _, socket) do
-    {:cont, assign(socket, :otp_app, otp_app)}
+  def on_mount(action, _params, session, socket) do
+    case action do
+      {:set_otp_app, otp_app} ->
+        {:cont, assign(socket, :otp_app, otp_app)}
+
+      :default ->
+        mount_default(session, socket)
+
+      _ ->
+        {:cont, socket}
+    end
   end
 
   # sobelow_skip ["DOS.StringToAtom"]
-  def on_mount(:default, _params, session, socket) do
+  defp mount_default(session, socket) do
     tenant = socket.assigns[:current_tenant] || session["tenant"]
 
     socket =
@@ -209,8 +218,6 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     end)
     |> then(&{:cont, &1})
   end
-
-  def on_mount(_, _params, _session, socket), do: {:cont, socket}
 
   @doc """
   Supplements the session with any `current_X` assigns which are authenticated
