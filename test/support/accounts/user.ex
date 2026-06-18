@@ -180,18 +180,21 @@ defmodule Example.Accounts.User do
         authorize_url(&get_config/2)
         token_url(&get_config/2)
         user_url(&get_config/2)
+        warn_on_missing_identity_resource? false
       end
 
       github do
         client_id &get_config/2
         redirect_uri &get_config/2
         client_secret &get_config/2
+        warn_on_missing_identity_resource? false
       end
 
       slack do
         client_id &get_config/2
         redirect_uri &get_config/2
         client_secret &get_config/2
+        warn_on_missing_identity_resource? false
       end
 
       oidc :twitch do
@@ -199,11 +202,13 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
+        warn_on_missing_identity_resource? false
       end
 
       dynamic_oidc :sso do
         connection_resource Example.Accounts.OidcConnection
         redirect_uri "http://localhost:4000/auth"
+        warn_on_missing_identity_resource? false
       end
 
       magic_link do
