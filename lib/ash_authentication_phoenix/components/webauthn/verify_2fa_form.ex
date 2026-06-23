@@ -122,6 +122,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
           </a>
         <% _ -> %>
           <form
+            id={"#{@id}-form"}
             phx-submit="start-verify"
             phx-target={@myself}
             class={override_for(@overrides, :form_class)}
@@ -142,6 +143,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
           <%= if @subject_name_slug && @strategy && @auth_routes_prefix do %>
             <.form
               for={%{}}
+              id={"#{@id}-token-form"}
               as={:user}
               action={
                 auth_path(
