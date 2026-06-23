@@ -62,6 +62,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     ~H"""
     <div class={override_for(@overrides, :root_class)} id={@id} phx-hook="WebAuthnRegistrationHook">
       <form
+        id={"#{@id}-form"}
         phx-change="update-identity"
         phx-submit="register"
         phx-target={@myself}
@@ -89,6 +90,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
 
       <.form
         for={%{}}
+        id={"#{@id}-token-form"}
         as={:user}
         action={
           auth_path(
