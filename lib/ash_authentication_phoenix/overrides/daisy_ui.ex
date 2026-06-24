@@ -281,6 +281,14 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :remember_me_input_label, "Remember me"
     set :checkbox_class, "dark:text-white mr-2"
     set :checkbox_label_class, "text-sm font-medium text-gray-700 dark:text-white"
+    set :password_toggle_visibility, false
+    set :password_field_wrapper_class, "relative"
+
+    set :password_toggle_class,
+        "btn btn-ghost btn-sm absolute inset-y-0 right-0 flex items-center"
+
+    set :password_show_label, "Show"
+    set :password_hide_label, "Hide"
   end
 
   override Components.OAuth2 do

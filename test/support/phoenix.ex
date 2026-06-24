@@ -138,6 +138,14 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   overrides: [AshAuthentication.Phoenix.Test.FilterInviteOverride],
                   as: :filtered
 
+    sign_in_route path: "/sign-in-password-toggle",
+                  auth_routes_prefix: "/auth",
+                  overrides: [
+                    AshAuthentication.Phoenix.Test.PasswordToggleOverride,
+                    AshAuthentication.Phoenix.Overrides.Default
+                  ],
+                  as: :password_toggle
+
     # Custom LiveView for components testing
     sign_in_route path: "/custom_lv",
                   auth_routes_prefix: "/auth",

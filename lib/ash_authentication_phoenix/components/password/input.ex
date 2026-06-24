@@ -20,7 +20,16 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     remember_me_class: "CSS class for the `div` element surrounding the remember me field.",
     remember_me_input_label: "Label for remember me field.",
     checkbox_class: "CSS class for the `input` element of the remember me field.",
-    checkbox_label_class: "CSS class for the `label` element of the remember me field."
+    checkbox_label_class: "CSS class for the `label` element of the remember me field.",
+    password_toggle_visibility:
+      "Whether to show a button that toggles the visibility of password fields. Defaults to `false`.",
+    password_field_wrapper_class:
+      "CSS class for the `div` wrapping the password `input` and its visibility toggle button.",
+    password_toggle_class: "CSS class for the password visibility toggle `button`.",
+    password_show_label:
+      "Label for the password visibility toggle button when the password is hidden.",
+    password_hide_label:
+      "Label for the password visibility toggle button when the password is shown."
 
   @moduledoc """
   Function components for dealing with form input during password
@@ -39,7 +48,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   use AshAuthentication.Phoenix.Web, :component
   alias AshAuthentication.Strategy
   alias AshPhoenix.Form
-  alias Phoenix.LiveView.{Rendered, Socket}
+  alias Phoenix.LiveView.{JS, Rendered, Socket}
   import Phoenix.HTML.Form
   import PhoenixHTMLHelpers.Form
 
@@ -152,11 +161,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       {label(@form, @password_field, _gettext(override_for(@overrides, :password_input_label)),
         class: override_for(@overrides, :label_class)
       )}
-      {password_input(@form, @password_field,
-        class: @input_class,
-        value: input_value(@form, @password_field),
-        phx_debounce: override_for(@overrides, :input_debounce)
-      )}
+      <.password_input_with_toggle
+        form={@form}
+        field={@password_field}
+        input_class={@input_class}
+        overrides={@overrides}
+        gettext_fn={@gettext_fn}
+      />
       <.error form={@form} field={@password_field} overrides={@overrides} />
     </div>
     """
@@ -206,11 +217,13 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         _gettext(override_for(@overrides, :password_confirmation_input_label)),
         class: override_for(@overrides, :label_class)
       )}
-      {password_input(@form, @password_confirmation_field,
-        class: @input_class,
-        value: input_value(@form, @password_confirmation_field),
-        phx_debounce: override_for(@overrides, :input_debounce)
-      )}
+      <.password_input_with_toggle
+        form={@form}
+        field={@password_confirmation_field}
+        input_class={@input_class}
+        overrides={@overrides}
+        gettext_fn={@gettext_fn}
+      />
       <.error form={@form} field={@password_confirmation_field} overrides={@overrides} />
     </div>
     """
@@ -378,6 +391,48 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       </ul>
     <% end %>
     """
+  end
+
+  defp password_input_with_toggle(assigns) do
+    assigns = assign(assigns, :input_id, input_id(assigns.form, assigns.field))
+
+    ~H"""
+    <%= if override_for(@overrides, :password_toggle_visibility) do %>
+      <div class={override_for(@overrides, :password_field_wrapper_class)}>
+        {password_input(@form, @field,
+          id: @input_id,
+          class: @input_class,
+          value: input_value(@form, @field),
+          phx_debounce: override_for(@overrides, :input_debounce)
+        )}
+        <button
+          type="button"
+          class={override_for(@overrides, :password_toggle_class)}
+          phx-click={toggle_password_visibility(@input_id)}
+        >
+          <span id={"#{@input_id}-show-label"}>
+            {_gettext(override_for(@overrides, :password_show_label))}
+          </span>
+          <span id={"#{@input_id}-hide-label"} style="display: none;">
+            {_gettext(override_for(@overrides, :password_hide_label))}
+          </span>
+        </button>
+      </div>
+    <% else %>
+      {password_input(@form, @field,
+        class: @input_class,
+        value: input_value(@form, @field),
+        phx_debounce: override_for(@overrides, :input_debounce)
+      )}
+    <% end %>
+    """
+  end
+
+  defp toggle_password_visibility(input_id) do
+    %JS{}
+    |> JS.toggle_attribute({"type", "text", "password"}, to: "##{input_id}")
+    |> JS.toggle(to: "##{input_id}-show-label")
+    |> JS.toggle(to: "##{input_id}-hide-label")
   end
 
   defp has_error?(form, field) do

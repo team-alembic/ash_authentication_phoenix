@@ -98,6 +98,23 @@ defmodule AshAuthentication.Phoenix.SignInTest do
     assert html =~ "ever gonna"
   end
 
+  test "password visibility toggle is hidden by default", %{conn: conn} do
+    conn = get(conn, "/sign-in")
+    assert {:ok, _view, html} = live(conn)
+
+    refute html =~ "-show-label"
+  end
+
+  test "password visibility toggle is rendered when enabled via override", %{conn: conn} do
+    conn = get(conn, "/sign-in-password-toggle")
+    assert {:ok, view, html} = live(conn)
+
+    assert html =~ "-show-label"
+    assert html =~ "Show"
+    assert html =~ "Hide"
+    assert has_element?(view, "button[phx-click] span[id$=\"-show-label\"]")
+  end
+
   test "sign_in liveview honours filter_strategy override", %{conn: conn} do
     conn = get(conn, "/sign-in-filtered")
 
