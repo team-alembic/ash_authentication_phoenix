@@ -110,9 +110,9 @@ defmodule AshAuthentication.Phoenix.SignInTest do
     assert {:ok, view, html} = live(conn)
 
     assert html =~ "-show-label"
-    assert html =~ "Show"
-    assert html =~ "Hide"
-    assert has_element?(view, "button[phx-click] span[id$=\"-show-label\"]")
+    assert has_element?(view, "button[phx-click] svg[aria-hidden=\"true\"]")
+    assert has_element?(view, "button span[id$=\"-show-label\"] span.sr-only", "Show password")
+    assert has_element?(view, "button span[id$=\"-hide-label\"] span.sr-only", "Hide password")
   end
 
   test "sign_in liveview honours filter_strategy override", %{conn: conn} do

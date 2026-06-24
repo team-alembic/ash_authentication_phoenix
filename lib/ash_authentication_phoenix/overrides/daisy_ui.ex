@@ -285,10 +285,10 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :password_field_wrapper_class, "relative"
 
     set :password_toggle_class,
-        "btn btn-ghost btn-sm absolute right-1 top-1/2 -translate-y-1/2"
+        "btn btn-ghost btn-sm btn-square absolute right-1 top-1/2 -translate-y-1/2"
 
-    set :password_show_label, "Show"
-    set :password_hide_label, "Hide"
+    set :password_show_label, "Show password"
+    set :password_hide_label, "Hide password"
   end
 
   override Components.OAuth2 do
