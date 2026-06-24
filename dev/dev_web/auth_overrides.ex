@@ -10,4 +10,8 @@ defmodule DevWeb.AuthOverrides do
   override Components.Banner do
     set :image_url, "https://media.giphy.com/media/g7GKcSzwQfugw/giphy.gif"
   end
+
+  override Components.Password.Input do
+    set :password_toggle_visibility, true
+  end
 end
