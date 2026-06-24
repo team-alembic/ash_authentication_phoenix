@@ -170,6 +170,14 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                 auth_routes_prefix: "/auth",
                 gettext_backend: {AshAuthentication.Phoenix.Test.Gettext, "test"},
                 as: :gettext_backend
+
+    reset_route path: "/password-reset-custom-button",
+                auth_routes_prefix: "/auth",
+                overrides: [
+                  AshAuthentication.Phoenix.Test.ResetButtonOverride,
+                  AshAuthentication.Phoenix.Overrides.Default
+                ],
+                as: :custom_button
   end
 
   scope "/nested", AshAuthentication.Phoenix.Test do

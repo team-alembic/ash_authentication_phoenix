@@ -278,6 +278,8 @@ Renders a password-reset form.
 
 Generates a default password reset form.
 
+  * `:button_text` - Text for the submit button.
+
   * `:disable_button_text` - Text for the submit button when the request is happening.
 
   * `:form_class` - CSS class for the `form` element.
@@ -293,7 +295,7 @@ Generates a default password reset form.
 
 Generates a default password reset form.
 
-  * `:button_text` - Tex for the submit button.
+  * `:button_text` - Text for the submit button.
 
   * `:disable_button_text` - Text for the submit button when the request is happening.
 
