@@ -115,6 +115,17 @@ defmodule AshAuthentication.Phoenix.SignInTest do
     assert has_element?(view, "button span[id$=\"-hide-label\"] span.sr-only", "Hide password")
   end
 
+  test "register page shows a single toggle that controls both password fields", %{conn: conn} do
+    conn = get(conn, "/register-password-toggle")
+    assert {:ok, view, html} = live(conn)
+
+    assert has_element?(view, "button span[id$=\"-show-label\"]")
+
+    refute html =~ "password_confirmation-show-label"
+
+    assert html =~ "#user-password-register-with-password_password_confirmation"
+  end
+
   test "sign_in liveview honours filter_strategy override", %{conn: conn} do
     conn = get(conn, "/sign-in-filtered")
 

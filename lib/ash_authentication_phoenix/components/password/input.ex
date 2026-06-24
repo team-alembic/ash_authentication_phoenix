@@ -167,6 +167,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         input_class={@input_class}
         overrides={@overrides}
         gettext_fn={@gettext_fn}
+        toggle_button={true}
+        also_toggle_id={
+          if @strategy.confirmation_required?,
+            do: input_id(@form, @strategy.password_confirmation_field)
+        }
       />
       <.error form={@form} field={@password_field} overrides={@overrides} />
     </div>
@@ -223,6 +228,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         input_class={@input_class}
         overrides={@overrides}
         gettext_fn={@gettext_fn}
+        toggle_button={false}
       />
       <.error form={@form} field={@password_confirmation_field} overrides={@overrides} />
     </div>
@@ -394,7 +400,11 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   end
 
   defp password_input_with_toggle(assigns) do
-    assigns = assign(assigns, :input_id, input_id(assigns.form, assigns.field))
+    assigns =
+      assigns
+      |> assign(:input_id, input_id(assigns.form, assigns.field))
+      |> assign_new(:toggle_button, fn -> true end)
+      |> assign_new(:also_toggle_id, fn -> nil end)
 
     ~H"""
     <%= if override_for(@overrides, :password_toggle_visibility) do %>
@@ -406,9 +416,10 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
           phx_debounce: override_for(@overrides, :input_debounce)
         )}
         <button
+          :if={@toggle_button}
           type="button"
           class={override_for(@overrides, :password_toggle_class)}
-          phx-click={toggle_password_visibility(@input_id)}
+          phx-click={toggle_password_visibility(@input_id, @also_toggle_id)}
         >
           <span id={"#{@input_id}-show-label"}>
             <svg
@@ -465,12 +476,18 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     """
   end
 
-  defp toggle_password_visibility(input_id) do
+  defp toggle_password_visibility(input_id, also_toggle_id) do
     %JS{}
     |> JS.toggle_attribute({"type", "text", "password"}, to: "##{input_id}")
+    |> maybe_toggle_attribute(also_toggle_id)
     |> JS.toggle(to: "##{input_id}-show-label")
     |> JS.toggle(to: "##{input_id}-hide-label")
   end
+
+  defp maybe_toggle_attribute(js, nil), do: js
+
+  defp maybe_toggle_attribute(js, input_id),
+    do: JS.toggle_attribute(js, {"type", "text", "password"}, to: "##{input_id}")
 
   defp has_error?(form, field) do
     form

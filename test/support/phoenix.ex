@@ -139,6 +139,7 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   as: :filtered
 
     sign_in_route path: "/sign-in-password-toggle",
+                  register_path: "/register-password-toggle",
                   auth_routes_prefix: "/auth",
                   overrides: [
                     AshAuthentication.Phoenix.Test.PasswordToggleOverride,
