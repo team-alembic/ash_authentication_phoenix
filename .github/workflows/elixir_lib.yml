@@ -18,6 +18,7 @@ jobs:
       spark-formatter: false
       community-files: false
       conventional-commit: false
+      release: true
     permissions:
       id-token: write
       contents: write
