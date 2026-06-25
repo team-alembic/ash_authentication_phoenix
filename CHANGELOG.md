@@ -11,6 +11,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [3.0.0-rc.8](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.7...3.0.0-rc.8) (2026-06-25)
+
+
+
+
+### Improvements:
+
+* add optional password visibility toggle (#657) (#752) by James Harton
+
+* allow overriding the reset password submit label (#665) (#751) by James Harton
+
+* add `id` to form components to enable LiveView form recovery (#749) (#750) by James Harton
+
+* consolidate on_mount/4 clauses to avoid Elixir 1.19 type-checker slowdown (#748) by James Harton
+
 ## [v3.0.0-rc.7](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.6...v3.0.0-rc.7) (2026-06-15)
 ### Breaking Changes:
 
