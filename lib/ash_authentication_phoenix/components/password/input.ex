@@ -26,6 +26,8 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     password_field_wrapper_class:
       "CSS class for the `div` wrapping the password `input` and its visibility toggle button.",
     password_toggle_class: "CSS class for the password visibility toggle `button`.",
+    password_toggle_icon_class:
+      "CSS class for the `svg` icons in the password visibility toggle.",
     password_show_label:
       "Label for the password visibility toggle button when the password is hidden.",
     password_hide_label:
@@ -430,7 +432,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
               stroke="currentColor"
               aria-hidden="true"
               focusable="false"
-              class="h-5 w-5"
+              class={override_for(@overrides, :password_toggle_icon_class)}
             >
               <path
                 stroke-linecap="round"
@@ -454,7 +456,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
               stroke="currentColor"
               aria-hidden="true"
               focusable="false"
-              class="h-5 w-5"
+              class={override_for(@overrides, :password_toggle_icon_class)}
             >
               <path
                 stroke-linecap="round"

@@ -340,6 +340,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     text-blue-500 hover:text-blue-600 focus:outline-none dark:text-blue-400
     """
 
+    set :password_toggle_icon_class, "h-5 w-5"
     set :password_show_label, "Show password"
     set :password_hide_label, "Hide password"
   end

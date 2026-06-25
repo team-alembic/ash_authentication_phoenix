@@ -287,6 +287,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :password_toggle_class,
         "btn btn-ghost btn-sm btn-square absolute right-1 top-1/2 -translate-y-1/2"
 
+    set :password_toggle_icon_class, "h-5 w-5"
     set :password_show_label, "Show password"
     set :password_hide_label, "Hide password"
   end
