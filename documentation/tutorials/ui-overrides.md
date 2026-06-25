@@ -340,7 +340,19 @@ authentication.
 
   * `:password_confirmation_input_label` - Label for password confirmation field.
 
+  * `:password_field_wrapper_class` - CSS class for the `div` wrapping the password `input` and its visibility toggle button.
+
+  * `:password_hide_label` - Label for the password visibility toggle button when the password is shown.
+
   * `:password_input_label` - Label for password field.
+
+  * `:password_show_label` - Label for the password visibility toggle button when the password is hidden.
+
+  * `:password_toggle_class` - CSS class for the password visibility toggle `button`.
+
+  * `:password_toggle_icon_class` - CSS class for the `svg` icons in the password visibility toggle.
+
+  * `:password_toggle_visibility` - Whether to show a button that toggles the visibility of password fields. Defaults to `false`.
 
   * `:remember_me_class` - CSS class for the `div` element surrounding the remember me field.
 

@@ -332,6 +332,17 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :remember_me_input_label, "Remember me"
     set :checkbox_class, "dark:text-white mr-2"
     set :checkbox_label_class, "text-sm font-medium text-gray-700 dark:text-white"
+    set :password_toggle_visibility, false
+    set :password_field_wrapper_class, "relative"
+
+    set :password_toggle_class, """
+    absolute inset-y-0 right-0 flex items-center px-3 text-sm font-medium
+    text-blue-500 hover:text-blue-600 focus:outline-none dark:text-blue-400
+    """
+
+    set :password_toggle_icon_class, "h-5 w-5"
+    set :password_show_label, "Show password"
+    set :password_hide_label, "Hide password"
   end
 
   override Components.OAuth2 do

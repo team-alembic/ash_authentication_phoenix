@@ -20,7 +20,18 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     remember_me_class: "CSS class for the `div` element surrounding the remember me field.",
     remember_me_input_label: "Label for remember me field.",
     checkbox_class: "CSS class for the `input` element of the remember me field.",
-    checkbox_label_class: "CSS class for the `label` element of the remember me field."
+    checkbox_label_class: "CSS class for the `label` element of the remember me field.",
+    password_toggle_visibility:
+      "Whether to show a button that toggles the visibility of password fields. Defaults to `false`.",
+    password_field_wrapper_class:
+      "CSS class for the `div` wrapping the password `input` and its visibility toggle button.",
+    password_toggle_class: "CSS class for the password visibility toggle `button`.",
+    password_toggle_icon_class:
+      "CSS class for the `svg` icons in the password visibility toggle.",
+    password_show_label:
+      "Label for the password visibility toggle button when the password is hidden.",
+    password_hide_label:
+      "Label for the password visibility toggle button when the password is shown."
 
   @moduledoc """
   Function components for dealing with form input during password
@@ -39,7 +50,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
   use AshAuthentication.Phoenix.Web, :component
   alias AshAuthentication.Strategy
   alias AshPhoenix.Form
-  alias Phoenix.LiveView.{Rendered, Socket}
+  alias Phoenix.LiveView.{JS, Rendered, Socket}
   import Phoenix.HTML.Form
   import PhoenixHTMLHelpers.Form
 
@@ -152,11 +163,18 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
       {label(@form, @password_field, _gettext(override_for(@overrides, :password_input_label)),
         class: override_for(@overrides, :label_class)
       )}
-      {password_input(@form, @password_field,
-        class: @input_class,
-        value: input_value(@form, @password_field),
-        phx_debounce: override_for(@overrides, :input_debounce)
-      )}
+      <.password_input_with_toggle
+        form={@form}
+        field={@password_field}
+        input_class={@input_class}
+        overrides={@overrides}
+        gettext_fn={@gettext_fn}
+        toggle_button={true}
+        also_toggle_id={
+          if @strategy.confirmation_required?,
+            do: input_id(@form, @strategy.password_confirmation_field)
+        }
+      />
       <.error form={@form} field={@password_field} overrides={@overrides} />
     </div>
     """
@@ -206,11 +224,14 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
         _gettext(override_for(@overrides, :password_confirmation_input_label)),
         class: override_for(@overrides, :label_class)
       )}
-      {password_input(@form, @password_confirmation_field,
-        class: @input_class,
-        value: input_value(@form, @password_confirmation_field),
-        phx_debounce: override_for(@overrides, :input_debounce)
-      )}
+      <.password_input_with_toggle
+        form={@form}
+        field={@password_confirmation_field}
+        input_class={@input_class}
+        overrides={@overrides}
+        gettext_fn={@gettext_fn}
+        toggle_button={false}
+      />
       <.error form={@form} field={@password_confirmation_field} overrides={@overrides} />
     </div>
     """
@@ -379,6 +400,96 @@ defmodule AshAuthentication.Phoenix.Components.Password.Input do
     <% end %>
     """
   end
+
+  defp password_input_with_toggle(assigns) do
+    assigns =
+      assigns
+      |> assign(:input_id, input_id(assigns.form, assigns.field))
+      |> assign_new(:toggle_button, fn -> true end)
+      |> assign_new(:also_toggle_id, fn -> nil end)
+
+    ~H"""
+    <%= if override_for(@overrides, :password_toggle_visibility) do %>
+      <div class={override_for(@overrides, :password_field_wrapper_class)}>
+        {password_input(@form, @field,
+          id: @input_id,
+          class: @input_class,
+          value: input_value(@form, @field),
+          phx_debounce: override_for(@overrides, :input_debounce)
+        )}
+        <button
+          :if={@toggle_button}
+          type="button"
+          class={override_for(@overrides, :password_toggle_class)}
+          phx-click={toggle_password_visibility(@input_id, @also_toggle_id)}
+        >
+          <span id={"#{@input_id}-show-label"}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              aria-hidden="true"
+              focusable="false"
+              class={override_for(@overrides, :password_toggle_icon_class)}
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+              />
+            </svg>
+            <span class="sr-only">{_gettext(override_for(@overrides, :password_show_label))}</span>
+          </span>
+          <span id={"#{@input_id}-hide-label"} style="display: none;">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              aria-hidden="true"
+              focusable="false"
+              class={override_for(@overrides, :password_toggle_icon_class)}
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
+              />
+            </svg>
+            <span class="sr-only">{_gettext(override_for(@overrides, :password_hide_label))}</span>
+          </span>
+        </button>
+      </div>
+    <% else %>
+      {password_input(@form, @field,
+        class: @input_class,
+        value: input_value(@form, @field),
+        phx_debounce: override_for(@overrides, :input_debounce)
+      )}
+    <% end %>
+    """
+  end
+
+  defp toggle_password_visibility(input_id, also_toggle_id) do
+    %JS{}
+    |> JS.toggle_attribute({"type", "text", "password"}, to: "##{input_id}")
+    |> maybe_toggle_attribute(also_toggle_id)
+    |> JS.toggle(to: "##{input_id}-show-label")
+    |> JS.toggle(to: "##{input_id}-hide-label")
+  end
+
+  defp maybe_toggle_attribute(js, nil), do: js
+
+  defp maybe_toggle_attribute(js, input_id),
+    do: JS.toggle_attribute(js, {"type", "text", "password"}, to: "##{input_id}")
 
   defp has_error?(form, field) do
     form
