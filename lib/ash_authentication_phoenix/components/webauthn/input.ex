@@ -4,8 +4,11 @@
 
 defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   use AshAuthentication.Phoenix.Overrides.Overridable,
-    identity_input_label: "Label for the identity (email) input field.",
+    identity_input_label:
+      "Label for the identity input. Defaults to the humanized field name (e.g. `:email` → \"Email\").",
     identity_input_placeholder: "Placeholder for the identity input field.",
+    key_name_label: "Label for the optional passkey name field.",
+    key_name_placeholder: "Placeholder for the passkey name field.",
     field_class: "CSS class for the field wrapper `div`.",
     label_class: "CSS class for `label` elements.",
     input_class: "CSS class for `input` elements.",
@@ -31,23 +34,99 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   """
 
   use AshAuthentication.Phoenix.Web, :component
+  alias AshPhoenix.Form
   alias Phoenix.LiveView.Rendered
+  import Phoenix.HTML.Form, only: [input_value: 2]
 
-  @doc "Renders the identity (email/username) input field."
+  @doc """
+  Renders the identity (email/username) input field.
+
+  When a `form` prop (an `AshPhoenix.Form`) is given, the input is bound to
+  the form's identity field and validation errors for it are rendered below
+  the input. Otherwise a bare input named after the identity field is
+  rendered (with an optional `value` prop).
+  """
   @spec identity_field(map) :: Rendered.t()
   def identity_field(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:form, fn -> nil end)
+      |> assign_new(:value, fn ->
+        if assigns[:form], do: input_value(assigns.form, assigns.identity_field), else: ""
+      end)
+
+    assigns =
+      assigns
+      |> assign(:input_id, assigns[:id] || Phoenix.Naming.humanize(assigns.identity_field))
+      |> assign(:input_name, input_name_for(assigns.form, assigns.identity_field))
+      |> assign(:errors, field_errors(assigns.form, assigns.identity_field))
+
+    assigns =
+      assign(assigns, :input_class, input_class_for(assigns.overrides, assigns.errors))
+
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <label class={override_for(@overrides, :label_class)}>
-        {_gettext(override_for(@overrides, :identity_input_label, "Email"))}
+      <label for={@input_id} class={override_for(@overrides, :label_class)}>
+        {override_for(@overrides, :identity_input_label) ||
+          Phoenix.Naming.humanize(@identity_field)}
       </label>
       <input
         type="text"
-        name={to_string(@identity_field)}
+        id={@input_id}
+        name={@input_name}
         value={@value}
-        placeholder={override_for(@overrides, :identity_input_placeholder, "you@example.com")}
-        class={override_for(@overrides, :input_class)}
+        placeholder={override_for(@overrides, :identity_input_placeholder)}
+        class={@input_class}
         autocomplete="username webauthn"
+        phx-debounce="300"
+      />
+      <%= if Enum.any?(@errors) do %>
+        <ul class={override_for(@overrides, :error_ul)}>
+          <li :for={error <- @errors} class={override_for(@overrides, :error_li)}>
+            {_gettext(error)}
+          </li>
+        </ul>
+      <% end %>
+    </div>
+    """
+  end
+
+  defp input_name_for(nil, field), do: to_string(field)
+  defp input_name_for(form, field), do: Phoenix.HTML.Form.input_name(form, field)
+
+  defp field_errors(nil, _field), do: []
+
+  defp field_errors(form, field) do
+    form
+    |> Form.errors()
+    |> Keyword.get_values(field)
+  end
+
+  defp input_class_for(overrides, []), do: override_for(overrides, :input_class)
+
+  defp input_class_for(overrides, _errors) do
+    override_for(overrides, :input_class_with_error) || override_for(overrides, :input_class)
+  end
+
+  @doc "Renders the optional passkey name input."
+  @spec key_name_field(map) :: Rendered.t()
+  def key_name_field(assigns) do
+    assigns = assign(assigns, :input_id, assigns[:id] || "key_name")
+
+    ~H"""
+    <div class={override_for(@overrides, :field_class)}>
+      <label for={@input_id} class={override_for(@overrides, :label_class)}>
+        {_gettext(override_for(@overrides, :key_name_label, "Passkey name"))}
+      </label>
+      <input
+        type="text"
+        id={@input_id}
+        name="key_name"
+        value={@value}
+        placeholder={override_for(@overrides, :key_name_placeholder, "My passkey")}
+        class={override_for(@overrides, :input_class)}
+        autocomplete="off"
+        phx-debounce="300"
       />
     </div>
     """

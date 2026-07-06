@@ -5,20 +5,15 @@
 defmodule AshAuthentication.Phoenix.Components.WebAuthn do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
-    hide_class: "CSS class to apply to hide an element.",
-    show_first:
-      "The form to show on first load. Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.",
-    interstitial_class: "CSS class for the `div` element between the form and the toggle.",
-    sign_in_toggle_text:
-      "Toggle text to display when the sign in form is not showing (or `nil` to disable).",
-    register_toggle_text:
-      "Toggle text to display when the register form is not showing (or `nil` to disable).",
-    toggler_class: "CSS class for the toggler `a` element.",
     registration_form_module:
       "The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`.",
     authentication_form_module:
       "The Phoenix component to be used for the authentication form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`.",
-    slot_class: "CSS class for the `div` surrounding the slot."
+    slot_class: "CSS class for the `div` surrounding the slot.",
+    workflow_button_class:
+      "CSS class for the link shown on the sign-in page when `webauthn_path` is configured.",
+    workflow_button_text:
+      "Text for the link shown on the sign-in page when `webauthn_path` is configured."
 
   @moduledoc """
   Generates sign in and registration forms for WebAuthn/Passkey authentication.
@@ -33,10 +28,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
     * `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`
     * `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`
     * `AshAuthentication.Phoenix.Components.WebAuthn.Support`
+    * `AshAuthentication.Phoenix.Components.HorizontalRule` (between the two forms)
 
   ## Props
 
     * `strategy` - The WebAuthn strategy configuration. Required.
+    * `webauthn_path` - When set, renders a single link to this path rather than
+      the full form. Configure via `sign_in_route(webauthn_path: "/webauthn")` and
+      mount `webauthn_route/3` at that path to get a dedicated sign-in/register page.
+      When `nil` (the default) the full form renders inline as before.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
 
@@ -44,8 +44,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.WebAuthn, Strategy}
-  alias Phoenix.LiveView.{JS, Rendered, Socket}
+  alias AshAuthentication.{Info, Phoenix.Components, Phoenix.Components.WebAuthn, Strategy}
+  alias Phoenix.LiveView.{Rendered, Socket}
   import Slug
 
   @doc false
@@ -76,6 +76,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:live_action, fn -> :sign_in end)
       |> assign_new(:path, fn -> "/" end)
+      |> assign_new(:webauthn_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
@@ -88,34 +89,24 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
   @impl true
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
-    register_enabled? =
-      assigns.strategy.registration_enabled? &&
-        override_for(assigns.overrides, :register_toggle_text)
-
-    assigns =
-      assigns
-      |> assign(:hide_class, override_for(assigns.overrides, :hide_class))
-      |> assign(:register_enabled?, register_enabled?)
-      |> assign(:sign_in_enabled?, !is_nil(override_for(assigns.overrides, :sign_in_toggle_text)))
-
-    show =
-      if assigns[:live_action] == :sign_in && is_nil(assigns[:register_path]) do
-        assigns[:show_first] || :sign_in
-      else
-        assigns[:live_action]
-      end
-
-    assigns = assign(assigns, :show, show)
+    assigns = assign(assigns, :register_enabled?, assigns.strategy.registration_enabled?)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <.live_component
-        module={WebAuthn.Support}
-        id={"#{@sign_in_id}-support"}
-        overrides={@overrides}
-      />
+      <%= if @webauthn_path && @live_action != :webauthn do %>
+        <.link
+          href={@webauthn_path}
+          class={override_for(@overrides, :workflow_button_class)}
+        >
+          {_gettext(override_for(@overrides, :workflow_button_text, "Continue with WebAuthn"))}
+        </.link>
+      <% else %>
+        <.live_component
+          module={WebAuthn.Support}
+          id={"#{@sign_in_id}-support"}
+          overrides={@overrides}
+        />
 
-      <div id={"#{@sign_in_id}-wrapper"} class={if @show == :sign_in, do: nil, else: @hide_class}>
         <.live_component
           module={
             override_for(@overrides, :authentication_form_module) || WebAuthn.AuthenticationForm
@@ -129,24 +120,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
           auth_routes_prefix={@auth_routes_prefix}
         />
 
-        <div class={override_for(@overrides, :interstitial_class)}>
-          <%= if @register_enabled? do %>
-            <.toggler
-              message={override_for(@overrides, :register_toggle_text)}
-              show={@register_id}
-              hide={[@sign_in_id]}
-              overrides={@overrides}
-              gettext_fn={@gettext_fn}
-            />
-          <% end %>
-        </div>
-      </div>
+        <%= if @register_enabled? do %>
+          <.live_component
+            module={Components.HorizontalRule}
+            id={"#{@sign_in_id}-divider"}
+            overrides={@overrides}
+          />
 
-      <%= if @register_enabled? do %>
-        <div
-          id={"#{@register_id}-wrapper"}
-          class={if @live_action == :register, do: nil, else: @hide_class}
-        >
           <.live_component
             module={override_for(@overrides, :registration_form_module) || WebAuthn.RegistrationForm}
             id={@register_id}
@@ -157,46 +137,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
             gettext_fn={@gettext_fn}
             auth_routes_prefix={@auth_routes_prefix}
           />
-
-          <div class={override_for(@overrides, :interstitial_class)}>
-            <%= if @sign_in_enabled? do %>
-              <.toggler
-                message={override_for(@overrides, :sign_in_toggle_text)}
-                show={@sign_in_id}
-                hide={[@register_id]}
-                overrides={@overrides}
-                gettext_fn={@gettext_fn}
-              />
-            <% end %>
-          </div>
-        </div>
+        <% end %>
       <% end %>
     </div>
     """
-  end
-
-  @doc false
-  @spec toggler(Socket.assigns()) :: Rendered.t() | no_return
-  def toggler(assigns) do
-    ~H"""
-    <a href="#" phx-click={toggle_js(@show, @hide)} class={override_for(@overrides, :toggler_class)}>
-      {_gettext(@message)}
-    </a>
-    """
-  end
-
-  defp toggle_js(show, hides, %JS{} = js \\ %JS{}) do
-    show_wrapper = "##{show}-wrapper"
-
-    js =
-      js
-      |> JS.show(to: show_wrapper)
-      |> JS.focus_first(to: show_wrapper)
-
-    hides
-    |> Enum.reject(&is_nil/1)
-    |> Enum.reduce(js, fn hide, js ->
-      JS.hide(js, to: "##{hide}-wrapper")
-    end)
   end
 end

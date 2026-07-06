@@ -23,6 +23,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     SignOutLive,
     TotpSetupLive,
     TotpVerifyLive,
+    WebAuthnLive,
     WebAuthnSetupLive,
     WebAuthnVerifyLive
   }
@@ -295,6 +296,21 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :password_hide_label, "Hide password"
   end
 
+  override Components.CustomFields do
+    set :field_class, "mt-2 mb-2"
+    set :label_class, "block text-sm font-medium text-base-content mb-1"
+    set :input_class, "input w-full"
+    set :input_class_with_error, "input w-full input-error"
+    set :checkbox_class, "checkbox mr-2"
+    set :select_class, "select w-full"
+    set :error_ul, "text-error font-light my-3 italic text-sm"
+    set :error_li, nil
+    set :input_debounce, 350
+    set :field_labels, %{}
+    set :field_placeholders, %{}
+    set :field_input_types, %{}
+  end
+
   override Components.OAuth2 do
     set :root_class, "w-full mt-2 mb-4"
 
@@ -389,29 +405,29 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
   end
 
   override Components.WebAuthn do
-    set :root_class, "mt-4 mb-4"
-    set :hide_class, "hidden"
-    set :show_first, :sign_in
-    set :sign_in_toggle_text, "Already have a passkey? Sign in"
-    set :register_toggle_text, "New here? Register a passkey"
+    set :root_class,
+        "mx-auto w-full max-w-sm rounded-box border border-base-300 bg-base-100 p-6 shadow-xl"
 
-    set :toggler_class,
-        "flex-none text-primary hover:text-primary-focus px-2 first:pl-0 last:pr-0"
-
-    set :interstitial_class, "flex flex-row justify-between content-between text-sm font-medium"
-    set :slot_class, "my-4"
+    set :slot_class, "mt-6"
+    set :workflow_button_class, "btn btn-outline btn-neutral w-full"
+    set :workflow_button_text, "Continue with WebAuthn"
   end
 
   override Components.WebAuthn.RegistrationForm do
     set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :label_text, "Register a passkey"
     set :form_class, nil
     set :button_text, "Register with Passkey"
     set :disable_button_text, "Registering..."
     set :slot_class, "my-4"
+    set :show_key_name_field, true
   end
 
   override Components.WebAuthn.AuthenticationForm do
     set :root_class, nil
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
+    set :label_text, "Sign in with a passkey"
     set :form_class, nil
     set :button_text, "Sign in with Passkey"
     set :disable_button_text, "Signing in..."
@@ -425,8 +441,6 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
 
     @webauthn_base_input_class "input w-full"
 
-    set :identity_input_label, "Email"
-    set :identity_input_placeholder, nil
     set :input_class, @webauthn_base_input_class
     set :input_class_with_error, @webauthn_base_input_class <> " input-error"
     set :submit_class, "btn btn-primary btn-block mt-4 mb-4 gap-2"
@@ -494,6 +508,11 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
 
   override WebAuthnSetupLive do
     set :root_class, "grid h-screen place-items-center bg-base-100"
+  end
+
+  override WebAuthnLive do
+    set :root_class, "grid h-screen place-items-center bg-base-100"
+    set :inner_class, "w-full max-w-sm"
   end
 
   override Components.WebAuthn.Verify2faForm do

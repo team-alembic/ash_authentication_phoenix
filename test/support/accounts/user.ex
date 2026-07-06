@@ -132,6 +132,8 @@ defmodule Example.Accounts.User do
     uuid_primary_key :id
 
     attribute :email, :ci_string, allow_nil?: false, public?: true
+    attribute :name, :string, allow_nil?: true, public?: true, constraints: [min_length: 2]
+    attribute :personal_number, :string, allow_nil?: true, public?: true, sensitive?: true
     attribute :hashed_password, :string, allow_nil?: true, sensitive?: true
     attribute :totp_secret, :binary, allow_nil?: true, sensitive?: true
     attribute :last_totp_at, :datetime, allow_nil?: true, sensitive?: true
@@ -150,7 +152,7 @@ defmodule Example.Accounts.User do
 
         sender(fn user, token, _ ->
           Logger.debug("Confirmation request for #{user.email} with token #{inspect(token)}")
-          Helper.notify_test(:sender_password_confirmation_fired)
+          if Mix.env() == :test, do: Helper.notify_test(:sender_password_confirmation_fired)
         end)
       end
     end
@@ -162,6 +164,7 @@ defmodule Example.Accounts.User do
         identity_field(:email)
         hashed_password_field(:hashed_password)
         registration_enabled? true
+        register_action_accept [:name]
         sign_in_tokens_enabled? true
 
         resettable do
@@ -245,6 +248,15 @@ defmodule Example.Accounts.User do
         confirm_setup_enabled? true
         brute_force_strategy {:preparation, Example.TotpNoopPreparation}
       end
+
+      webauthn :webauthn do
+        credential_resource Example.Accounts.WebAuthnCredential
+        require_identity? true
+        register_action_accept [:name]
+        rp_id "localhost"
+        rp_name "AshAuthenticationPhoenix Dev"
+        origin fn _resource, _opts -> {:ok, DevWeb.Endpoint.url()} end
+      end
     end
 
     tokens do
@@ -262,6 +274,10 @@ defmodule Example.Accounts.User do
       pre_check_with: Example.Accounts,
       eager_check_with: Example.Accounts
     )
+  end
+
+  relationships do
+    has_many :webauthn_credentials, Example.Accounts.WebAuthnCredential
   end
 
   def get_config(path, resource) do
