@@ -16,7 +16,26 @@ defmodule Dev.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Dev.Supervisor]
-    Supervisor.start_link(children, opts)
+
+    with {:ok, pid} <- Supervisor.start_link(children, opts) do
+      initialize_ets_resources()
+      {:ok, pid}
+    end
+  end
+
+  defp initialize_ets_resources do
+    for resource <- [
+          Example.Accounts.Admin,
+          Example.Accounts.Token,
+          Example.Accounts.User,
+          Example.Accounts.WebAuthnCredential,
+          Example.Accounts.AnonUser,
+          Example.Accounts.AnonCredential
+        ] do
+      resource
+      |> Ash.Query.for_read(:read)
+      |> Ash.read!(domain: Example.Accounts)
+    end
   end
 
   @impl true

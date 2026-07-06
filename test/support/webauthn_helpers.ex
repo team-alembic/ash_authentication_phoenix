@@ -26,6 +26,7 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnHelpers do
       credential_resource: nil,
       rp_id: "localhost",
       rp_name: "Test App",
+      require_identity?: nil,
       identity_field: :email,
       authenticator_attachment: nil,
       user_verification: "preferred",
