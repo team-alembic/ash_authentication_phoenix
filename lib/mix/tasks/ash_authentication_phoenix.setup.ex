@@ -81,7 +81,7 @@ if Code.ensure_loaded?(Igniter) do
         |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
         |> create_live_user_auth(web_module)
-        |> maybe_create_oauth_interstitial(options, web_module)
+        |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial()
         |> add_auth_routes(overrides, options, router, web_module)
         |> add_live_session_scopes(web_module, router)
       else
@@ -318,115 +318,6 @@ if Code.ensure_loaded?(Igniter) do
         end
         """
       )
-    end
-
-    @oauth_strategy_types ~w[oauth2 oidc apple github google auth0 microsoft okta slack dynamic_oidc]a
-
-    # The "signing you in…" interstitial is only relevant when there is an
-    # OAuth/OIDC strategy (only those can receive a cross-site form_post
-    # callback), so it is generated only when one is present on the resource.
-    defp maybe_create_oauth_interstitial(igniter, options, web_module) do
-      {igniter, has_oauth?} = defines_any_oauth_strategy?(igniter, options[:user])
-
-      if has_oauth? do
-        igniter
-        |> create_interstitial_renderer(web_module)
-        |> create_interstitial_template(web_module)
-        |> configure_interstitial_renderer(web_module)
-      else
-        igniter
-      end
-    end
-
-    defp defines_any_oauth_strategy?(igniter, resource) do
-      Enum.reduce(@oauth_strategy_types, {igniter, false}, fn
-        _type, {igniter, true} ->
-          {igniter, true}
-
-        type, {igniter, false} ->
-          AshAuthentication.Igniter.defines_strategy_of_type(igniter, resource, type)
-      end)
-    end
-
-    defp create_interstitial_renderer(igniter, web_module) do
-      module = Module.concat(web_module, AuthInterstitialHTML)
-
-      case Igniter.Project.Module.module_exists(igniter, module) do
-        {true, igniter} ->
-          igniter
-
-        {false, igniter} ->
-          Igniter.Project.Module.create_module(igniter, module, ~S'''
-          @moduledoc """
-          Renders the "signing you in…" interstitial shown while completing sign-in
-          with an OAuth/OIDC provider that uses `response_mode=form_post` (e.g. Apple).
-
-          The cross-site form_post callback can't read the session cookie, so this
-          page re-POSTs the parameters same-origin, where the session is available.
-          Edit `auth_interstitial_html/signing_in.html.eex` to customise it.
-          """
-
-          require EEx
-
-          EEx.function_from_file(
-            :def,
-            :render,
-            Path.join(__DIR__, "auth_interstitial_html/signing_in.html.eex"),
-            [:assigns]
-          )
-          ''')
-      end
-    end
-
-    defp create_interstitial_template(igniter, web_module) do
-      module = Module.concat(web_module, AuthInterstitialHTML)
-
-      template_path =
-        igniter
-        |> Igniter.Project.Module.proper_location(module)
-        |> Path.rootname()
-        |> Path.join("signing_in.html.eex")
-
-      Igniter.create_new_file(igniter, template_path, interstitial_template(), on_exists: :skip)
-    end
-
-    defp configure_interstitial_renderer(igniter, web_module) do
-      module = Module.concat(web_module, AuthInterstitialHTML)
-
-      Igniter.Project.Config.configure_new(
-        igniter,
-        "config.exs",
-        :ash_authentication,
-        [:oauth2_interstitial_renderer],
-        {module, :render}
-      )
-    end
-
-    defp interstitial_template do
-      """
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <meta name="robots" content="noindex, nofollow" />
-          <title>Signing you in…</title>
-        </head>
-        <body onload="document.forms[0].submit()">
-          <form method="post" action="<%= Plug.HTML.html_escape(@action) %>">
-            <%= for {key, value} <- @params do %>
-              <input type="hidden" name="<%= Plug.HTML.html_escape(to_string(key)) %>" value="<%= Plug.HTML.html_escape(to_string(value)) %>" />
-            <% end %>
-            <input type="hidden" name="<%= @reflected_param %>" value="1" />
-            <noscript>
-              <p>Signing you in…</p>
-              <button type="submit">Continue</button>
-            </noscript>
-          </form>
-          <p>Signing you in…</p>
-        </body>
-      </html>
-      """
     end
 
     defp create_auth_controller(igniter, otp_app) do
