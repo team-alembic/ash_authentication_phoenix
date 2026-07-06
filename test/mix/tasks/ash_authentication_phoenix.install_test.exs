@@ -229,6 +229,29 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     """)
   end
 
+  test "adding an oauth strategy generates the form_post interstitial renderer and template", %{
+    igniter: igniter
+  } do
+    igniter =
+      igniter
+      |> Igniter.compose_task("ash_authentication_phoenix.install")
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["github"])
+
+    assert_creates(igniter, "lib/test_web/auth_interstitial_html.ex")
+    assert_creates(igniter, "lib/test_web/auth_interstitial_html/signing_in.html.eex")
+  end
+
+  test "installation does not generate the interstitial when there is no oauth strategy", %{
+    igniter: igniter
+  } do
+    igniter =
+      igniter
+      |> Igniter.compose_task("ash_authentication_phoenix.install")
+
+    refute_creates(igniter, "lib/test_web/auth_interstitial_html.ex")
+  end
+
   test "installation configures token resource for live session disconnect", %{igniter: igniter} do
     igniter
     |> Igniter.compose_task("ash_authentication_phoenix.install")
