@@ -23,7 +23,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     timestamp_class: "CSS class for timestamp text.",
     continue_button_text:
       "Text for the continue button shown after at least one credential is registered.",
-    continue_button_class: "CSS class for the continue button."
+    continue_button_class: "CSS class for the continue button.",
+    add_form_class: "CSS class for the `form` wrapping the passkey name input and add button.",
+    show_key_name_field:
+      "Whether to show a passkey name input before adding a new credential, so the name is set before the browser ceremony stores it in the user's password manager. Defaults to `true`."
 
   @moduledoc """
   Credential management panel for authenticated users.
@@ -46,6 +49,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
+  alias AshAuthentication.Phoenix.Components.WebAuthn.Input
   alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias AshAuthentication.Strategy.WebAuthn
   # alias Phoenix.LiveView.{Rendered, Socket}
@@ -61,6 +65,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       |> assign_new(:editing_label, fn -> "" end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:adding, fn -> false end)
+      |> assign_new(:key_name_value, fn -> "" end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:continue_path, fn -> nil end)
 
@@ -151,14 +156,29 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       <% end %>
 
       <div id={"#{@id}-add-key"} phx-hook="WebAuthnRegistrationHook">
-        <button
-          phx-click="add-credential"
+        <form
+          id={"#{@id}-add-key-form"}
+          phx-change="update-key-name"
+          phx-submit="add-credential"
           phx-target={@myself}
-          class={override_for(@overrides, :add_button_class)}
-          disabled={@adding}
+          class={override_for(@overrides, :add_form_class)}
         >
-          {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
-        </button>
+          <%= if override_for(@overrides, :show_key_name_field, true) do %>
+            <Input.key_name_field
+              id={"#{@id}-key-name"}
+              value={@key_name_value}
+              overrides={@overrides}
+              gettext_fn={@gettext_fn}
+            />
+          <% end %>
+          <button
+            type="submit"
+            class={override_for(@overrides, :add_button_class)}
+            disabled={@adding}
+          >
+            {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
+          </button>
+        </form>
       </div>
 
       <%= if @continue_path && @credentials != [] do %>
@@ -232,7 +252,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     end
   end
 
-  def handle_event("add-credential", _params, socket) do
+  def handle_event("update-key-name", params, socket) do
+    {:noreply,
+     assign(socket, :key_name_value, Map.get(params, "key_name", socket.assigns.key_name_value))}
+  end
+
+  def handle_event("add-credential", params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
     origin = PhoenixWebAuthn.origin_from_socket(socket)
@@ -245,16 +270,28 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     user_id = Base.url_encode64(:crypto.strong_rand_bytes(64), padding: false)
     user = socket.assigns.current_user
 
+    key_name = Map.get(params, "key_name", socket.assigns.key_name_value)
+    identity = to_string(Map.get(user, strategy.identity_field) || "")
+
+    # `user_name` identifies the account; `user_display_name` is the
+    # human-readable name the browser stores in the user's password manager.
+    # Both must be set *before* the ceremony — many password managers don't
+    # allow editing them afterwards.
+    user_name = if identity != "", do: identity, else: key_name
+    user_display_name = if key_name != "", do: key_name, else: identity
+
     socket =
       socket
       |> assign(:add_challenge, challenge)
       |> assign(:adding, true)
+      |> assign(:key_name_value, key_name)
       |> Phoenix.LiveView.push_event("registration-challenge", %{
         challenge: Base.url_encode64(challenge.bytes, padding: false),
         rp_id: rp_id,
         rp_name: rp_name,
         user_id: user_id,
-        user_name: to_string(Map.get(user, strategy.identity_field)),
+        user_name: user_name,
+        user_display_name: user_display_name,
         timeout: strategy.timeout,
         attestation: strategy.attestation,
         authenticator_attachment:
@@ -275,10 +312,18 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     user = socket.assigns.current_user
     tenant = socket.assigns.current_tenant
 
+    # A blank label is passed as `nil` so the credential resource's
+    # attribute default applies.
+    label =
+      case socket.assigns.key_name_value do
+        "" -> nil
+        key_name -> key_name
+      end
+
     add_params = %{
       "attestation_object" => params["attestation_object"],
       "client_data_json" => params["client_data_json"],
-      "label" => "New Key"
+      "label" => label
     }
 
     case WebAuthn.Actions.add_credential(strategy, add_params,
@@ -289,7 +334,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       {:ok, _credential} ->
         socket =
           socket
-          |> assign(adding: false, add_challenge: nil, error_message: nil)
+          |> assign(adding: false, add_challenge: nil, error_message: nil, key_name_value: "")
           |> load_credentials()
 
         {:noreply, socket}

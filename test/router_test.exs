@@ -26,6 +26,7 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "path" => "/sign-in",
                   "register_path" => "/register",
                   "reset_path" => "/reset",
+                  "webauthn_path" => nil,
                   "gettext_fn" => nil,
                   "resources" => nil
                 }
@@ -94,6 +95,7 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "path" => "/nested/sign-in",
                   "register_path" => "/nested/register",
                   "reset_path" => "/nested/reset",
+                  "webauthn_path" => nil,
                   "gettext_fn" => nil,
                   "resources" => nil
                 }
@@ -124,8 +126,58 @@ defmodule AshAuthentication.Phoenix.RouterTest do
                   "path" => "/unscoped/sign-in",
                   "register_path" => "/register",
                   "reset_path" => "/reset",
+                  "webauthn_path" => nil,
                   "gettext_fn" => nil,
                   "resources" => nil
+                }
+              ]}
+  end
+
+  test "sign_in_route with webauthn_path includes it in session" do
+    route =
+      AshAuthentication.Phoenix.Test.Router
+      |> Phoenix.Router.routes()
+      |> Enum.find(&(&1.path == "/sign-in-webauthn"))
+
+    {_, _, _, %{extra: %{session: session}}} = route.metadata.phoenix_live_view
+
+    assert session ==
+             {AshAuthentication.Phoenix.Router, :generate_session,
+              [
+                %{
+                  "auth_routes_prefix" => "/auth",
+                  "otp_app" => nil,
+                  "overrides" => [AshAuthentication.Phoenix.Overrides.Default],
+                  "path" => "/sign-in-webauthn",
+                  "register_path" => nil,
+                  "reset_path" => nil,
+                  "webauthn_path" => "/webauthn",
+                  "gettext_fn" => nil,
+                  "resources" => nil
+                }
+              ]}
+  end
+
+  test "webauthn_route generates a live route with correct session" do
+    route =
+      AshAuthentication.Phoenix.Test.Router
+      |> Phoenix.Router.routes()
+      |> Enum.find(&(&1.path == "/webauthn"))
+
+    assert route, "expected a route at /webauthn/"
+    {_, _, _, %{extra: %{session: session}}} = route.metadata.phoenix_live_view
+
+    assert session ==
+             {AshAuthentication.Phoenix.Router, :generate_session,
+              [
+                %{
+                  "auth_routes_prefix" => "/auth",
+                  "otp_app" => nil,
+                  "overrides" => [AshAuthentication.Phoenix.Overrides.Default],
+                  "resource" => Example.Accounts.User,
+                  "strategy" => :webauthn,
+                  "path" => "/sign-in",
+                  "gettext_fn" => nil
                 }
               ]}
   end
