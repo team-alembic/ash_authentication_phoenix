@@ -31,7 +31,31 @@ if Code.ensure_loaded?(Igniter) do
         |> create_interstitial_renderer(web_module)
         |> create_interstitial_template(web_module)
         |> configure_interstitial_renderer(web_module)
+        |> ensure_csrf_skip_plug()
       end
+    end
+
+    # OAuth `form_post` callbacks are cross-site POSTs with no CSRF token (OAuth
+    # `state` is the CSRF defence). Prepend the skip plug to each router's
+    # `:browser` pipeline so it runs before `:protect_from_forgery`. Only affects
+    # POSTs to callback paths; every other request stays CSRF-protected.
+    defp ensure_csrf_skip_plug(igniter) do
+      {igniter, routers} = Igniter.Libs.Phoenix.list_routers(igniter)
+
+      Enum.reduce(routers, igniter, fn router, igniter ->
+        case Igniter.Libs.Phoenix.has_pipeline(igniter, router, :browser) do
+          {igniter, true} ->
+            Igniter.Libs.Phoenix.prepend_to_pipeline(
+              igniter,
+              :browser,
+              "plug :skip_csrf_for_oauth_callback",
+              router: router
+            )
+
+          {igniter, false} ->
+            igniter
+        end
+      end)
     end
 
     defp find_resources_with_oauth_strategies(igniter) do

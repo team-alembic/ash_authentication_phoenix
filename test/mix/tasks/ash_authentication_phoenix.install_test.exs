@@ -240,6 +240,11 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
 
     assert_creates(igniter, "lib/test_web/auth_interstitial_html.ex")
     assert_creates(igniter, "lib/test_web/auth_interstitial_html/signing_in.html.eex")
+
+    # and the callback CSRF-skip plug is wired into the browser pipeline
+    assert_has_patch(igniter, "lib/test_web/router.ex", """
+    + |    plug(:skip_csrf_for_oauth_callback)
+    """)
   end
 
   test "installation does not generate the interstitial when there is no oauth strategy", %{

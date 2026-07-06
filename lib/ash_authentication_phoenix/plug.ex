@@ -103,4 +103,45 @@ defmodule AshAuthentication.Phoenix.Plug do
   """
   @spec set_actor(Conn.t(), atom) :: Conn.t()
   defdelegate set_actor(conn, subject_name), to: AshAuthentication.Plug.Helpers
+
+  @doc """
+  Skip Phoenix CSRF protection for OAuth2/OIDC callback POSTs.
+
+  Providers that use `response_mode=form_post` (e.g. Sign in with Apple) return
+  the callback as a *cross-site* POST that carries no CSRF token — the OAuth
+  `state` parameter is the CSRF defence there. Phoenix's `:protect_from_forgery`
+  would otherwise reject it before it reaches the callback. This plug marks such
+  requests to skip CSRF, and must therefore run **before** `:protect_from_forgery`.
+
+  Only `POST` requests to a callback path (`<auth_routes_prefix>/…/callback`) are
+  affected. Every other request — including all other authentication POSTs
+  (password, magic link, TOTP, WebAuthn, …) — remains fully CSRF-protected.
+
+  ## Options
+
+    * `:auth_routes_prefix` - the prefix your auth routes are mounted under.
+      Defaults to `"/auth"`.
+
+  ## Example
+
+      pipeline :browser do
+        # ...
+        plug :skip_csrf_for_oauth_callback
+        plug :protect_from_forgery
+      end
+  """
+  @spec skip_csrf_for_oauth_callback(Conn.t(), keyword) :: Conn.t()
+  def skip_csrf_for_oauth_callback(conn, opts) do
+    prefix =
+      opts
+      |> Keyword.get(:auth_routes_prefix, "/auth")
+      |> String.split("/", trim: true)
+
+    if conn.method == "POST" and List.starts_with?(conn.path_info, prefix) and
+         List.last(conn.path_info) == "callback" do
+      Conn.put_private(conn, :plug_skip_csrf_protection, true)
+    else
+      conn
+    end
+  end
 end
