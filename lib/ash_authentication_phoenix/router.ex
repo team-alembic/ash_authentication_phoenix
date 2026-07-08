@@ -301,6 +301,7 @@ defmodule AshAuthentication.Phoenix.Router do
         ) :: Macro.t()
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defmacro sign_in_route(opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/sign-in")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignInLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -465,6 +466,7 @@ defmodule AshAuthentication.Phoenix.Router do
           | {atom, any}
         ]) :: Macro.t()
   defmacro sign_out_route(auth_controller, path \\ "/sign-out", opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {as, opts} = Keyword.pop(opts, :as, :auth)
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.SignOutLive)
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
@@ -578,6 +580,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro reset_route(opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/password-reset")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.ResetLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -838,6 +841,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro totp_setup_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/totp-setup")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.TotpSetupLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -1072,6 +1076,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro webauthn_setup_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/webauthn-setup")
 
     {live_view, opts} =
@@ -1186,6 +1191,7 @@ defmodule AshAuthentication.Phoenix.Router do
       end
   """
   defmacro recovery_code_verify_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/recovery-code-verify")
 
     {live_view, opts} =
@@ -1296,6 +1302,7 @@ defmodule AshAuthentication.Phoenix.Router do
       end
   """
   defmacro recovery_code_display_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/recovery-codes")
 
     {live_view, opts} =
@@ -1421,6 +1428,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro confirm_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/#{strategy}")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.ConfirmLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -1544,6 +1552,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro magic_sign_in_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/#{strategy}")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.MagicSignInLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -1631,6 +1640,21 @@ defmodule AshAuthentication.Phoenix.Router do
     |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
     |> Map.put("context", Ash.PlugHelpers.get_context(conn))
   end
+
+  # Expands option aliases as if inside a function so they become runtime
+  # rather than compile-time dependencies of the calling router.
+  defp expand_opts_aliases(opts, env) do
+    if Macro.quoted_literal?(opts) do
+      Macro.prewalk(opts, &expand_alias(&1, env))
+    else
+      opts
+    end
+  end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:mount, 3}})
+
+  defp expand_alias(other, _env), do: other
 
   # When using a `gettext_backend`, we generate a function in the caller's router module, involving the
   # path as unique id for the function name

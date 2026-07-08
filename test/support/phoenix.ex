@@ -91,6 +91,11 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   end
 end
 
+defmodule AshAuthentication.Phoenix.Test.OnMountHook do
+  @moduledoc false
+  def on_mount(:default, _params, _session, socket), do: {:cont, socket}
+end
+
 defmodule AshAuthentication.Phoenix.Test.Router do
   @moduledoc false
   alias AshAuthentication.Phoenix.Test.ComponentsLive
@@ -146,6 +151,13 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                     AshAuthentication.Phoenix.Overrides.Default
                   ],
                   as: :password_toggle
+
+    # on_mount and layout options for router_test
+    sign_in_route path: "/sign-in-on-mount",
+                  auth_routes_prefix: "/auth",
+                  on_mount: [AshAuthentication.Phoenix.Test.OnMountHook],
+                  layout: {AshAuthentication.Phoenix.Test.HomeLive, :live},
+                  as: :on_mount_hooks
 
     # Custom LiveView for components testing
     sign_in_route path: "/custom_lv",
