@@ -6,9 +6,10 @@ defmodule AshAuthentication.Phoenix.PlugTest do
   @moduledoc false
   use ExUnit.Case, async: true
   import Plug.Test
+  alias AshAuthentication.Phoenix.Plug
 
   defp skip(conn, opts \\ []),
-    do: AshAuthentication.Phoenix.Plug.skip_csrf_for_oauth_callback(conn, opts)
+    do: Plug.skip_csrf_for_oauth_callback(conn, opts)
 
   describe "skip_csrf_for_oauth_callback/2" do
     test "skips CSRF for a POST to an OAuth callback path" do
