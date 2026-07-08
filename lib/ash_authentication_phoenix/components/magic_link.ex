@@ -43,7 +43,6 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5, debug_form_errors: 1]
   import Slug
-  require Logger
 
   @type props :: %{
           required(:strategy) => AshAuthentication.Strategy.t(),

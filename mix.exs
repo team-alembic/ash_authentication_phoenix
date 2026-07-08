@@ -15,7 +15,6 @@ defmodule AshAuthentication.Phoenix.MixProject do
       description: "Phoenix integration for Ash Authentication",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
-      preferred_cli_env: [ci: :test],
       aliases: aliases(),
       deps: deps(),
       package: package(),
@@ -129,6 +128,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
       extra_applications: [:logger]
     ]
 
+  def cli, do: [preferred_envs: [ci: :test]]
+  
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [

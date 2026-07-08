@@ -8,7 +8,6 @@ defmodule AshAuthentication.Phoenix.PasswordResetTest do
   use ExUnit.Case, async: false
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
-  require Ash.Query
 
   @endpoint AshAuthentication.Phoenix.Test.Endpoint
 

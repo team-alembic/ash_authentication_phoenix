@@ -86,8 +86,6 @@ defmodule AshAuthentication.Phoenix.Router do
   in the appropriate position within the authentication form.
   """
 
-  require Logger
-
   @typedoc "Options that can be passed to `auth_routes_for`."
   @type auth_route_options :: [
           path_option | to_option | scope_opts_option | only_option | except_option
