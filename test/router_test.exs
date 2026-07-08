@@ -32,6 +32,19 @@ defmodule AshAuthentication.Phoenix.RouterTest do
               ]}
   end
 
+  test "oauth2/oidc callback routes accept both GET and POST" do
+    by_path =
+      %{resources: [Example.Accounts.User]}
+      |> StrategyRouter.__formatted_routes__()
+      |> Enum.filter(&(&1.label =~ ~r/:callback/))
+      |> Enum.group_by(& &1.path, & &1.verb)
+
+    refute by_path == %{}
+
+    assert Enum.any?(by_path, fn {_path, verbs} -> "GET" in verbs and "POST" in verbs end),
+           "expected an oauth callback path to accept both GET and POST, got: #{inspect(by_path)}"
+  end
+
   test "sign_in_routes respects the inherited router scope" do
     routes = Phoenix.Router.routes(AshAuthentication.Phoenix.Test.Router)
 

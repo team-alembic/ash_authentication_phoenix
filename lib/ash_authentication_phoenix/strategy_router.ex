@@ -22,11 +22,7 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
         strategy_path_split = Path.split(String.trim_leading(path, "/"))
 
         with {:match, bindings} <- match_path(strategy_path_split, conn.path_info, %{}),
-             true <-
-               conn.method ==
-                 String.upcase(
-                   to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))
-                 ) do
+             true <- conn.method in methods_for_phase(strategy, phase) do
           {:halt, {:found, resource, strategy, path, phase, bindings}}
         else
           _ -> {:cont, {:not_found, conn}}
@@ -47,6 +43,15 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
       {:not_found, conn} ->
         not_found(conn, opts)
     end
+  end
+
+  # A phase may accept more than one HTTP method (e.g. the OAuth2/OIDC callback
+  # accepts GET and POST, the latter for `response_mode=form_post` providers).
+  defp methods_for_phase(strategy, phase) do
+    strategy
+    |> AshAuthentication.Strategy.method_for_phase(phase)
+    |> List.wrap()
+    |> Enum.map(&String.upcase(to_string(&1)))
   end
 
   defp merge_path_bindings(conn, bindings) when bindings == %{}, do: conn
@@ -146,13 +151,17 @@ defmodule AshAuthentication.Phoenix.StrategyRouter do
   def __formatted_routes__(opts) do
     opts
     |> routes()
-    |> Enum.map(fn {resource, strategy, path, phase} ->
-      %{
-        verb:
-          String.upcase(to_string(AshAuthentication.Strategy.method_for_phase(strategy, phase))),
-        path: path,
-        label: "#{inspect(resource)}.#{strategy.name} #{inspect(phase)}"
-      }
+    |> Enum.flat_map(fn {resource, strategy, path, phase} ->
+      strategy
+      |> AshAuthentication.Strategy.method_for_phase(phase)
+      |> List.wrap()
+      |> Enum.map(fn method ->
+        %{
+          verb: String.upcase(to_string(method)),
+          path: path,
+          label: "#{inspect(resource)}.#{strategy.name} #{inspect(phase)}"
+        }
+      end)
     end)
   end
 

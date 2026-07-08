@@ -129,11 +129,11 @@ defmodule AshAuthentication.Phoenix.MixProject do
     ]
 
   def cli, do: [preferred_envs: [ci: :test]]
-  
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc.9"},
+      {:ash_authentication, "~> 5.0.0-rc.12"},
       {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.26"},

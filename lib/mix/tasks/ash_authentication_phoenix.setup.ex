@@ -81,6 +81,7 @@ if Code.ensure_loaded?(Igniter) do
         |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
         |> create_live_user_auth(web_module)
+        |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial()
         |> add_auth_routes(overrides, options, router, web_module)
         |> add_live_session_scopes(web_module, router)
       else
