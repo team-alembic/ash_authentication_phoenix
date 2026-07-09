@@ -54,7 +54,11 @@ defmodule ExampleWeb.Router do
     plug :put_root_layout, {ExampleWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :load_from_session # <-------- Add this line
+
+    # add these lines -->
+    plug :load_from_session
+    plug :set_scope, scope: Example.Accounts.Scope, default_scope?: true
+    # <-- add these lines
   end
 
   pipeline :api do
@@ -62,7 +66,7 @@ defmodule ExampleWeb.Router do
 
     # add these lines -->
     plug :load_from_bearer
-    plug :set_actor, :user
+    plug :set_scope, scope: Example.Accounts.Scope, default_scope?: true
     # <-- add these lines
   end
 
@@ -89,6 +93,34 @@ defmodule ExampleWeb.Router do
   ...
 end
 ```
+
+#### Scope
+
+The `set_scope` plug wraps the current actor and tenant in a scope struct that
+implements `Ash.Scope.ToOpts`, assigning it to `current_user_scope` (and, because
+of `default_scope?: true`, `current_scope`). Create the struct in your accounts
+namespace:
+
+**lib/example/accounts/scope.ex**
+
+```elixir
+defmodule Example.Accounts.Scope do
+  defstruct [:actor, :tenant]
+
+  defimpl Ash.Scope.ToOpts, for: __MODULE__ do
+    def get_actor(%{actor: actor}), do: {:ok, actor}
+    def get_tenant(%{tenant: tenant}), do: {:ok, tenant}
+    def get_context(_scope), do: :error
+    def get_tracer(_scope), do: :error
+    def get_authorize?(_scope), do: :error
+  end
+end
+```
+
+You can then pass it to any Ash action as `scope: conn.assigns.current_scope`. See
+the [Scopes](scopes.md) guide for the full picture, including LiveView. If you'd
+rather not use scopes, replace both `set_scope` plugs above with
+`plug :set_actor, :user` and skip this module.
 
 #### AuthController
 
