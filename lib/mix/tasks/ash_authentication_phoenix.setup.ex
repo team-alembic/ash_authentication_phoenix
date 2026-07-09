@@ -152,7 +152,7 @@ if Code.ensure_loaded?(Igniter) do
         )
         |> Igniter.Libs.Phoenix.append_to_pipeline(
           :api,
-          "plug :load_from_bearer\nplug :set_scope, #{inspect(scope_module)}",
+          "plug :load_from_bearer\nplug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true",
           router: router
         )
         |> add_to_graphql_pipeline(router, scope_module)
@@ -197,7 +197,7 @@ if Code.ensure_loaded?(Igniter) do
           Igniter.Libs.Phoenix.prepend_to_pipeline(
             igniter,
             :graphql,
-            "plug :load_from_bearer\nplug :set_scope, #{inspect(scope_module)}",
+            "plug :load_from_bearer\nplug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true",
             router: router
           )
 

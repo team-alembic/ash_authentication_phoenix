@@ -319,7 +319,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
       |  pipeline :api do
       |    plug(:accepts, ["json"])
     + |    plug(:load_from_bearer)
-    + |    plug(:set_scope, Test.Accounts.Scope)
+    + |    plug(:set_scope, scope: Test.Accounts.Scope, default_scope?: true)
       |  end
     """)
     |> assert_has_patch("lib/test_web/router.ex", """

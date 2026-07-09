@@ -134,15 +134,15 @@ if Code.ensure_loaded?(Igniter) do
     defp insert_live_session_opts(node, _scope_module), do: node
 
     # `set_scope` is a superset of `set_actor`, so every `plug :set_actor, :user`
-    # is rewritten in place. The browser pipeline additionally opts into the
-    # `current_scope` alias, matching what a fresh install generates.
+    # is rewritten in place, opting into the `current_scope` alias to match what a
+    # fresh install generates.
     defp replace_set_actor_plugs(zipper, scope_module) do
       case Igniter.Code.Function.move_to_function_call(zipper, :plug, 2, fn call ->
              Igniter.Code.Function.argument_equals?(call, 0, :set_actor) and
                Igniter.Code.Function.argument_equals?(call, 1, :user)
            end) do
         {:ok, plug_zipper} ->
-          replacement = set_scope_plug(enclosing_pipeline_name(plug_zipper), scope_module)
+          replacement = "plug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true"
 
           plug_zipper
           |> Sourceror.Zipper.replace(Sourceror.parse_string!(replacement))
@@ -151,28 +151,6 @@ if Code.ensure_loaded?(Igniter) do
 
         :error ->
           zipper
-      end
-    end
-
-    defp set_scope_plug(:browser, scope_module),
-      do: "plug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true"
-
-    defp set_scope_plug(_pipeline, scope_module),
-      do: "plug :set_scope, #{inspect(scope_module)}"
-
-    defp enclosing_pipeline_name(zipper) do
-      case Igniter.Code.Common.move_upwards(zipper, fn upward ->
-             Igniter.Code.Function.function_call?(upward, :pipeline, 2)
-           end) do
-        {:ok, pipeline_zipper} ->
-          case Sourceror.Zipper.node(pipeline_zipper) do
-            {:pipeline, _, [{:__block__, _, [name]} | _]} when is_atom(name) -> name
-            {:pipeline, _, [name | _]} when is_atom(name) -> name
-            _ -> nil
-          end
-
-        :error ->
-          nil
       end
     end
 

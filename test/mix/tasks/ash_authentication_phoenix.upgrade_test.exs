@@ -109,7 +109,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.UpgradeTest do
       pipeline :api do
         plug(:accepts, ["json"])
         plug(:load_from_bearer)
-        plug(:set_scope, Test.Accounts.Scope)
+        plug(:set_scope, scope: Test.Accounts.Scope, default_scope?: true)
       end
     end
     """)
