@@ -47,11 +47,7 @@ if Code.ensure_loaded?(Igniter) do
       upgrades =
         %{
           "2.10.6" => [&change_auth_routes_for_to_auth_routes_for_all_routers/2],
-          # NOTE: this key must be the 3.0 RC version that ships OAuth2 POST
-          # callback support (tracks ash_authentication 5.0.0); set it to the
-          # actual release version at release time.
-          "3.0.0-rc.8" => [&generate_oauth_interstitial/2],
-          "3.0.0" => [&add_scope_support/2]
+          "3.0.0" => [&generate_oauth_interstitial/2, &add_scope_support/2]
         }
 
       # For each version that requires a change, add it to this map
