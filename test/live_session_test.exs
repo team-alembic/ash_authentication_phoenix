@@ -6,6 +6,7 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
   @moduledoc false
 
   use ExUnit.Case, async: false
+  alias Ash.Scope.ToOpts
   alias AshAuthentication.Phoenix.LiveSession
 
   describe "on_mount with multiple authenticated resources" do
@@ -194,7 +195,7 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
       scope = result_socket.assigns.current_user_scope
       assert %Example.Accounts.Scope{} = scope
       assert scope.actor.id == user.id
-      assert {:ok, actor} = Ash.Scope.ToOpts.get_actor(scope)
+      assert {:ok, actor} = ToOpts.get_actor(scope)
       assert actor.id == user.id
     end
 

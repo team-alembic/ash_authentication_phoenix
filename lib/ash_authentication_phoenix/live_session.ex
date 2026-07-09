@@ -237,24 +237,26 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   defp maybe_assign_scopes(socket, _otp_app, nil, _tenant, _default_scope_subject), do: socket
 
-  # sobelow_skip ["DOS.StringToAtom"]
   defp maybe_assign_scopes(socket, otp_app, scope_module, tenant, default_scope_subject) do
     otp_app
     |> AshAuthentication.authenticated_resources()
-    |> Enum.reduce(socket, fn resource, socket ->
-      subject_name = to_string(Info.authentication_subject_name!(resource))
-      current_subject_name = String.to_atom("current_#{subject_name}")
-      scope_name = String.to_atom("current_#{subject_name}_scope")
+    |> Enum.reduce(socket, &assign_scope(&2, &1, scope_module, tenant, default_scope_subject))
+  end
 
-      scope = struct(scope_module, %{actor: socket.assigns[current_subject_name], tenant: tenant})
-      socket = assign_new(socket, scope_name, fn -> scope end)
+  # sobelow_skip ["DOS.StringToAtom"]
+  defp assign_scope(socket, resource, scope_module, tenant, default_scope_subject) do
+    subject_name = to_string(Info.authentication_subject_name!(resource))
+    current_subject_name = String.to_atom("current_#{subject_name}")
+    scope_name = String.to_atom("current_#{subject_name}_scope")
 
-      if default_scope_subject == subject_name do
-        assign_new(socket, :current_scope, fn -> scope end)
-      else
-        socket
-      end
-    end)
+    scope = struct(scope_module, %{actor: socket.assigns[current_subject_name], tenant: tenant})
+    socket = assign_new(socket, scope_name, fn -> scope end)
+
+    if default_scope_subject == subject_name do
+      assign_new(socket, :current_scope, fn -> scope end)
+    else
+      socket
+    end
   end
 
   @doc """
