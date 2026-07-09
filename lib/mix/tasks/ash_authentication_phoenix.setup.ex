@@ -147,7 +147,7 @@ if Code.ensure_loaded?(Igniter) do
         |> use_authentication_phoenix_router(router)
         |> Igniter.Libs.Phoenix.append_to_pipeline(
           :browser,
-          "plug :load_from_session\nplug :set_scope, #{inspect(scope_module)}",
+          "plug :load_from_session\nplug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true",
           router: router
         )
         |> Igniter.Libs.Phoenix.append_to_pipeline(

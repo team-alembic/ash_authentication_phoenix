@@ -172,12 +172,17 @@ defmodule AshAuthentication.Phoenix.Plug do
 
     * `:scope` - the scope module to instantiate. Required.
     * `:subject` - the subject name to build the scope for. Defaults to `:user`.
+    * `:default_scope?` - when `true`, also assigns the scope to `current_scope`
+      (in addition to `current_<subject_name>_scope`). This designates the subject
+      as the application's primary one and exposes it under the singular
+      `current_scope` assign that Phoenix-idiomatic code expects. Defaults to
+      `false`.
 
   ## Example
 
       pipeline :browser do
         plug :load_from_session
-        plug :set_scope, MyApp.Accounts.Scope
+        plug :set_scope, scope: MyApp.Accounts.Scope, default_scope?: true
       end
 
       pipeline :admin do
@@ -200,6 +205,10 @@ defmodule AshAuthentication.Phoenix.Plug do
 
     conn
     |> Conn.assign(String.to_atom("current_#{subject_name}_scope"), scope)
+    |> maybe_assign_default_scope(Keyword.get(opts, :default_scope?, false), scope)
     |> Ash.PlugHelpers.set_actor(actor)
   end
+
+  defp maybe_assign_default_scope(conn, true, scope), do: Conn.assign(conn, :current_scope, scope)
+  defp maybe_assign_default_scope(conn, _default_scope?, _scope), do: conn
 end

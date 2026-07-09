@@ -89,6 +89,29 @@ defmodule AshAuthentication.Phoenix.PlugTest do
       assert Ash.PlugHelpers.get_actor(conn) == nil
     end
 
+    test "assigns the current_scope alias when default_scope? is true" do
+      user = register_user("set-scope-default@example.com")
+
+      conn =
+        conn(:get, "/")
+        |> Plug.Conn.assign(:current_user, user)
+        |> AuthPlug.set_scope(scope: Example.Accounts.Scope, default_scope?: true)
+
+      assert conn.assigns.current_scope == conn.assigns.current_user_scope
+      assert conn.assigns.current_scope.actor.id == user.id
+    end
+
+    test "does not assign current_scope by default" do
+      user = register_user("set-scope-no-alias@example.com")
+
+      conn =
+        conn(:get, "/")
+        |> Plug.Conn.assign(:current_user, user)
+        |> AuthPlug.set_scope(Example.Accounts.Scope)
+
+      refute Map.has_key?(conn.assigns, :current_scope)
+    end
+
     test "honours the :subject option for non-default subjects" do
       admin =
         Example.Accounts.Admin
