@@ -79,14 +79,17 @@ if Code.ensure_loaded?(Igniter) do
       |> Igniter.add_notice("""
       AshAuthenticationPhoenix now supports Ash scopes.
 
-      A `#{inspect(scope_module)}` struct was generated and your `set_actor`
-      pipeline plugs were replaced with `set_scope`. To also receive scope assigns
-      in your LiveViews, add `scope:` (and, for the `current_scope` alias,
-      `default_scope:`) to your `ash_authentication_live_session` blocks:
+      A `#{inspect(scope_module)}` struct was generated, your `set_actor` pipeline
+      plugs were replaced with `set_scope`, and option-less
+      `ash_authentication_live_session` blocks were given `scope:`/`default_scope:`.
+
+      If any of your `ash_authentication_live_session` blocks already pass options,
+      they were left untouched — add the scope options to them manually:
 
           ash_authentication_live_session :authenticated_routes,
             scope: #{inspect(scope_module)},
-            default_scope: :user do
+            default_scope: :user,
+            on_mount: [...] do
             # ...
           end
       """)
@@ -94,9 +97,41 @@ if Code.ensure_loaded?(Igniter) do
 
     defp add_scope_to_router(igniter, router, scope_module) do
       Igniter.Project.Module.find_and_update_module!(igniter, router, fn zipper ->
-        {:ok, replace_set_actor_plugs(zipper, scope_module)}
+        zipper =
+          zipper
+          |> replace_set_actor_plugs(scope_module)
+          |> add_scope_to_live_sessions(scope_module)
+
+        {:ok, zipper}
       end)
     end
+
+    # Only the option-less form is rewritten automatically. A call that already
+    # passes options is arity 3, so it never matches here and is left to the
+    # notice below.
+    defp add_scope_to_live_sessions(zipper, scope_module) do
+      case Igniter.Code.Function.move_to_function_call(
+             zipper,
+             :ash_authentication_live_session,
+             2
+           ) do
+        {:ok, call_zipper} ->
+          call_zipper
+          |> Sourceror.Zipper.update(&insert_live_session_opts(&1, scope_module))
+          |> Sourceror.Zipper.topmost()
+          |> add_scope_to_live_sessions(scope_module)
+
+        :error ->
+          zipper
+      end
+    end
+
+    defp insert_live_session_opts({fun, meta, [name, do_block]}, scope_module) do
+      opts = Sourceror.parse_string!("[scope: #{inspect(scope_module)}, default_scope: :user]")
+      {fun, meta, [name, opts, do_block]}
+    end
+
+    defp insert_live_session_opts(node, _scope_module), do: node
 
     # `set_scope` is a superset of `set_actor`, so every `plug :set_actor, :user`
     # is rewritten in place. The browser pipeline additionally opts into the

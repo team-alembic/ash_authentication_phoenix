@@ -167,6 +167,62 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.UpgradeTest do
     """)
   end
 
+  test "3.0.0: adds scope options to an option-less ash_authentication_live_session" do
+    test_project()
+    |> Igniter.Project.Module.create_module(TestWeb.Router, """
+    use TestWeb, :router
+    use AshAuthentication.Phoenix.Router
+
+    scope "/", TestWeb do
+      ash_authentication_live_session :authenticated_routes do
+        live "/", HomeLive
+      end
+    end
+    """)
+    |> Igniter.compose_task("ash_authentication_phoenix.upgrade", ["3.0.0-rc.8", "3.0.0"])
+    |> assert_creates("lib/test_web/router.ex", """
+    defmodule TestWeb.Router do
+      use TestWeb, :router
+      use AshAuthentication.Phoenix.Router
+
+      scope "/", TestWeb do
+        ash_authentication_live_session :authenticated_routes,
+          scope: Test.Accounts.Scope,
+          default_scope: :user do
+          live("/", HomeLive)
+        end
+      end
+    end
+    """)
+  end
+
+  test "3.0.0: leaves an ash_authentication_live_session that already has options alone" do
+    test_project()
+    |> Igniter.Project.Module.create_module(TestWeb.Router, """
+    use TestWeb, :router
+    use AshAuthentication.Phoenix.Router
+
+    scope "/", TestWeb do
+      ash_authentication_live_session :authenticated_routes, on_mount: [SomeHook] do
+        live "/", HomeLive
+      end
+    end
+    """)
+    |> Igniter.compose_task("ash_authentication_phoenix.upgrade", ["3.0.0-rc.8", "3.0.0"])
+    |> assert_creates("lib/test_web/router.ex", """
+    defmodule TestWeb.Router do
+      use TestWeb, :router
+      use AshAuthentication.Phoenix.Router
+
+      scope "/", TestWeb do
+        ash_authentication_live_session :authenticated_routes, on_mount: [SomeHook] do
+          live("/", HomeLive)
+        end
+      end
+    end
+    """)
+  end
+
   test "handles multiple routers" do
     test_project()
     |> Igniter.Project.Module.create_module(MyAppWeb.Router, """
