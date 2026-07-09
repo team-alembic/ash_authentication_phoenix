@@ -326,7 +326,9 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |  scope "/", TestWeb do
     + |    pipe_through(:browser)
     + |
-    + |    ash_authentication_live_session :authenticated_routes, scope: Test.Accounts.Scope do
+    + |    ash_authentication_live_session :authenticated_routes,
+    + |      scope: Test.Accounts.Scope,
+    + |      default_scope: :user do
     + |      # in each liveview, add one of the following at the top of the module:
     + |      #
     + |      # If an authenticated user must be present:

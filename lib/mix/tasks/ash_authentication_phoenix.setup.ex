@@ -251,7 +251,8 @@ if Code.ensure_loaded?(Igniter) do
             pipe_through :browser
 
             ash_authentication_live_session :authenticated_routes,
-              scope: #{inspect(scope_module)} do
+              scope: #{inspect(scope_module)},
+              default_scope: :user do
               # in each liveview, add one of the following at the top of the module:
               #
               # If an authenticated user must be present:

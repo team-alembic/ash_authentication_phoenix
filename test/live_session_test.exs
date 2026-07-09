@@ -215,6 +215,38 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
 
       refute Map.has_key?(result_socket.assigns, :current_user_scope)
     end
+
+    test "assigns current_scope alias for the default_scope subject" do
+      user =
+        Example.Accounts.User
+        |> Ash.Changeset.for_create(:register_with_password, %{
+          email: "scope-alias-user@example.com",
+          password: "secure-password",
+          password_confirmation: "secure-password"
+        })
+        |> Ash.create!()
+
+      session = %{
+        "user" => "fake-jti:#{AshAuthentication.user_to_subject(user)}",
+        "scope" => Example.Accounts.Scope,
+        "default_scope" => "user"
+      }
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      assert result_socket.assigns.current_scope == result_socket.assigns.current_user_scope
+      assert result_socket.assigns.current_scope.actor.id == user.id
+    end
+
+    test "does not assign current_scope without a default_scope subject" do
+      session = %{"scope" => Example.Accounts.Scope}
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      refute Map.has_key?(result_socket.assigns, :current_scope)
+    end
   end
 
   defp build_socket do
