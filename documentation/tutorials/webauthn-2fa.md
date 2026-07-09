@@ -146,7 +146,7 @@ defmodule MyAppWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :load_from_session
-    plug :set_actor, :user
+    plug :set_scope, scope: MyApp.Accounts.Scope, default_scope?: true
   end
 
   scope "/", MyAppWeb do
@@ -164,9 +164,10 @@ end
 
 > ### Browser pipeline {: .info}
 >
-> `plug :load_from_session` and `plug :set_actor, :user` are required. The
+> `plug :load_from_session` and `plug :set_scope, ...` are required. The
 > 2FA verify ceremony reads the user from `Ash.PlugHelpers.get_actor/1`, which
-> relies on those two plugs having run.
+> relies on those two plugs having run (`set_scope` is a superset of `set_actor`;
+> `plug :set_actor, :user` works too if you aren't using scopes).
 
 Options for both macros (matching the TOTP versions):
 
