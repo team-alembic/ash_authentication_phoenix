@@ -50,7 +50,8 @@ if Code.ensure_loaded?(Igniter) do
           # NOTE: this key must be the 3.0 RC version that ships OAuth2 POST
           # callback support (tracks ash_authentication 5.0.0); set it to the
           # actual release version at release time.
-          "3.0.0-rc.8" => [&generate_oauth_interstitial/2]
+          "3.0.0-rc.8" => [&generate_oauth_interstitial/2],
+          "3.0.0" => [&add_scope_support/2]
         }
 
       # For each version that requires a change, add it to this map
@@ -64,6 +65,80 @@ if Code.ensure_loaded?(Igniter) do
 
     defp generate_oauth_interstitial(igniter, _opts) do
       AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(igniter)
+    end
+
+    defp add_scope_support(igniter, _opts) do
+      scope_module = Module.concat(Igniter.Project.Module.module_name(igniter, "Accounts"), Scope)
+
+      igniter
+      |> Mix.Tasks.AshAuthenticationPhoenix.Setup.create_scope_module(scope_module)
+      |> Igniter.Libs.Phoenix.list_routers()
+      |> then(fn {igniter, routers} ->
+        Enum.reduce(routers, igniter, &add_scope_to_router(&2, &1, scope_module))
+      end)
+      |> Igniter.add_notice("""
+      AshAuthenticationPhoenix now supports Ash scopes.
+
+      A `#{inspect(scope_module)}` struct was generated and your `set_actor`
+      pipeline plugs were replaced with `set_scope`. To also receive scope assigns
+      in your LiveViews, add `scope:` (and, for the `current_scope` alias,
+      `default_scope:`) to your `ash_authentication_live_session` blocks:
+
+          ash_authentication_live_session :authenticated_routes,
+            scope: #{inspect(scope_module)},
+            default_scope: :user do
+            # ...
+          end
+      """)
+    end
+
+    defp add_scope_to_router(igniter, router, scope_module) do
+      Igniter.Project.Module.find_and_update_module!(igniter, router, fn zipper ->
+        {:ok, replace_set_actor_plugs(zipper, scope_module)}
+      end)
+    end
+
+    # `set_scope` is a superset of `set_actor`, so every `plug :set_actor, :user`
+    # is rewritten in place. The browser pipeline additionally opts into the
+    # `current_scope` alias, matching what a fresh install generates.
+    defp replace_set_actor_plugs(zipper, scope_module) do
+      case Igniter.Code.Function.move_to_function_call(zipper, :plug, 2, fn call ->
+             Igniter.Code.Function.argument_equals?(call, 0, :set_actor) and
+               Igniter.Code.Function.argument_equals?(call, 1, :user)
+           end) do
+        {:ok, plug_zipper} ->
+          replacement = set_scope_plug(enclosing_pipeline_name(plug_zipper), scope_module)
+
+          plug_zipper
+          |> Sourceror.Zipper.replace(Sourceror.parse_string!(replacement))
+          |> Sourceror.Zipper.topmost()
+          |> replace_set_actor_plugs(scope_module)
+
+        :error ->
+          zipper
+      end
+    end
+
+    defp set_scope_plug(:browser, scope_module),
+      do: "plug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true"
+
+    defp set_scope_plug(_pipeline, scope_module),
+      do: "plug :set_scope, #{inspect(scope_module)}"
+
+    defp enclosing_pipeline_name(zipper) do
+      case Igniter.Code.Common.move_upwards(zipper, fn upward ->
+             Igniter.Code.Function.function_call?(upward, :pipeline, 2)
+           end) do
+        {:ok, pipeline_zipper} ->
+          case Sourceror.Zipper.node(pipeline_zipper) do
+            {:pipeline, _, [{:__block__, _, [name]} | _]} when is_atom(name) -> name
+            {:pipeline, _, [name | _]} when is_atom(name) -> name
+            _ -> nil
+          end
+
+        :error ->
+          nil
+      end
     end
 
     defp change_auth_routes_for_to_auth_routes_for_all_routers(igniter, _opts) do

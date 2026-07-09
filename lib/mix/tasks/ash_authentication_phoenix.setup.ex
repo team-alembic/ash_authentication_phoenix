@@ -324,7 +324,8 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
-    defp create_scope_module(igniter, scope_module) do
+    @doc false
+    def create_scope_module(igniter, scope_module) do
       Igniter.Project.Module.create_module(
         igniter,
         scope_module,

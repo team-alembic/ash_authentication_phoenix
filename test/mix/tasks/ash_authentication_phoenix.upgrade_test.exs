@@ -76,6 +76,97 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.UpgradeTest do
     """)
   end
 
+  test "3.0.0: creates a scope module and swaps set_actor for set_scope" do
+    test_project()
+    |> Igniter.Project.Module.create_module(TestWeb.Router, """
+    use TestWeb, :router
+    use AshAuthentication.Phoenix.Router
+
+    pipeline :browser do
+      plug :accepts, ["html"]
+      plug :load_from_session
+      plug :set_actor, :user
+    end
+
+    pipeline :api do
+      plug :accepts, ["json"]
+      plug :load_from_bearer
+      plug :set_actor, :user
+    end
+    """)
+    |> Igniter.compose_task("ash_authentication_phoenix.upgrade", ["3.0.0-rc.8", "3.0.0"])
+    |> assert_creates("lib/test_web/router.ex", """
+    defmodule TestWeb.Router do
+      use TestWeb, :router
+      use AshAuthentication.Phoenix.Router
+
+      pipeline :browser do
+        plug(:accepts, ["html"])
+        plug(:load_from_session)
+        plug(:set_scope, scope: Test.Accounts.Scope, default_scope?: true)
+      end
+
+      pipeline :api do
+        plug(:accepts, ["json"])
+        plug(:load_from_bearer)
+        plug(:set_scope, Test.Accounts.Scope)
+      end
+    end
+    """)
+    |> assert_creates("lib/test/accounts/scope.ex", """
+    defmodule Test.Accounts.Scope do
+      @moduledoc \"\"\"
+      Authentication scope.
+
+      Wraps the current actor and tenant in a single struct that implements
+      `Ash.Scope.ToOpts`, so it can be passed to any Ash action as `scope:`:
+
+          Ash.read!(query, scope: socket.assigns.current_user_scope)
+
+      Grow this struct as your application does — add organisation, permissions,
+      locale, and so on — and expose them through the `ToOpts` callbacks below.
+      \"\"\"
+
+      defstruct [:actor, :tenant]
+
+      defimpl Ash.Scope.ToOpts, for: __MODULE__ do
+        def get_actor(%{actor: actor}), do: {:ok, actor}
+        def get_tenant(%{tenant: tenant}), do: {:ok, tenant}
+        def get_context(_scope), do: :error
+        def get_tracer(_scope), do: :error
+        def get_authorize?(_scope), do: :error
+      end
+    end
+    """)
+  end
+
+  test "3.0.0: leaves an already-migrated router's plugs unchanged" do
+    test_project()
+    |> Igniter.Project.Module.create_module(TestWeb.Router, """
+    use TestWeb, :router
+    use AshAuthentication.Phoenix.Router
+
+    pipeline :browser do
+      plug :accepts, ["html"]
+      plug :load_from_session
+      plug :set_scope, scope: Test.Accounts.Scope, default_scope?: true
+    end
+    """)
+    |> Igniter.compose_task("ash_authentication_phoenix.upgrade", ["3.0.0-rc.8", "3.0.0"])
+    |> assert_creates("lib/test_web/router.ex", """
+    defmodule TestWeb.Router do
+      use TestWeb, :router
+      use AshAuthentication.Phoenix.Router
+
+      pipeline :browser do
+        plug(:accepts, ["html"])
+        plug(:load_from_session)
+        plug(:set_scope, scope: Test.Accounts.Scope, default_scope?: true)
+      end
+    end
+    """)
+  end
+
   test "handles multiple routers" do
     test_project()
     |> Igniter.Project.Module.create_module(MyAppWeb.Router, """
