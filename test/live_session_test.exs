@@ -172,6 +172,51 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
     end
   end
 
+  describe "on_mount with a scope module" do
+    test "wraps each loaded subject in a scope assign" do
+      user =
+        Example.Accounts.User
+        |> Ash.Changeset.for_create(:register_with_password, %{
+          email: "scope-user@example.com",
+          password: "secure-password",
+          password_confirmation: "secure-password"
+        })
+        |> Ash.create!()
+
+      session = %{
+        "user" => "fake-jti:#{AshAuthentication.user_to_subject(user)}",
+        "scope" => Example.Accounts.Scope
+      }
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      scope = result_socket.assigns.current_user_scope
+      assert %Example.Accounts.Scope{} = scope
+      assert scope.actor.id == user.id
+      assert {:ok, actor} = Ash.Scope.ToOpts.get_actor(scope)
+      assert actor.id == user.id
+    end
+
+    test "assigns an anonymous scope when the subject is absent" do
+      session = %{"scope" => Example.Accounts.Scope}
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      assert %Example.Accounts.Scope{actor: nil} = result_socket.assigns.current_user_scope
+    end
+
+    test "does not assign scopes when no scope module is provided" do
+      session = %{"user" => "fake-jti:user?id=nonexistent-id"}
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      refute Map.has_key?(result_socket.assigns, :current_user_scope)
+    end
+  end
+
   defp build_socket do
     %Phoenix.LiveView.Socket{
       endpoint: AshAuthentication.Phoenix.Test.Endpoint,
