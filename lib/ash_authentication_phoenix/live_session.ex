@@ -58,6 +58,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   Options:
     * `:otp_app` - Set the otp app in which to search for authenticated resources.
+    * `:scope` - A scope module (implementing `Ash.Scope.ToOpts`) to wrap each
+      authenticated subject in. When set, a `current_<subject_name>_scope` assign
+      is added to the socket alongside `current_<subject_name>`.
+    * `:default_scope` - The subject name (e.g. `:user`) whose scope should also be
+      assigned to the singular `current_scope`, exposing it under the assign
+      Phoenix-idiomatic code expects. Requires `:scope`.
     * `:on_mount_prepend` - Same as `:on_mount`, but for hooks that need to be
       run before AshAuthenticationPhoenix's hooks.
 
@@ -110,10 +116,17 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     on_mount = [LiveSession]
 
     session =
-      {__MODULE__, :generate_session, [custom_opts[:otp_app], List.wrap(custom_opts[:session])]}
+      {__MODULE__, :generate_session,
+       [
+         custom_opts[:otp_app],
+         List.wrap(custom_opts[:session]),
+         custom_opts[:scope],
+         custom_opts[:default_scope]
+       ]}
 
     opts =
       custom_opts
+      |> Keyword.drop([:scope, :default_scope])
       |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
       |> Keyword.put(:session, session)
 
@@ -175,6 +188,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       end
 
     context = session["context"] || %{}
+    scope_module = session["scope"]
+    default_scope_subject = session["default_scope"]
     opts = [tenant: tenant, context: context]
 
     otp_app =
@@ -216,17 +231,55 @@ defmodule AshAuthentication.Phoenix.LiveSession do
             {:cont, assign_new(socket, current_subject_name, fn -> nil end)}
         end
     end)
+    |> maybe_assign_scopes(otp_app, scope_module, tenant, default_scope_subject)
     |> then(&{:cont, &1})
+  end
+
+  defp maybe_assign_scopes(socket, _otp_app, nil, _tenant, _default_scope_subject), do: socket
+
+  defp maybe_assign_scopes(socket, otp_app, scope_module, tenant, default_scope_subject) do
+    otp_app
+    |> AshAuthentication.authenticated_resources()
+    |> Enum.reduce(socket, &assign_scope(&2, &1, scope_module, tenant, default_scope_subject))
+  end
+
+  # sobelow_skip ["DOS.StringToAtom"]
+  defp assign_scope(socket, resource, scope_module, tenant, default_scope_subject) do
+    subject_name = to_string(Info.authentication_subject_name!(resource))
+    current_subject_name = String.to_atom("current_#{subject_name}")
+    scope_name = String.to_atom("current_#{subject_name}_scope")
+
+    scope = struct(scope_module, %{actor: socket.assigns[current_subject_name], tenant: tenant})
+    socket = assign_new(socket, scope_name, fn -> scope end)
+
+    if default_scope_subject == subject_name do
+      assign_new(socket, :current_scope, fn -> scope end)
+    else
+      socket
+    end
   end
 
   @doc """
   Supplements the session with any `current_X` assigns which are authenticated
   resource records from the conn.
   """
-  @spec generate_session(Plug.Conn.t(), atom | [atom], additional_hooks :: [mfa]) :: %{
-          required(String.t()) => String.t()
-        }
-  def generate_session(conn, otp_app \\ nil, additional_hooks \\ []) do
+  @spec generate_session(
+          Plug.Conn.t(),
+          atom | [atom],
+          additional_hooks :: [mfa],
+          module | nil,
+          atom | nil
+        ) ::
+          %{
+            required(String.t()) => String.t()
+          }
+  def generate_session(
+        conn,
+        otp_app \\ nil,
+        additional_hooks \\ [],
+        scope_module \\ nil,
+        default_scope_subject \\ nil
+      ) do
     otp_app = otp_app || conn.assigns[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
 
     acc =
@@ -235,6 +288,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
       end)
       |> Map.put("tenant", Ash.PlugHelpers.get_tenant(conn))
       |> Map.put("context", Ash.PlugHelpers.get_context(conn))
+      |> then(&if scope_module, do: Map.put(&1, "scope", scope_module), else: &1)
+      |> then(
+        &if default_scope_subject,
+          do: Map.put(&1, "default_scope", to_string(default_scope_subject)),
+          else: &1
+      )
 
     otp_app
     |> AshAuthentication.authenticated_resources()

@@ -257,6 +257,36 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     refute_creates(igniter, "lib/test_web/auth_interstitial_html.ex")
   end
 
+  test "installation creates a scope module", %{igniter: igniter} do
+    igniter
+    |> Igniter.compose_task("ash_authentication_phoenix.install")
+    |> assert_creates("lib/test/accounts/scope.ex", """
+    defmodule Test.Accounts.Scope do
+      @moduledoc \"\"\"
+      Authentication scope.
+
+      Wraps the current actor and tenant in a single struct that implements
+      `Ash.Scope.ToOpts`, so it can be passed to any Ash action as `scope:`:
+
+          Ash.read!(query, scope: socket.assigns.current_user_scope)
+
+      Grow this struct as your application does — add organisation, permissions,
+      locale, and so on — and expose them through the `ToOpts` callbacks below.
+      \"\"\"
+
+      defstruct [:actor, :tenant]
+
+      defimpl Ash.Scope.ToOpts, for: __MODULE__ do
+        def get_actor(%{actor: actor}), do: {:ok, actor}
+        def get_tenant(%{tenant: tenant}), do: {:ok, tenant}
+        def get_context(_scope), do: :error
+        def get_tracer(_scope), do: :error
+        def get_authorize?(_scope), do: :error
+      end
+    end
+    """)
+  end
+
   test "installation configures token resource for live session disconnect", %{igniter: igniter} do
     igniter
     |> Igniter.compose_task("ash_authentication_phoenix.install")
@@ -283,20 +313,22 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
     + |    plug(:load_from_session)
-    + |    plug(:set_actor, :user)
+    + |    plug(:set_scope, scope: Test.Accounts.Scope, default_scope?: true)
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
       |  pipeline :api do
       |    plug(:accepts, ["json"])
     + |    plug(:load_from_bearer)
-    + |    plug(:set_actor, :user)
+    + |    plug(:set_scope, scope: Test.Accounts.Scope, default_scope?: true)
       |  end
     """)
     |> assert_has_patch("lib/test_web/router.ex", """
     + |  scope "/", TestWeb do
     + |    pipe_through(:browser)
     + |
-    + |    ash_authentication_live_session :authenticated_routes do
+    + |    ash_authentication_live_session :authenticated_routes,
+    + |      scope: Test.Accounts.Scope,
+    + |      default_scope: :user do
     + |      # in each liveview, add one of the following at the top of the module:
     + |      #
     + |      # If an authenticated user must be present:

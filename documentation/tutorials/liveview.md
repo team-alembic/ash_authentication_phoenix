@@ -116,6 +116,30 @@ You can also use this to prevent users from visiting the auto generated `sign_in
 sign_in_route(on_mount: [{MyAppWeb.LiveUserAuth, :live_no_user}])
 ```
 
+## Scopes
+
+Pass a `:scope` option to add `current_<subject_name>_scope` assigns to the
+socket, and `:default_scope` to nominate the subject whose scope is also assigned
+to the singular `current_scope`:
+
+```elixir
+ash_authentication_live_session :authentication_required,
+  scope: MyApp.Accounts.Scope,
+  default_scope: :user,
+  on_mount: {MyAppWeb.LiveUserAuth, :live_user_required} do
+  live "/protected_route", ProjectLive.Index, :index
+end
+```
+
+Each scope wraps the loaded user and tenant and implements `Ash.Scope.ToOpts`, so
+it can be passed straight into your actions:
+
+```elixir
+posts = MyApp.Blog.list_posts!(scope: socket.assigns.current_scope)
+```
+
+See the [Scopes](scopes.md) guide for the full picture.
+
 ## Automatic Session Disconnection on Sign Out
 
 When configured, AshAuthentication.Phoenix can automatically disconnect all LiveView

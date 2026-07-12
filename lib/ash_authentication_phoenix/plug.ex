@@ -144,4 +144,71 @@ defmodule AshAuthentication.Phoenix.Plug do
       conn
     end
   end
+
+  @doc """
+  Build a scope from the connection's assigns and store it, along with the actor.
+
+  This plug takes the user from `conn.assigns.current_<subject_name>` (set by
+  `load_from_session/2` or `load_from_bearer/2`) and the tenant from
+  `Ash.PlugHelpers.get_tenant/1`, wraps them in your scope struct, and assigns it
+  to `conn.assigns.current_<subject_name>_scope`. The scope struct is expected to
+  implement `Ash.Scope.ToOpts`, so it can be passed straight into Ash actions:
+
+      Ash.read!(query, scope: conn.assigns.current_user_scope)
+
+  It is a superset of `set_actor/2` — it also sets the Ash actor via
+  `Ash.PlugHelpers.set_actor/2`, so use `set_scope` *instead of* `set_actor`, not
+  alongside it.
+
+  The scope module is referenced only as data and instantiated at runtime with
+  `Kernel.struct/2`, so this plug introduces no compile-time dependency on your
+  scope module (and therefore no router recompilation cycle). Keys absent from the
+  struct are ignored rather than raising.
+
+  ## Options
+
+  Pass the scope module directly for the common single-subject case, or a keyword
+  list to override the subject:
+
+    * `:scope` - the scope module to instantiate. Required.
+    * `:subject` - the subject name to build the scope for. Defaults to `:user`.
+    * `:default_scope?` - when `true`, also assigns the scope to `current_scope`
+      (in addition to `current_<subject_name>_scope`). This designates the subject
+      as the application's primary one and exposes it under the singular
+      `current_scope` assign that Phoenix-idiomatic code expects. Defaults to
+      `false`.
+
+  ## Example
+
+      pipeline :browser do
+        plug :load_from_session
+        plug :set_scope, scope: MyApp.Accounts.Scope, default_scope?: true
+      end
+
+      pipeline :admin do
+        plug :load_from_session
+        plug :set_scope, scope: MyApp.Accounts.Scope, subject: :admin
+      end
+  """
+  @spec set_scope(Conn.t(), module | keyword) :: Conn.t()
+  def set_scope(conn, scope_module) when is_atom(scope_module) and not is_nil(scope_module),
+    do: set_scope(conn, scope: scope_module)
+
+  # sobelow_skip ["DOS.StringToAtom"]
+  def set_scope(conn, opts) when is_list(opts) do
+    scope_module = Keyword.fetch!(opts, :scope)
+    subject_name = Keyword.get(opts, :subject, :user)
+
+    actor = conn.assigns[String.to_existing_atom("current_#{subject_name}")]
+    tenant = Ash.PlugHelpers.get_tenant(conn)
+    scope = struct(scope_module, %{actor: actor, tenant: tenant})
+
+    conn
+    |> Conn.assign(String.to_atom("current_#{subject_name}_scope"), scope)
+    |> maybe_assign_default_scope(Keyword.get(opts, :default_scope?, false), scope)
+    |> Ash.PlugHelpers.set_actor(actor)
+  end
+
+  defp maybe_assign_default_scope(conn, true, scope), do: Conn.assign(conn, :current_scope, scope)
+  defp maybe_assign_default_scope(conn, _default_scope?, _scope), do: conn
 end

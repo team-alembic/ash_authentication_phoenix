@@ -30,7 +30,7 @@ defmodule MyAppWeb.Router do
   pipeline :browser do
     # ...
     plug :load_from_session
-    plug :set_actor, :user
+    plug :set_scope, scope: MyApp.Accounts.Scope, default_scope?: true
   end
 
   scope "/", MyAppWeb do

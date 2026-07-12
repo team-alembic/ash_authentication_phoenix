@@ -72,6 +72,7 @@ if Code.ensure_loaded?(Igniter) do
         web_module = Igniter.Libs.Phoenix.web_module(igniter)
         overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
         otp_app = Igniter.Project.Application.app_name(igniter)
+        scope_module = Module.concat(options[:accounts], Scope)
 
         igniter
         |> Igniter.Project.Formatter.import_dep(:ash_authentication_phoenix)
@@ -81,9 +82,10 @@ if Code.ensure_loaded?(Igniter) do
         |> create_auth_controller(otp_app)
         |> create_overrides_module(overrides)
         |> create_live_user_auth(web_module)
+        |> create_scope_module(scope_module)
         |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial()
-        |> add_auth_routes(overrides, options, router, web_module)
-        |> add_live_session_scopes(web_module, router)
+        |> add_auth_routes(overrides, options, router, web_module, scope_module)
+        |> add_live_session_scopes(web_module, router, scope_module)
       else
         Igniter.add_warning(igniter, """
         Could not find a Phoenix router. Skipping authentication UI setup.
@@ -130,7 +132,7 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp add_auth_routes(igniter, overrides, options, router, web_module) do
+    defp add_auth_routes(igniter, overrides, options, router, web_module, scope_module) do
       with {_, _source, zipper} <- Igniter.Project.Module.find_module!(igniter, router),
            {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper),
            :error <- Igniter.Code.Module.move_to_use(zipper, AshAuthentication.Phoenix.Router) do
@@ -145,15 +147,15 @@ if Code.ensure_loaded?(Igniter) do
         |> use_authentication_phoenix_router(router)
         |> Igniter.Libs.Phoenix.append_to_pipeline(
           :browser,
-          "plug :load_from_session\nplug :set_actor, :user",
+          "plug :load_from_session\nplug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true",
           router: router
         )
         |> Igniter.Libs.Phoenix.append_to_pipeline(
           :api,
-          "plug :load_from_bearer\nplug :set_actor, :user",
+          "plug :load_from_bearer\nplug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true",
           router: router
         )
-        |> add_to_graphql_pipeline(router)
+        |> add_to_graphql_pipeline(router, scope_module)
         |> Igniter.Libs.Phoenix.append_to_scope(
           "/",
           """
@@ -189,13 +191,13 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp add_to_graphql_pipeline(igniter, router) do
+    defp add_to_graphql_pipeline(igniter, router, scope_module) do
       case Igniter.Libs.Phoenix.has_pipeline(igniter, router, :graphql) do
         {igniter, true} ->
           Igniter.Libs.Phoenix.prepend_to_pipeline(
             igniter,
             :graphql,
-            "plug :load_from_bearer\nplug :set_actor, :user",
+            "plug :load_from_bearer\nplug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true",
             router: router
           )
 
@@ -227,7 +229,7 @@ if Code.ensure_loaded?(Igniter) do
       """)
     end
 
-    defp add_live_session_scopes(igniter, web_module, router) do
+    defp add_live_session_scopes(igniter, web_module, router, scope_module) do
       {_, _source, zipper} = Igniter.Project.Module.find_module!(igniter, router)
 
       case Igniter.Code.Common.move_to(zipper, fn zipper ->
@@ -248,7 +250,9 @@ if Code.ensure_loaded?(Igniter) do
             """
             pipe_through :browser
 
-            ash_authentication_live_session :authenticated_routes do
+            ash_authentication_live_session :authenticated_routes,
+              scope: #{inspect(scope_module)},
+              default_scope: :user do
               # in each liveview, add one of the following at the top of the module:
               #
               # If an authenticated user must be present:
@@ -315,6 +319,37 @@ if Code.ensure_loaded?(Igniter) do
                 {:cont, assign(socket, :current_user, nil)}
               end
           end
+        end
+        """
+      )
+    end
+
+    @doc false
+    def create_scope_module(igniter, scope_module) do
+      Igniter.Project.Module.create_module(
+        igniter,
+        scope_module,
+        """
+        @moduledoc \"\"\"
+        Authentication scope.
+
+        Wraps the current actor and tenant in a single struct that implements
+        `Ash.Scope.ToOpts`, so it can be passed to any Ash action as `scope:`:
+
+            Ash.read!(query, scope: socket.assigns.current_user_scope)
+
+        Grow this struct as your application does — add organisation, permissions,
+        locale, and so on — and expose them through the `ToOpts` callbacks below.
+        \"\"\"
+
+        defstruct [:actor, :tenant]
+
+        defimpl Ash.Scope.ToOpts, for: __MODULE__ do
+          def get_actor(%{actor: actor}), do: {:ok, actor}
+          def get_tenant(%{tenant: tenant}), do: {:ok, tenant}
+          def get_context(_scope), do: :error
+          def get_tracer(_scope), do: :error
+          def get_authorize?(_scope), do: :error
         end
         """
       )

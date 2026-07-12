@@ -86,7 +86,7 @@ defmodule MyAppWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :load_from_session
-    plug :set_actor, :user
+    plug :set_scope, scope: MyApp.Accounts.Scope, default_scope?: true
   end
 
   scope "/", MyAppWeb do
@@ -106,10 +106,11 @@ end
 
 > ### Browser pipeline {: .info}
 >
-> The `plug :set_actor, :user` is required in the browser pipeline for TOTP
+> The `plug :set_scope, ...` is required in the browser pipeline for TOTP
 > verification to work. The `load_from_session` plug loads the user from the
-> session into `conn.assigns`, and `set_actor` makes it available to the TOTP
-> verify action via `Ash.PlugHelpers.get_actor/1`.
+> session into `conn.assigns`, and `set_scope` (a superset of `set_actor`) makes
+> it available to the TOTP verify action via `Ash.PlugHelpers.get_actor/1`. If you
+> aren't using scopes, `plug :set_actor, :user` works too.
 
 Options for both macros:
 - `path` - The path to mount at (defaults to `/totp-verify` and `/totp-setup`)
@@ -272,7 +273,7 @@ end
 
 2. **Registration**: New users (e.g., via magic link with `registration_enabled? true`) match the `:register` clause and are always redirected to TOTP setup.
 
-3. **TOTP verification**: The user is already in the session (so `plug :load_from_session` and `plug :set_actor, :user` find them). The verify form submits to the TOTP strategy's verify action, which checks the code. On success, the controller's catch-all `success/4` runs and redirects to the return path.
+3. **TOTP verification**: The user is already in the session (so `plug :load_from_session` and `plug :set_scope, ...` find them). The verify form submits to the TOTP strategy's verify action, which checks the code. On success, the controller's catch-all `success/4` runs and redirects to the return path.
 
 > ### Why store_in_session before verify? {: .info}
 >

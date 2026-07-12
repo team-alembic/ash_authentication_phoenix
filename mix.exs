@@ -35,7 +35,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/password-change.md", title: "Password-Change UI"},
             {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"},
             {"documentation/tutorials/webauthn.md", title: "WebAuthn / Passkeys"},
-            {"documentation/tutorials/webauthn-2fa.md", title: "Passkeys as 2FA"}
+            {"documentation/tutorials/webauthn-2fa.md", title: "Passkeys as 2FA"},
+            {"documentation/topics/scopes.md", title: "Scopes"}
           ],
           redirects: %{
             "getting-started-with-ash-authentication-phoenix" => "get-started"

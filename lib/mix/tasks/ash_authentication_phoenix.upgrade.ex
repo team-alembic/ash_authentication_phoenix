@@ -47,10 +47,7 @@ if Code.ensure_loaded?(Igniter) do
       upgrades =
         %{
           "2.10.6" => [&change_auth_routes_for_to_auth_routes_for_all_routers/2],
-          # NOTE: this key must be the 3.0 RC version that ships OAuth2 POST
-          # callback support (tracks ash_authentication 5.0.0); set it to the
-          # actual release version at release time.
-          "3.0.0-rc.8" => [&generate_oauth_interstitial/2]
+          "3.0.0" => [&generate_oauth_interstitial/2, &add_scope_support/2]
         }
 
       # For each version that requires a change, add it to this map
@@ -64,6 +61,93 @@ if Code.ensure_loaded?(Igniter) do
 
     defp generate_oauth_interstitial(igniter, _opts) do
       AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(igniter)
+    end
+
+    defp add_scope_support(igniter, _opts) do
+      scope_module = Module.concat(Igniter.Project.Module.module_name(igniter, "Accounts"), Scope)
+
+      igniter
+      |> Mix.Tasks.AshAuthenticationPhoenix.Setup.create_scope_module(scope_module)
+      |> Igniter.Libs.Phoenix.list_routers()
+      |> then(fn {igniter, routers} ->
+        Enum.reduce(routers, igniter, &add_scope_to_router(&2, &1, scope_module))
+      end)
+      |> Igniter.add_notice("""
+      AshAuthenticationPhoenix now supports Ash scopes.
+
+      A `#{inspect(scope_module)}` struct was generated, your `set_actor` pipeline
+      plugs were replaced with `set_scope`, and option-less
+      `ash_authentication_live_session` blocks were given `scope:`/`default_scope:`.
+
+      If any of your `ash_authentication_live_session` blocks already pass options,
+      they were left untouched — add the scope options to them manually:
+
+          ash_authentication_live_session :authenticated_routes,
+            scope: #{inspect(scope_module)},
+            default_scope: :user,
+            on_mount: [...] do
+            # ...
+          end
+      """)
+    end
+
+    defp add_scope_to_router(igniter, router, scope_module) do
+      Igniter.Project.Module.find_and_update_module!(igniter, router, fn zipper ->
+        zipper =
+          zipper
+          |> replace_set_actor_plugs(scope_module)
+          |> add_scope_to_live_sessions(scope_module)
+
+        {:ok, zipper}
+      end)
+    end
+
+    # Only the option-less form is rewritten automatically. A call that already
+    # passes options is arity 3, so it never matches here and is left to the
+    # notice below.
+    defp add_scope_to_live_sessions(zipper, scope_module) do
+      case Igniter.Code.Function.move_to_function_call(
+             zipper,
+             :ash_authentication_live_session,
+             2
+           ) do
+        {:ok, call_zipper} ->
+          call_zipper
+          |> Sourceror.Zipper.update(&insert_live_session_opts(&1, scope_module))
+          |> Sourceror.Zipper.topmost()
+          |> add_scope_to_live_sessions(scope_module)
+
+        :error ->
+          zipper
+      end
+    end
+
+    defp insert_live_session_opts({fun, meta, [name, do_block]}, scope_module) do
+      opts = Sourceror.parse_string!("[scope: #{inspect(scope_module)}, default_scope: :user]")
+      {fun, meta, [name, opts, do_block]}
+    end
+
+    defp insert_live_session_opts(node, _scope_module), do: node
+
+    # `set_scope` is a superset of `set_actor`, so every `plug :set_actor, :user`
+    # is rewritten in place, opting into the `current_scope` alias to match what a
+    # fresh install generates.
+    defp replace_set_actor_plugs(zipper, scope_module) do
+      case Igniter.Code.Function.move_to_function_call(zipper, :plug, 2, fn call ->
+             Igniter.Code.Function.argument_equals?(call, 0, :set_actor) and
+               Igniter.Code.Function.argument_equals?(call, 1, :user)
+           end) do
+        {:ok, plug_zipper} ->
+          replacement = "plug :set_scope, scope: #{inspect(scope_module)}, default_scope?: true"
+
+          plug_zipper
+          |> Sourceror.Zipper.replace(Sourceror.parse_string!(replacement))
+          |> Sourceror.Zipper.topmost()
+          |> replace_set_actor_plugs(scope_module)
+
+        :error ->
+          zipper
+      end
     end
 
     defp change_auth_routes_for_to_auth_routes_for_all_routers(igniter, _opts) do

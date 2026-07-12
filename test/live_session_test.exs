@@ -6,6 +6,7 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
   @moduledoc false
 
   use ExUnit.Case, async: false
+  alias Ash.Scope.ToOpts
   alias AshAuthentication.Phoenix.LiveSession
 
   describe "on_mount with multiple authenticated resources" do
@@ -169,6 +170,83 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
 
       assert result_socket.assigns.current_admin.id == admin.id
       assert Map.get(result_socket.assigns, :current_user) == nil
+    end
+  end
+
+  describe "on_mount with a scope module" do
+    test "wraps each loaded subject in a scope assign" do
+      user =
+        Example.Accounts.User
+        |> Ash.Changeset.for_create(:register_with_password, %{
+          email: "scope-user@example.com",
+          password: "secure-password",
+          password_confirmation: "secure-password"
+        })
+        |> Ash.create!()
+
+      session = %{
+        "user" => "fake-jti:#{AshAuthentication.user_to_subject(user)}",
+        "scope" => Example.Accounts.Scope
+      }
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      scope = result_socket.assigns.current_user_scope
+      assert %Example.Accounts.Scope{} = scope
+      assert scope.actor.id == user.id
+      assert {:ok, actor} = ToOpts.get_actor(scope)
+      assert actor.id == user.id
+    end
+
+    test "assigns an anonymous scope when the subject is absent" do
+      session = %{"scope" => Example.Accounts.Scope}
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      assert %Example.Accounts.Scope{actor: nil} = result_socket.assigns.current_user_scope
+    end
+
+    test "does not assign scopes when no scope module is provided" do
+      session = %{"user" => "fake-jti:user?id=nonexistent-id"}
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      refute Map.has_key?(result_socket.assigns, :current_user_scope)
+    end
+
+    test "assigns current_scope alias for the default_scope subject" do
+      user =
+        Example.Accounts.User
+        |> Ash.Changeset.for_create(:register_with_password, %{
+          email: "scope-alias-user@example.com",
+          password: "secure-password",
+          password_confirmation: "secure-password"
+        })
+        |> Ash.create!()
+
+      session = %{
+        "user" => "fake-jti:#{AshAuthentication.user_to_subject(user)}",
+        "scope" => Example.Accounts.Scope,
+        "default_scope" => "user"
+      }
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      assert result_socket.assigns.current_scope == result_socket.assigns.current_user_scope
+      assert result_socket.assigns.current_scope.actor.id == user.id
+    end
+
+    test "does not assign current_scope without a default_scope subject" do
+      session = %{"scope" => Example.Accounts.Scope}
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      refute Map.has_key?(result_socket.assigns, :current_scope)
     end
   end
 
