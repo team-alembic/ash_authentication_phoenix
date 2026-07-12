@@ -57,7 +57,7 @@ Scopes are built from the assigns that `load_from_session/2` and
 | `:user` | `:current_user`  | `:current_user_scope`   |
 | `:admin`| `:current_admin` | `:current_admin_scope`  |
 
-One subject can also be nominated as the application's primary, in which case its
+One subject can also be nominated as the application's default, in which case its
 scope is additionally assigned to the singular `:current_scope` — the assign
 Phoenix-idiomatic code expects.
 
