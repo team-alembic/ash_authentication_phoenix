@@ -93,6 +93,7 @@ end
 
 defmodule AshAuthentication.Phoenix.Test.OnMountHook do
   @moduledoc false
+  @doc false
   def on_mount(:default, _params, _session, socket), do: {:cont, socket}
 end
 
