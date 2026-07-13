@@ -159,6 +159,14 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   layout: {AshAuthentication.Phoenix.Test.HomeLive, :live},
                   as: :on_mount_hooks
 
+    totp_2fa_route(Example.Accounts.User, :totp,
+      path: "/totp-2fa-on-mount",
+      auth_routes_prefix: "/auth",
+      on_mount: [AshAuthentication.Phoenix.Test.OnMountHook],
+      layout: {AshAuthentication.Phoenix.Test.HomeLive, :live},
+      as: :totp_2fa_on_mount
+    )
+
     # Custom LiveView for components testing
     sign_in_route path: "/custom_lv",
                   auth_routes_prefix: "/auth",

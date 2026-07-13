@@ -48,6 +48,22 @@ defmodule AshAuthentication.Phoenix.RouterTest do
     assert extra.layout == {AshAuthentication.Phoenix.Test.HomeLive, :live}
   end
 
+  test "totp_2fa_route registers on_mount hooks and layout given as options" do
+    route =
+      AshAuthentication.Phoenix.Test.Router
+      |> Phoenix.Router.routes()
+      |> Enum.find(&(&1.path == "/totp-2fa-on-mount"))
+
+    {_, _, _, %{extra: extra}} = route.metadata.phoenix_live_view
+
+    assert Enum.any?(
+             extra.on_mount,
+             &(&1.id == {AshAuthentication.Phoenix.Test.OnMountHook, :default})
+           )
+
+    assert extra.layout == {AshAuthentication.Phoenix.Test.HomeLive, :live}
+  end
+
   test "oauth2/oidc callback routes accept both GET and POST" do
     by_path =
       %{resources: [Example.Accounts.User]}

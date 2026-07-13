@@ -707,6 +707,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro totp_2fa_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/totp-verify")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.TotpVerifyLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
@@ -962,6 +963,7 @@ defmodule AshAuthentication.Phoenix.Router do
           ]
         ) :: Macro.t()
   defmacro webauthn_2fa_route(resource, strategy, opts \\ []) do
+    opts = expand_opts_aliases(opts, __CALLER__)
     {path, opts} = Keyword.pop(opts, :path, "/webauthn-verify")
 
     {live_view, opts} =
