@@ -94,6 +94,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.ResetForm do
 
       <.form
         :let={form}
+        id={@form.id}
         for={@form}
         phx-submit="submit"
         phx-change="change"

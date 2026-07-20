@@ -91,6 +91,7 @@ defmodule AshAuthentication.Phoenix.Components.MagicLink do
 
       <.form
         :let={form}
+        id={@form.id}
         for={@form}
         phx-change="change"
         phx-submit="submit"

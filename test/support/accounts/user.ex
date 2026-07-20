@@ -31,6 +31,7 @@ defmodule Example.Accounts.User do
       upsert_identity :unique_email
 
       change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.OAuth2.IdentityChange
 
       change fn changeset, _ ->
         user_info = Ash.Changeset.get_argument(changeset, :user_info)
@@ -47,6 +48,7 @@ defmodule Example.Accounts.User do
       upsert_identity :unique_email
 
       change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.OAuth2.IdentityChange
 
       change fn changeset, _ ->
         user_info = Ash.Changeset.get_argument(changeset, :user_info)
@@ -63,6 +65,7 @@ defmodule Example.Accounts.User do
       upsert_identity :unique_email
 
       change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.OAuth2.IdentityChange
 
       change fn changeset, _ ->
         user_info = Ash.Changeset.get_argument(changeset, :user_info)
@@ -79,6 +82,7 @@ defmodule Example.Accounts.User do
       upsert_identity :unique_email
 
       change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.OAuth2.IdentityChange
 
       change fn changeset, _ ->
         user_info = Ash.Changeset.get_argument(changeset, :user_info)
@@ -152,18 +156,21 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
+        identity_resource Example.Accounts.UserIdentity
       end
 
       github do
         client_id &get_config/2
         redirect_uri &get_config/2
         client_secret &get_config/2
+        identity_resource Example.Accounts.UserIdentity
       end
 
       slack do
         client_id &get_config/2
         redirect_uri &get_config/2
         client_secret &get_config/2
+        identity_resource Example.Accounts.UserIdentity
       end
 
       oidc :twitch do
@@ -171,6 +178,7 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
+        identity_resource Example.Accounts.UserIdentity
       end
 
       magic_link do

@@ -113,6 +113,7 @@ defmodule AshAuthentication.Phoenix.Components.Reset.Form do
 
       <.form
         :let={form}
+        id={@form.id}
         for={@form}
         phx-change="change"
         phx-submit="submit"
