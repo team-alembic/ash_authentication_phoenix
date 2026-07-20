@@ -39,9 +39,9 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
 
     base_override =
       if context.daisy_ui do
-        AshAuthentication.Phoenix.Overrides.DaisyUI
+        "AshAuthentication.Phoenix.Overrides.DaisyUI"
       else
-        AshAuthentication.Phoenix.Overrides.Default
+        "AshAuthentication.Phoenix.Overrides.Default"
       end
 
     [igniter: igniter, base_override: base_override]
