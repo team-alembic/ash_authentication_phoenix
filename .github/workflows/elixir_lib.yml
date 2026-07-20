@@ -9,7 +9,7 @@ on:
       - "v*"
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main,v2.x]
 jobs:
   ash-ci:
     uses: ash-project/ash/.github/workflows/ash-ci.yml@main
