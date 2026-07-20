@@ -11,6 +11,85 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.9](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.8...v3.0.0-rc.9) (2026-07-20)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by [@jimsynz](https://github.com/jimsynz)
+
+* add TOTP authentication components and routes (#706) by [@jimsynz](https://github.com/jimsynz)
+
+
+
+### Features:
+
+* add DynamicOidc sign-in component by [@zachdaniel](https://github.com/zachdaniel)
+
+* add WebAuthn/Passkey Phoenix components (#734) by [@jimsynz](https://github.com/jimsynz)
+
+* add Phoenix integration for the OTP strategy (#732) by [@jimsynz](https://github.com/jimsynz)
+
+* extract sign-in setup task, register OAuth strategies (#725) by [@jimsynz](https://github.com/jimsynz)
+
+* add Phoenix integration for recovery code strategy (#724) by [@jimsynz](https://github.com/jimsynz)
+
+* add convention-named Phoenix strategy tasks for auth integration (#719) by [@jimsynz](https://github.com/jimsynz)
+
+* After user sign out all other tabs will disconnect (#662) by Abdessabour Moutik
+
+* Allow filtering auth routes (#696) by Andrés
+
+### Bug Fixes:
+
+* Update type for Ash records. by [@jimsynz](https://github.com/jimsynz)
+
+* capture path-param bindings in StrategyRouter by [@zachdaniel](https://github.com/zachdaniel)
+
+* LiveView 1.2 compatibility (#733) by [@frankdugan3](https://github.com/frankdugan3)
+
+* use raw paths for reset/register route definitions in sign_in_route (#729) by [@jimsynz](https://github.com/jimsynz)
+
+* use consistent underscored subject name for form param keys (#728) by [@jimsynz](https://github.com/jimsynz)
+
+* read session data from Plug session in generate_session (#716) by [@nallwhy](https://github.com/nallwhy)
+
+* respect override for submit_label in Confirm.Input component (#717) by [@nallwhy](https://github.com/nallwhy)
+
+* improve TOTP helpers and documentation (#715) by [@jimsynz](https://github.com/jimsynz)
+
+* add dark mode background to input fields (#713) by [@jimsynz](https://github.com/jimsynz)
+
+* setting `image_url` to nil now also suppresses dark mode image (#708) by [@jimsynz](https://github.com/jimsynz)
+
+* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by [@jimsynz](https://github.com/jimsynz)
+
+* check override for `submit_label` in Confirm.Input component (#709) by [@jimsynz](https://github.com/jimsynz)
+
+* remove double translation in MagicLink.Form disable_text (#707) by [@jimsynz](https://github.com/jimsynz)
+
+* only show separator when alternative strategies are visible (#705) by [@jimsynz](https://github.com/jimsynz)
+
+### Improvements:
+
+* avoid compile-time dependencies from route macro options (#757) by Dekkon
+
+* Ash.Scope support (generated scope struct + set_scope plug) (#756) by [@jimsynz](https://github.com/jimsynz)
+
+* route OAuth2/OIDC callbacks on POST + generate form_post interstitial (#755) by [@jimsynz](https://github.com/jimsynz)
+
+* add optional password visibility toggle (#657) (#752) by [@jimsynz](https://github.com/jimsynz)
+
+* allow overriding the reset password submit label (#665) (#751) by [@jimsynz](https://github.com/jimsynz)
+
+* add `id` to form components to enable LiveView form recovery (#749) (#750) by [@jimsynz](https://github.com/jimsynz)
+
+* consolidate on_mount/4 clauses to avoid Elixir 1.19 type-checker slowdown (#748) by [@jimsynz](https://github.com/jimsynz)
+
+* handle `ConfirmationRequired` in the generated auth controller by [@jimsynz](https://github.com/jimsynz)
+
+* generated confirmation sender demonstrates identity-link copy by [@jimsynz](https://github.com/jimsynz)
+
+* register `okta` and `dynamic_oidc` strategies in `add_strategy` dispatcher by [@jimsynz](https://github.com/jimsynz)
+
 ## [3.0.0-rc.8](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.7...3.0.0-rc.8) (2026-06-25)
 
 
