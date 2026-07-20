@@ -92,7 +92,11 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
           <%= for credential <- @credentials do %>
             <li class={override_for(@overrides, :credential_item_class)}>
               <%= if @editing_id == credential.id do %>
-                <form phx-submit="save-label" phx-target={@myself}>
+                <form
+                  id={"credential-#{credential.id}-form"}
+                  phx-submit="save-label"
+                  phx-target={@myself}
+                >
                   <input type="hidden" name="credential_id" value={credential.id} />
                   <input
                     type="text"
