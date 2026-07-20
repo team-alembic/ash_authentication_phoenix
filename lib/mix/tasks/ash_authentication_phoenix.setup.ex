@@ -160,7 +160,8 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           """
           auth_routes AuthController, #{inspect(options[:user])}, path: "/auth"
-          sign_out_route AuthController
+          sign_out_route AuthController, "/sign-out",
+            overrides: [#{inspect(overrides)}, #{override_module}]
 
           # Remove these if you'd like to use your own authentication views
           sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
