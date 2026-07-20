@@ -160,26 +160,27 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           """
           auth_routes AuthController, #{inspect(options[:user])}, path: "/auth"
-          sign_out_route AuthController
+          sign_out_route AuthController, "/sign-out",
+            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
 
           # Remove these if you'd like to use your own authentication views
           sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
-            overrides: [#{inspect(overrides)}, #{override_module}]
+            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
 
           # Remove this if you do not want to use the reset password feature
-          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, #{override_module}]
+          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
 
           # Remove this if you do not use the confirmation strategy
           confirm_route #{inspect(options[:user])},
             :confirm_new_user,
             auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, #{override_module}]
+            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
 
           # Remove this if you do not use the magic link strategy.
           magic_sign_in_route #{inspect(options[:user])},
             :magic_link,
             auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, #{override_module}]
+            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
           """,
           with_pipelines: [:browser],
           arg2: Igniter.Libs.Phoenix.web_module(igniter),
