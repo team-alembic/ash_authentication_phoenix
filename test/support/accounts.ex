@@ -10,5 +10,6 @@ defmodule Example.Accounts do
     resource Example.Accounts.Admin
     resource Example.Accounts.Token
     resource Example.Accounts.User
+    resource Example.Accounts.UserIdentity
   end
 end
