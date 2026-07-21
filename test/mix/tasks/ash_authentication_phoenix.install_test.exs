@@ -39,9 +39,9 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
 
     base_override =
       if context.daisy_ui do
-        AshAuthentication.Phoenix.Overrides.DaisyUI
+        "AshAuthentication.Phoenix.Overrides.DaisyUI"
       else
-        AshAuthentication.Phoenix.Overrides.Default
+        "AshAuthentication.Phoenix.Overrides.Default"
       end
 
     [igniter: igniter, base_override: base_override]
@@ -257,7 +257,10 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |  scope "/", TestWeb do
     + |    pipe_through([:browser])
     + |    auth_routes(AuthController, Test.Accounts.User, path: "/auth")
-    + |    sign_out_route(AuthController)
+    + |
+    + |    sign_out_route(AuthController, "/sign-out",
+    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
+    + |    )
     + |
     + |    # Remove these if you'd like to use your own authentication views
     + |    sign_in_route(
