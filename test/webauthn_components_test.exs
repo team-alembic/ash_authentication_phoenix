@@ -230,6 +230,27 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
       assert resident_key
       assert is_integer(timeout)
     end
+
+    test "omits authenticatorAttachment rather than sending null", %{conn: conn} do
+      conn = get(conn, "/webauthn")
+      assert {:ok, view, _html} = live(conn)
+
+      view
+      |> form("#user-webauthn-register-form", %{
+        "user" => %{"email" => "someone@example.com", "name" => "Someone"}
+      })
+      |> render_submit()
+
+      assert_push_event(view, "registration-challenge", %{authenticatorSelection: selection})
+
+      # `null` is not a member of the AuthenticatorAttachment enum; the
+      # absence of the key is how "no preference" is spelled.
+      refute Map.has_key?(selection, :authenticatorAttachment)
+
+      # The Level 1 spelling, for clients predating `residentKey`.
+      assert selection.residentKey == :required
+      assert selection.requireResidentKey == true
+    end
   end
 
   describe "authentication ceremony options" do
@@ -250,6 +271,47 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
       })
 
       assert {:ok, _} = Base.url_decode64(challenge, padding: false)
+    end
+  end
+
+  describe "cross-device hints" do
+    test "the member is absent when the strategy configures no hints", %{conn: conn} do
+      conn = get(conn, "/webauthn")
+      assert {:ok, view, _html} = live(conn)
+
+      view
+      |> form("#user-webauthn-sign-in-form")
+      |> render_submit()
+
+      assert_push_event(view, "authentication-challenge", options)
+
+      # An empty sequence reads to some clients as "nothing is acceptable",
+      # so "no preference" must be spelled by leaving the member out.
+      refute Map.has_key?(options, :hints)
+    end
+
+    test "the strategy's hints are carried into the authentication options", %{conn: conn} do
+      conn = get(conn, "/webauthn-passkey-first")
+      assert {:ok, view, _html} = live(conn)
+
+      view
+      |> form("#anon-user-webauthn-sign-in-form")
+      |> render_submit()
+
+      # Hyphenated PublicKeyCredentialHint members, in the configured order of
+      # preference — the DSL spells them as atoms.
+      assert_push_event(view, "authentication-challenge", %{hints: ["hybrid", "security-key"]})
+    end
+
+    test "registration gets the hints too, so a phone can be enrolled", %{conn: conn} do
+      conn = get(conn, "/webauthn-passkey-first")
+      assert {:ok, view, _html} = live(conn)
+
+      view
+      |> form("#anon-user-webauthn-register-form", %{"display_name" => "Jane Doe"})
+      |> render_submit()
+
+      assert_push_event(view, "registration-challenge", %{hints: ["hybrid", "security-key"]})
     end
   end
 
