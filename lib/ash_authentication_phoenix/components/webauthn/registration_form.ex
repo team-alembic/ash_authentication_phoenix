@@ -15,6 +15,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       "Whether to show the identity input. Defaults to `true`; automatically `false` when `require_identity?` is `false` on the strategy.",
     show_key_name_field:
       "Whether to show a passkey label input so users can name their credential (e.g. \"My iPhone\"). Defaults to `false`.",
+    show_display_name_field:
+      "Whether to show a display name input in passkey-first mode (`require_identity?` is `false`), where it is the only way to label the account inside the passkey. Defaults to `true`; never shown when the strategy requires an identity.",
     show_custom_fields:
       "Whether to automatically render inputs for the fields declared in the strategy's `register_action_accept`. Defaults to `true`."
 
@@ -69,6 +71,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
       |> assign_new(:identity_value, fn -> "" end)
       |> assign_new(:key_name_value, fn -> "" end)
+      |> assign_new(:display_name_value, fn -> "" end)
       |> assign_new(:user_params, fn -> %{} end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:submitting, fn -> false end)
@@ -126,11 +129,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     show_key_name = override_for(assigns.overrides, :show_key_name_field, true)
     show_custom_fields = override_for(assigns.overrides, :show_custom_fields, true)
 
+    show_display_name =
+      !assigns.strategy.require_identity? &&
+        override_for(assigns.overrides, :show_display_name_field, true)
+
     assigns =
       assigns
       |> assign(:show_identity, show_identity)
       |> assign(:show_key_name, show_key_name)
       |> assign(:show_custom_fields, show_custom_fields)
+      |> assign(:show_display_name, show_display_name)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)} id={@id} phx-hook="WebAuthnRegistrationHook">
@@ -151,6 +159,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
             id={@id <> "-identity"}
             form={form}
             identity_field={@strategy.identity_field}
+            overrides={@overrides}
+            gettext_fn={@gettext_fn}
+          />
+        <% end %>
+
+        <%= if @show_display_name do %>
+          <WebAuthn.Input.display_name_field
+            id={@id <> "-display-name"}
+            value={@display_name_value}
             overrides={@overrides}
             gettext_fn={@gettext_fn}
           />
@@ -227,6 +244,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       Map.get(user_params, to_string(socket.assigns.strategy.identity_field), "")
 
     key_name_value = Map.get(params, "key_name", socket.assigns.key_name_value)
+    display_name_value = Map.get(params, "display_name", socket.assigns.display_name_value)
 
     form = Form.validate(socket.assigns.form, user_params, errors: false)
 
@@ -235,7 +253,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
        form: form,
        user_params: user_params,
        identity_value: identity_value,
-       key_name_value: key_name_value
+       key_name_value: key_name_value,
+       display_name_value: display_name_value
      )}
   end
 
@@ -247,9 +266,25 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
   def handle_event("register", params, socket) do
     user_params = Map.get(params, to_string(socket.assigns.subject_name), %{})
     key_name = Map.get(params, "key_name", socket.assigns.key_name_value)
+    display_name = Map.get(params, "display_name", socket.assigns.display_name_value)
+
+    identity_value =
+      Map.get(
+        user_params,
+        to_string(socket.assigns.strategy.identity_field),
+        socket.assigns.identity_value
+      )
 
     form = Form.validate(socket.assigns.form, user_params)
-    socket = assign(socket, form: form, user_params: user_params, key_name_value: key_name)
+
+    socket =
+      assign(socket,
+        form: form,
+        user_params: user_params,
+        identity_value: identity_value,
+        key_name_value: key_name,
+        display_name_value: display_name
+      )
 
     # The register action also requires the credential produced by the
     # ceremony, so `form.valid?` can never be true here — gate the ceremony
@@ -269,17 +304,28 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     strategy = socket.assigns.strategy
     challenge = socket.assigns.challenge
 
+    # A blank label is passed as `nil` so the credential resource's
+    # attribute default applies. `transports` and `cred_props` are
+    # client-reported hints the action sanitizes and stores.
+    label =
+      case socket.assigns.key_name_value do
+        "" -> nil
+        key_name -> key_name
+      end
+
     register_params =
       socket.assigns.user_params
       |> Map.put(
         to_string(strategy.identity_field),
         socket.assigns.identity_value
       )
-      |> Map.put(to_string(strategy.label_field), socket.assigns.key_name_value)
       |> Map.merge(%{
         "attestation_object" => params["attestation_object"],
         "client_data_json" => params["client_data_json"],
-        "raw_id" => params["raw_id"]
+        "raw_id" => params["raw_id"],
+        "label" => label,
+        "transports" => params["transports"],
+        "cred_props" => params["cred_props"]
       })
 
     origin = PhoenixWebAuthn.origin_from_socket(socket)
@@ -289,7 +335,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
            register_params,
            challenge: challenge,
            origin: origin,
-           tenant: socket.assigns.current_tenant
+           tenant: socket.assigns.current_tenant,
+           user_handle: socket.assigns[:user_handle]
          ) do
       {:ok, user} ->
         {:noreply,
@@ -332,43 +379,31 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     {:ok, challenge} =
       WebAuthnStrategy.Actions.registration_challenge(strategy, tenant, origin: origin)
 
-    rp_id = WebAuthnStrategy.Helpers.resolve_rp_id(strategy, tenant)
-    rp_name = WebAuthnStrategy.Helpers.resolve_rp_name(strategy, tenant)
+    # The server mints the user handle (persisted on the credential after
+    # the ceremony); the client must use it verbatim. In passkey-first mode
+    # the passkey name becomes the descriptor's `name` (what password
+    # managers show as the saved key's username) and `display_name` its
+    # friendly label — both must be set before the ceremony, as most
+    # password managers don't allow renaming afterwards.
+    {user_descriptor, user_handle} =
+      PhoenixWebAuthn.new_user_descriptor(
+        socket.assigns.identity_value,
+        socket.assigns.display_name_value,
+        socket.assigns.key_name_value
+      )
 
-    user_id = Base.url_encode64(:crypto.strong_rand_bytes(64), padding: false)
-
-    identity = socket.assigns.identity_value
-    key_name = socket.assigns.key_name_value
-
-    # user_name must uniquely identify the account; display_name is human-readable.
-    # When a passkey label is set, use it as the display name.
-    user_name = if identity != "", do: identity, else: key_name
-    user_display_name = if key_name != "", do: key_name, else: identity
+    options =
+      PhoenixWebAuthn.registration_options(strategy, challenge, tenant, user_descriptor, [])
 
     timer_ref = Process.send_after(self(), :registration_timeout, @registration_timeout_ms)
 
     socket =
       socket
       |> assign(:challenge, challenge)
+      |> assign(:user_handle, user_handle)
       |> assign(:registration_timer_ref, timer_ref)
       |> assign(:submitting, true)
-      |> Phoenix.LiveView.push_event("registration-challenge", %{
-        challenge: Base.url_encode64(challenge.bytes, padding: false),
-        rp_id: rp_id,
-        rp_name: rp_name,
-        user_id: user_id,
-        user_name: user_name,
-        user_display_name: user_display_name,
-        timeout: strategy.timeout,
-        attestation: strategy.attestation,
-        authenticator_attachment:
-          if(strategy.authenticator_attachment,
-            do: to_string(strategy.authenticator_attachment),
-            else: nil
-          ),
-        user_verification: strategy.user_verification,
-        resident_key: to_string(strategy.resident_key)
-      })
+      |> Phoenix.LiveView.push_event("registration-challenge", options)
 
     {:noreply, socket}
   end

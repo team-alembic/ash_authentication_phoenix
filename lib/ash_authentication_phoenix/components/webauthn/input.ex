@@ -9,6 +9,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
     identity_input_placeholder: "Placeholder for the identity input field.",
     key_name_label: "Label for the optional passkey name field.",
     key_name_placeholder: "Placeholder for the passkey name field.",
+    display_name_label: "Label for the display name field (passkey-first mode).",
+    display_name_placeholder: "Placeholder for the display name field.",
     field_class: "CSS class for the field wrapper `div`.",
     label_class: "CSS class for `label` elements.",
     input_class: "CSS class for `input` elements.",
@@ -126,6 +128,38 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
         placeholder={override_for(@overrides, :key_name_placeholder, "My passkey")}
         class={override_for(@overrides, :input_class)}
         autocomplete="off"
+        phx-debounce="300"
+      />
+    </div>
+    """
+  end
+
+  @doc """
+  Renders the display name input (passkey-first mode).
+
+  With no identity field on the registration form, this value is the only
+  way to label the account inside the passkey — it becomes the
+  `user.displayName` shown in the OS passkey picker. Distinct from the
+  passkey name (`key_name_field/1`), which names the credential/device
+  server-side.
+  """
+  @spec display_name_field(map) :: Rendered.t()
+  def display_name_field(assigns) do
+    assigns = assign(assigns, :input_id, assigns[:id] || "display_name")
+
+    ~H"""
+    <div class={override_for(@overrides, :field_class)}>
+      <label for={@input_id} class={override_for(@overrides, :label_class)}>
+        {_gettext(override_for(@overrides, :display_name_label, "Your name"))}
+      </label>
+      <input
+        type="text"
+        id={@input_id}
+        name="display_name"
+        value={@value}
+        placeholder={override_for(@overrides, :display_name_placeholder, "Jane Doe")}
+        class={override_for(@overrides, :input_class)}
+        autocomplete="name"
         phx-debounce="300"
       />
     </div>
