@@ -47,7 +47,7 @@ defmodule DevWeb.Router do
       path: "/sign-in",
       overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI],
       auth_routes_prefix: "/auth",
-      webauthn_path: "/webauthn"
+      webauthn_path: [user: "/webauthn", anon_user: "/passkey"]
     )
 
     webauthn_route(Example.Accounts.User, :webauthn,
@@ -74,6 +74,13 @@ defmodule DevWeb.Router do
     )
 
     webauthn_setup_route(Example.Accounts.User, :webauthn,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+
+    webauthn_setup_route(Example.Accounts.AnonUser, :webauthn,
+      path: "/passkey-setup",
+      as: :anon_setup,
       auth_routes_prefix: "/auth",
       overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
     )

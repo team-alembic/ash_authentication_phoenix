@@ -219,6 +219,12 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   webauthn_path: "/webauthn",
                   as: :sign_in_webauthn
 
+    # WebAuthn link mode with per-resource paths
+    sign_in_route path: "/sign-in-webauthn-multi",
+                  auth_routes_prefix: "/auth",
+                  webauthn_path: [user: "/webauthn", anon_user: "/webauthn-passkey-first"],
+                  as: :sign_in_webauthn_multi
+
     # WebAuthn link mode: component with webauthn_path hardcoded
     sign_in_route path: "/webauthn_link_test",
                   auth_routes_prefix: "/auth",
@@ -230,6 +236,13 @@ defmodule AshAuthentication.Phoenix.Test.Router do
       path: "/webauthn",
       auth_routes_prefix: "/auth",
       as: :webauthn_live
+    )
+
+    # Passkey-first WebAuthn page (require_identity? false)
+    webauthn_route(Example.Accounts.AnonUser, :webauthn,
+      path: "/webauthn-passkey-first",
+      auth_routes_prefix: "/auth",
+      as: :webauthn_passkey_first
     )
 
     # Gettext routes

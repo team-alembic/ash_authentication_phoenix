@@ -46,12 +46,14 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
-    strategy = assigns.strategy
+    # `send_update/2` (e.g. the timeout path in `WebAuthnLive`) only passes a
+    # subset of assigns, so read everything through the merged socket assigns.
+    socket = assign(socket, assigns)
+    strategy = socket.assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     socket =
       socket
-      |> assign(assigns)
       |> assign(:subject_name, subject_name)
       |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
       |> assign_new(:identity_value, fn -> "" end)
@@ -160,7 +162,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     {:ok, challenge} =
       WebAuthn.Actions.authentication_challenge(strategy, [], tenant, origin: origin)
 
-    rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
+    options = PhoenixWebAuthn.authentication_options(strategy, challenge, tenant, [])
 
     timer_ref = Process.send_after(self(), :authentication_timeout, @authentication_timeout_ms)
 
@@ -169,13 +171,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       |> assign(:challenge, challenge)
       |> assign(:authentication_timer_ref, timer_ref)
       |> assign(:submitting, true)
-      |> Phoenix.LiveView.push_event("authentication-challenge", %{
-        challenge: Base.url_encode64(challenge.bytes, padding: false),
-        rp_id: rp_id,
-        timeout: strategy.timeout,
-        user_verification: strategy.user_verification,
-        allow_credentials: []
-      })
+      |> Phoenix.LiveView.push_event("authentication-challenge", options)
 
     {:noreply, socket}
   end
