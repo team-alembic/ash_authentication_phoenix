@@ -409,7 +409,11 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
         "mx-auto w-full max-w-sm rounded-box border border-base-300 bg-base-100 p-6 shadow-xl"
 
     set :slot_class, "mt-6"
-    set :workflow_button_class, "btn btn-outline btn-neutral w-full"
+
+    # Link mode renders alongside the OAuth links on the sign-in page, so it
+    # matches Components.OAuth2's root_class / link_class.
+    set :workflow_root_class, "w-full mt-2 mb-4"
+    set :workflow_button_class, "btn btn-outline btn-block"
     set :workflow_button_text, "Continue with WebAuthn"
   end
 

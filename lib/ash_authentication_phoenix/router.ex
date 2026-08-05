@@ -271,6 +271,12 @@ defmodule AshAuthentication.Phoenix.Router do
     accessible via a toggle on the sign-in page (switching forms with JavaScript rather than navigation).
     To hide the toggle, set `reset_toggle_text: nil` in your overrides (see `AshAuthentication.Phoenix.Overrides`).
     If a tuple `{:unscoped, path}` is provided, the reset path will not inherit the current route scope.
+  * `webauthn_path` - when set, WebAuthn strategies render as a "Continue with WebAuthn" link to this
+    path instead of their full inline forms. Mount `webauthn_route/3` at that path. Either a single path
+    applied to every WebAuthn strategy, or — when several resources have WebAuthn strategies — a keyword
+    list keyed by each resource's authentication subject name, e.g.
+    `webauthn_path: [user: "/webauthn", admin: "/admin/webauthn"]`; resources without an entry keep their
+    inline form. Paths may be wrapped in `{:unscoped, path}` to skip the current route scope.
   * `resources` - Which resources should have their sign in UIs rendered. Defaults to all resources
     that use `AshAuthentication`.
   * `live_view` the name of the live view to render. Defaults to
@@ -383,9 +389,20 @@ defmodule AshAuthentication.Phoenix.Router do
 
         webauthn_path =
           case unquote(webauthn_path) do
-            nil -> nil
-            {:unscoped, value} -> value
-            value -> Phoenix.Router.scoped_path(__MODULE__, value)
+            nil ->
+              nil
+
+            {:unscoped, value} ->
+              value
+
+            paths when is_list(paths) ->
+              Enum.map(paths, fn
+                {subject, {:unscoped, value}} -> {subject, value}
+                {subject, value} -> {subject, Phoenix.Router.scoped_path(__MODULE__, value)}
+              end)
+
+            value ->
+              Phoenix.Router.scoped_path(__MODULE__, value)
           end
 
         live_session_opts = [

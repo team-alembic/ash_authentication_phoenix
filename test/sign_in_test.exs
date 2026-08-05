@@ -9,6 +9,8 @@ defmodule AshAuthentication.Phoenix.SignInTest do
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
 
+  require Ash.Query
+
   @endpoint AshAuthentication.Phoenix.Test.Endpoint
 
   @jwt ~r/[\w-]{16,}\.[\w-]{16,}\.[\w-]{16,}/

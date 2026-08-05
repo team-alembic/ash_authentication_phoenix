@@ -685,11 +685,15 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :slot_class, "mt-6"
 
+    # Link mode renders alongside the OAuth links on the sign-in page, so it
+    # matches Components.OAuth2's root_class / link_class.
+    set :workflow_root_class, "w-full mt-2 mb-4"
+
     set :workflow_button_class, """
-    w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md
-    shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-100
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-black bg-gray-200 hover:bg-gray-300
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-    dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700
+    inline-flex items-center justify-center
     """
 
     set :workflow_button_text, "Continue with WebAuthn"

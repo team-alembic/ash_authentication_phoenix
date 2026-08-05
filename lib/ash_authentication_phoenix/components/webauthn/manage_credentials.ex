@@ -21,6 +21,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     last_credential_warning: "Warning when trying to delete the last credential.",
     label_input_class: "CSS class for the label input.",
     timestamp_class: "CSS class for timestamp text.",
+    synced_badge_text:
+      "Badge text shown for synced passkeys (credentials whose backup state flag is set).",
+    synced_badge_class: "CSS class for the synced passkey badge.",
     continue_button_text:
       "Text for the continue button shown after at least one credential is registered.",
     continue_button_class: "CSS class for the continue button.",
@@ -120,6 +123,11 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
               <% else %>
                 <div>
                   <strong>{credential.label || "Security Key"}</strong>
+                  <%= if Map.get(credential, @strategy.backed_up_field) == true do %>
+                    <span class={override_for(@overrides, :synced_badge_class)}>
+                      {_gettext(override_for(@overrides, :synced_badge_text, "Synced passkey"))}
+                    </span>
+                  <% end %>
                   <span class={override_for(@overrides, :timestamp_class)}>
                     <%= if added = Map.get(credential, :inserted_at) do %>
                       Added: {Calendar.strftime(added, "%B %d, %Y")}
@@ -265,43 +273,36 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     {:ok, challenge} =
       WebAuthn.Actions.registration_challenge(strategy, tenant, origin: origin)
 
-    rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
-    rp_name = WebAuthn.Helpers.resolve_rp_name(strategy, tenant)
-    user_id = Base.url_encode64(:crypto.strong_rand_bytes(64), padding: false)
     user = socket.assigns.current_user
-
+    credentials = socket.assigns.credentials
     key_name = Map.get(params, "key_name", socket.assigns.key_name_value)
-    identity = to_string(Map.get(user, strategy.identity_field) || "")
 
-    # `user_name` identifies the account; `user_display_name` is the
-    # human-readable name the browser stores in the user's password manager.
-    # Both must be set *before* the ceremony — many password managers don't
-    # allow editing them afterwards.
-    user_name = if identity != "", do: identity, else: key_name
-    user_display_name = if key_name != "", do: key_name, else: identity
+    # For an existing user the handle must be stable so all of their
+    # passkeys share it — reuse the one stored with an existing credential
+    # (falling back to the primary key). Existing credential ids go in
+    # `excludeCredentials` so re-registering an already-enrolled
+    # authenticator fails client-side instead of creating a duplicate.
+    {user_descriptor, user_handle} =
+      PhoenixWebAuthn.actor_user_descriptor(strategy, user, credentials, key_name)
+
+    exclude_ids = Enum.map(credentials, &Map.get(&1, strategy.credential_id_field))
+
+    options =
+      PhoenixWebAuthn.registration_options(
+        strategy,
+        challenge,
+        tenant,
+        user_descriptor,
+        exclude_ids
+      )
 
     socket =
       socket
       |> assign(:add_challenge, challenge)
+      |> assign(:add_user_handle, user_handle)
       |> assign(:adding, true)
       |> assign(:key_name_value, key_name)
-      |> Phoenix.LiveView.push_event("registration-challenge", %{
-        challenge: Base.url_encode64(challenge.bytes, padding: false),
-        rp_id: rp_id,
-        rp_name: rp_name,
-        user_id: user_id,
-        user_name: user_name,
-        user_display_name: user_display_name,
-        timeout: strategy.timeout,
-        attestation: strategy.attestation,
-        authenticator_attachment:
-          if(strategy.authenticator_attachment,
-            do: to_string(strategy.authenticator_attachment),
-            else: nil
-          ),
-        user_verification: strategy.user_verification,
-        resident_key: to_string(strategy.resident_key)
-      })
+      |> Phoenix.LiveView.push_event("registration-challenge", options)
 
     {:noreply, socket}
   end
@@ -323,13 +324,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     add_params = %{
       "attestation_object" => params["attestation_object"],
       "client_data_json" => params["client_data_json"],
-      "label" => label
+      "label" => label,
+      "transports" => params["transports"],
+      "cred_props" => params["cred_props"]
     }
 
     case WebAuthn.Actions.add_credential(strategy, add_params,
            challenge: challenge,
            user: user,
-           tenant: tenant
+           tenant: tenant,
+           user_handle: socket.assigns[:add_user_handle]
          ) do
       {:ok, _credential} ->
         socket =
@@ -349,12 +353,20 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     end
   end
 
-  def handle_event("registration-error", _params, socket) do
+  def handle_event("registration-error", params, socket) do
+    # `excludeCredentials` makes the browser reject an already-enrolled
+    # authenticator client-side with InvalidStateError.
+    error_message =
+      case params["name"] do
+        "InvalidStateError" -> "This device is already registered."
+        _ -> "Registration was cancelled."
+      end
+
     {:noreply,
      assign(socket,
        adding: false,
        add_challenge: nil,
-       error_message: "Registration was cancelled."
+       error_message: error_message
      )}
   end
 

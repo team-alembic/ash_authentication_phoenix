@@ -10,6 +10,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
     authentication_form_module:
       "The Phoenix component to be used for the authentication form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`.",
     slot_class: "CSS class for the `div` surrounding the slot.",
+    workflow_root_class:
+      "CSS class for the root `div` element in link mode (when `webauthn_path` is configured). Falls back to `root_class` when unset.",
     workflow_button_class:
       "CSS class for the link shown on the sign-in page when `webauthn_path` is configured.",
     workflow_button_text:
@@ -45,6 +47,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
 
   use AshAuthentication.Phoenix.Web, :live_component
   alias AshAuthentication.{Info, Phoenix.Components, Phoenix.Components.WebAuthn, Strategy}
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias Phoenix.LiveView.{Rendered, Socket}
   import Slug
 
@@ -76,7 +79,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:live_action, fn -> :sign_in end)
       |> assign_new(:path, fn -> "/" end)
-      |> assign_new(:webauthn_path, fn -> nil end)
+      # webauthn_path may be a keyword list keyed by subject name — resolve
+      # it to this strategy's path (or nil) before the render logic sees it.
+      |> assign(
+        :webauthn_path,
+        PhoenixWebAuthn.resolve_path(Map.get(assigns, :webauthn_path), strategy)
+      )
       |> assign_new(:register_path, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
@@ -91,9 +99,24 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
   def render(assigns) do
     assigns = assign(assigns, :register_enabled?, assigns.strategy.registration_enabled?)
 
+    link_mode? = assigns.webauthn_path && assigns.live_action != :webauthn
+
+    # The card-style `root_class` suits the dedicated page's full forms; in
+    # link mode the single link should sit flush with the other sign-in
+    # buttons, so it gets its own (flat) wrapper style.
+    root_class =
+      if link_mode? do
+        override_for(assigns.overrides, :workflow_root_class) ||
+          override_for(assigns.overrides, :root_class)
+      else
+        override_for(assigns.overrides, :root_class)
+      end
+
+    assigns = assign(assigns, link_mode?: link_mode?, root_class: root_class)
+
     ~H"""
-    <div class={override_for(@overrides, :root_class)}>
-      <%= if @webauthn_path && @live_action != :webauthn do %>
+    <div class={@root_class}>
+      <%= if @link_mode? do %>
         <.link
           href={@webauthn_path}
           class={override_for(@overrides, :workflow_button_class)}
