@@ -190,6 +190,26 @@ The library ships with a `ManageCredentials` component that lets authenticated u
 
 Deletion of the last credential is prevented to avoid locking users out of their accounts. All credential operations route through `AshAuthentication.Strategy.WebAuthn.Actions`, so policies, hooks, and validations defined on the credential resource are honored.
 
+## Cross-device sign-in (QR / hybrid)
+
+A passkey stored on a phone can be used to sign in on a laptop that has no authenticator of its own. The browser shows a QR code, the phone scans it, and the ceremony completes over Bluetooth proximity plus a relay — the phone never needs a route to your application, so this works on `localhost` in development.
+
+None of that is yours to implement. It is hybrid transport, handled entirely by the browser and the phone's operating system, and the assertion it produces is indistinguishable from one made by a USB security key. The only thing to do is ask for it, by setting `hints` on the strategy in your `ash_authentication` configuration:
+
+```elixir
+webauthn :webauthn do
+  credential_resource MyApp.Accounts.WebAuthnCredential
+  hints [:hybrid, :security_key]
+  timeout 300_000
+end
+```
+
+`:hybrid` is the "use your phone or tablet" option, `:security_key` a removable USB/NFC key, `:client_device` the authenticator built into this machine. The list is an order of preference. The components carry it into both the registration and the sign-in ceremony, so a machine with no authenticator can enrol a phone passkey and then use it.
+
+Raise the `timeout`. The default 60 seconds cannot fit a QR scan, a Bluetooth handshake and a prompt on the second device, and the ceremony expires mid-scan; `ash_authentication` warns at compile time if you offer `:hybrid` with less than 120 seconds.
+
+Chrome 128+ honours `hints`. Other browsers ignore members they don't recognise and fall back to their own picker, which generally offers the same thing — no feature detection is needed.
+
 ## Customization
 
 All WebAuthn components support the standard override mechanism. You can customize button text, CSS classes, and icons via your overrides module:

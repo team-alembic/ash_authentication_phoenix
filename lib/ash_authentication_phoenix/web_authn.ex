@@ -12,6 +12,27 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   payloads: spec-shaped `PublicKeyCredentialCreationOptions` /
   `PublicKeyCredentialRequestOptions` with all binary fields encoded as
   base64url without padding.
+
+  ## Cross-device (hybrid) passkeys
+
+  The strategy's `hints` option is carried through to the browser on both
+  ceremonies, so configuring it in `ash_authentication` is all that is needed
+  here:
+
+  ```elixir
+  webauthn :webauthn do
+    hints [:hybrid, :security_key]
+    timeout 300_000
+  end
+  ```
+
+  `:hybrid` asks for the "use your phone or tablet" option, which shows a QR
+  code and completes the ceremony on a passkey held by another device. Allow a
+  generous `timeout` — the default 60s cannot fit a QR scan, a Bluetooth
+  handshake and a prompt on the second device, and the ceremony expires
+  mid-scan. Chrome 128+ honours `hints`; other browsers ignore members they
+  don't recognise and fall back to their own picker, so no feature detection is
+  needed.
   """
 
   alias Ash.Resource.Info, as: ResourceInfo
@@ -177,15 +198,12 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
           exclude_credential_ids,
           &%{id: Base.url_encode64(&1, padding: false), type: "public-key"}
         ),
-      authenticatorSelection: %{
-        authenticatorAttachment: strategy.authenticator_attachment,
-        userVerification: strategy.user_verification,
-        residentKey: strategy.resident_key
-      },
+      authenticatorSelection: authenticator_selection(strategy),
       extensions: %{credProps: true},
       attestation: strategy.attestation,
       timeout: strategy.timeout
     }
+    |> put_hints(hints(strategy))
   end
 
   @doc """
@@ -206,7 +224,48 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
       timeout: strategy.timeout,
       allowCredentials: allow_credentials_entries(strategy, credentials)
     }
+    |> put_hints(hints(strategy))
   end
+
+  # `authenticatorAttachment` is a three-valued enum with no member for "no
+  # preference" — the absence of the key is how that is expressed, and `null`
+  # is not a legal value. Sending it explicitly also competes with `hints`,
+  # which supersedes it.
+  defp authenticator_selection(strategy) do
+    %{
+      userVerification: strategy.user_verification,
+      residentKey: strategy.resident_key,
+      # The Level 1 spelling, for clients predating `residentKey`.
+      requireResidentKey: strategy.resident_key == :required
+    }
+    |> maybe_put(:authenticatorAttachment, attachment(strategy.authenticator_attachment))
+  end
+
+  # The DSL spells this option in snake case; the enum member is hyphenated,
+  # and a client which doesn't recognise the value ignores the whole member.
+  defp attachment(:cross_platform), do: "cross-platform"
+  defp attachment(:platform), do: "platform"
+  defp attachment(nil), do: nil
+
+  defp maybe_put(map, _key, nil), do: map
+  defp maybe_put(map, key, value), do: Map.put(map, key, value)
+
+  @hint_strings %{
+    security_key: "security-key",
+    client_device: "client-device",
+    hybrid: "hybrid"
+  }
+
+  # Which kinds of authenticator the browser should offer, in the strategy's
+  # order of preference. `:hybrid` is what produces the "use your phone or
+  # tablet" QR option — see the `hints` option on the WebAuthn strategy.
+  defp hints(strategy), do: Enum.map(strategy.hints, &Map.fetch!(@hint_strings, &1))
+
+  # An empty `hints` means "no preference", which is spelled by leaving the
+  # member out — an empty sequence reads to some clients as "nothing is
+  # acceptable".
+  defp put_hints(options, []), do: options
+  defp put_hints(options, hints), do: Map.put(options, :hints, hints)
 
   # allowCredentials entries sent to the browser. Transports hints (when
   # captured at registration) let the client route straight to the right
