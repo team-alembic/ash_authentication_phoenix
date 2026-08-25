@@ -11,6 +11,25 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.17.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.17.2...v2.17.3) (2026-08-25)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by [@jimsynz](https://github.com/jimsynz) [(#770)](https://github.com/team-alembic/ash_authentication_phoenix/pull/770)
+
+
+
+### Bug Fixes:
+
+* apply overrides to generated sign-out route (#761) by [@jimsynz](https://github.com/jimsynz) [(#761)](https://github.com/team-alembic/ash_authentication_phoenix/pull/761)
+
+* add form IDs for liveview forms (#759) by [@jimsynz](https://github.com/jimsynz) [(#759)](https://github.com/team-alembic/ash_authentication_phoenix/pull/759)
+
+* read session data from Plug session in generate_session (#716) (#747) by [@jimsynz](https://github.com/jimsynz) [(#747)](https://github.com/team-alembic/ash_authentication_phoenix/pull/747)
+
+### Improvements:
+
+* handle `ConfirmationRequired` in the generated auth controller (#744) by [@jimsynz](https://github.com/jimsynz) [(#744)](https://github.com/team-alembic/ash_authentication_phoenix/pull/744)
+
 ## [v2.17.2](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.17.1...v2.17.2) (2026-07-20)
 ### Breaking Changes:
 
