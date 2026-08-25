@@ -11,6 +11,21 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.10](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.9...v3.0.0-rc.10) (2026-08-25)
+
+
+
+
+### Bug Fixes:
+
+* Add ID to webauthn credential form (#758) by [@jimsynz](https://github.com/jimsynz) [(#758)](https://github.com/team-alembic/ash_authentication_phoenix/pull/758)
+
+* Apply overrides to the generated `sign_out_route` (#760) by sevenseacat [(#760)](https://github.com/team-alembic/ash_authentication_phoenix/pull/760)
+
+### Improvements:
+
+* escape `@reflected_param` and note EEx escaping in the generated interstitial (#766) by [@jimsynz](https://github.com/jimsynz) [(#766)](https://github.com/team-alembic/ash_authentication_phoenix/pull/766)
+
 ## [v3.0.0-rc.9](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.8...v3.0.0-rc.9) (2026-07-20)
 ### Breaking Changes:
 
