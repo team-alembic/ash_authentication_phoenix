@@ -20,6 +20,8 @@
     # {:my_arbitrary_tool, command: "npm test", cd: "assets"},
     # {:my_arbitrary_script, command: ["my_script", "argument with spaces"], cd: "scripts"}
     
+    {:mix_audit, false},
+    {:hex_audit, command: "mix hex.audit"},
     {:sobelow, "mix sobelow --config"},
     {:reuse, command: ["pipx", "run", "--spec", "reuse[charset-normalizer]", "reuse", "lint", "-q"]}
   ]
