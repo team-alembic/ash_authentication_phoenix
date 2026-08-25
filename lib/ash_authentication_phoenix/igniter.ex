@@ -145,6 +145,12 @@ if Code.ensure_loaded?(Igniter) do
     defp interstitial_template do
       """
       <!DOCTYPE html>
+      <%!--
+        This is a plain EEx template, not HEEx, so nothing is escaped automatically.
+        The assigns carry the OAuth/OIDC provider's response parameters, which arrive
+        straight from the request, so wrap every interpolation you add in
+        `Plug.HTML.html_escape/1` as the existing ones below do.
+      --%>
       <html lang="en">
         <head>
           <meta charset="utf-8" />
@@ -157,7 +163,7 @@ if Code.ensure_loaded?(Igniter) do
             <%= for {key, value} <- @params do %>
               <input type="hidden" name="<%= Plug.HTML.html_escape(to_string(key)) %>" value="<%= Plug.HTML.html_escape(to_string(value)) %>" />
             <% end %>
-            <input type="hidden" name="<%= @reflected_param %>" value="1" />
+            <input type="hidden" name="<%= Plug.HTML.html_escape(@reflected_param) %>" value="1" />
             <noscript>
               <p>Signing you in…</p>
               <button type="submit">Continue</button>
