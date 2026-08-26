@@ -66,10 +66,16 @@ if Code.ensure_loaded?(Igniter) do
     def igniter(igniter) do
       options = parse_options(igniter)
 
+      {igniter, router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+          igniter,
+          "Which Phoenix router should be modified for TOTP routes?"
+        )
+
       igniter
       |> Igniter.Project.Deps.add_dep({:eqrcode, "~> 0.1"})
-      |> add_totp_routes(options)
-      |> maybe_modify_controller(options)
+      |> add_totp_routes(options, router, web_module)
+      |> maybe_modify_controller(options, web_module)
     end
 
     defp parse_options(igniter) do
@@ -93,17 +99,11 @@ if Code.ensure_loaded?(Igniter) do
     defp maybe_parse_module(value) when is_binary(value), do: Igniter.Project.Module.parse(value)
     defp maybe_parse_module(value), do: value
 
-    defp add_totp_routes(igniter, options) do
-      {igniter, router} =
-        Igniter.Libs.Phoenix.select_router(
-          igniter,
-          "Which Phoenix router should be modified for TOTP routes?"
-        )
-
+    defp add_totp_routes(igniter, options, router, web_module) do
       if router do
         user = inspect(options[:user])
         strategy_name = inspect(options[:name])
-        overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+        overrides = Module.concat(web_module, AuthOverrides)
 
         override_module =
           if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
@@ -131,7 +131,7 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           routes,
           with_pipelines: [:browser],
-          arg2: Igniter.Libs.Phoenix.web_module(igniter),
+          arg2: web_module,
           router: router
         )
       else
@@ -139,16 +139,15 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp maybe_modify_controller(igniter, options) do
+    defp maybe_modify_controller(igniter, options, web_module) do
       if options[:mode] == :"2fa" do
-        modify_controller_for_2fa(igniter)
+        modify_controller_for_2fa(igniter, web_module)
       else
         igniter
       end
     end
 
-    defp modify_controller_for_2fa(igniter) do
-      web_module = Igniter.Libs.Phoenix.web_module(igniter)
+    defp modify_controller_for_2fa(igniter, web_module) do
       controller = Module.concat(web_module, AuthController)
 
       {exists?, igniter} = Igniter.Project.Module.module_exists(igniter, controller)
