@@ -125,6 +125,41 @@ defmodule AshAuthentication.Phoenix.SignInTest do
     assert html =~ "#user-password-register-with-password_password_confirmation"
   end
 
+  describe "development mailbox link" do
+    setup do
+      on_exit(fn -> Application.delete_env(:ash_authentication, :dev_mailbox_path) end)
+    end
+
+    test "is not rendered when no path is configured", %{conn: conn} do
+      Application.delete_env(:ash_authentication, :dev_mailbox_path)
+
+      conn = get(conn, "/sign-in")
+      assert {:ok, _view, html} = live(conn)
+
+      refute html =~ "development mailbox"
+    end
+
+    test "links to the configured path", %{conn: conn} do
+      Application.put_env(:ash_authentication, :dev_mailbox_path, "/dev/mailbox")
+
+      conn = get(conn, "/sign-in")
+      assert {:ok, view, _html} = live(conn)
+
+      assert view
+             |> element(~s{a[href="/dev/mailbox"]})
+             |> render() =~ "View sent emails in the development mailbox"
+    end
+
+    test "is rendered on the register page too", %{conn: conn} do
+      Application.put_env(:ash_authentication, :dev_mailbox_path, "/mail")
+
+      conn = get(conn, "/register")
+      assert {:ok, view, _html} = live(conn)
+
+      assert has_element?(view, ~s{a[href="/mail"]})
+    end
+  end
+
   test "sign_in liveview honours filter_strategy override", %{conn: conn} do
     conn = get(conn, "/sign-in-filtered")
 

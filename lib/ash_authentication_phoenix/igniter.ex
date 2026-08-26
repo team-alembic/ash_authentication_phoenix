@@ -11,6 +11,28 @@ if Code.ensure_loaded?(Igniter) do
     @oauth_family ~w[oauth2 oidc github google auth0 apple slack microsoft okta dynamic_oidc]a
 
     @doc """
+    Points the sign-in page at the local Swoosh mailbox preview in dev.
+
+    `mix phx.new` forwards `/dev/mailbox` to `Plug.Swoosh.MailboxPreview`, so
+    the generated senders deliver into a mailbox the developer can actually
+    open. Configuring the path makes
+    `AshAuthentication.Phoenix.Components.SignIn` render a link to it.
+
+    Only call this when a Swoosh mailer has been found — without one nothing is
+    being delivered locally. Existing configuration is left alone.
+    """
+    @spec configure_dev_mailbox(Igniter.t()) :: Igniter.t()
+    def configure_dev_mailbox(igniter) do
+      Igniter.Project.Config.configure_new(
+        igniter,
+        "dev.exs",
+        :ash_authentication,
+        [:dev_mailbox_path],
+        "/dev/mailbox"
+      )
+    end
+
+    @doc """
     Generates the "signing you in…" interstitial used for OAuth/OIDC providers
     that return the callback as a cross-site `response_mode=form_post` POST.
 

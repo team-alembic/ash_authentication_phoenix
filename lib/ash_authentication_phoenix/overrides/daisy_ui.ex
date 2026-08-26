@@ -100,6 +100,9 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :authentication_error_container_class, "text-base-content text-center"
     set :authentication_error_text_class, ""
     set :strategy_display_order, :forms_first
+    set :dev_mailbox_container_class, "mx-auto w-full max-w-sm lg:w-96 text-center"
+    set :dev_mailbox_link_class, "link link-primary text-sm mt-4 block"
+    set :dev_mailbox_text, "View sent emails in the development mailbox"
   end
 
   override Components.Banner do

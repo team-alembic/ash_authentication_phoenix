@@ -443,6 +443,24 @@ Details: %AshAuthentication.Errors.AuthenticationFailed{
     ...
 ```
 
+### Linking to the development mailbox
+
+If you generated your app with `mix phx.new`, `/dev/mailbox` is forwarded to
+`Plug.Swoosh.MailboxPreview` in dev, and the emails AshAuthentication sends -
+magic links, sign-in codes, confirmation and password-reset links - land there
+rather than in a real inbox. Tell AshAuthentication where that preview lives and
+the sign-in page will link to it:
+
+**config/dev.exs**
+
+```elixir
+config :ash_authentication, dev_mailbox_path: "/dev/mailbox"
+```
+
+The installer writes this for you when it finds a Swoosh mailer. Setting it to
+`nil` (or leaving it unset) hides the link, so keep it out of your production
+configuration.
+
 ## Reset Password
 
 In this section we add a reset password functionality. Which is triggered by adding `resettable` in the `User` resource. Please replace the `strategies` block in `lib/example/accounts/user.ex` with the following code:
