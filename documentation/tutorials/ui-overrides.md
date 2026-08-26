@@ -99,6 +99,12 @@ Renders sign in mark-up for an authenticated resource.
 
   * `:authentication_error_text_class` - CSS class for the authentication error text.
 
+  * `:dev_mailbox_container_class` - CSS class for the `div` surrounding the development mailbox link.
+
+  * `:dev_mailbox_link_class` - CSS class for the development mailbox `a` tag.
+
+  * `:dev_mailbox_text` - Text for the link to the local development mailbox.
+
   * `:filter_strategy` - A function that decides whether a strategy should be shown
 
   * `:root_class` - CSS class for the root `div` element.

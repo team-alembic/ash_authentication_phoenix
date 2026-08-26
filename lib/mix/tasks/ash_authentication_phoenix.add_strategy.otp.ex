@@ -115,7 +115,9 @@ if Code.ensure_loaded?(Igniter) do
           location =
             Igniter.Project.Module.proper_location(igniter, sender)
 
-          Igniter.create_new_file(igniter, location, contents, on_exists: :overwrite)
+          igniter
+          |> Igniter.create_new_file(location, contents, on_exists: :overwrite)
+          |> AshAuthentication.Phoenix.Igniter.configure_dev_mailbox()
 
         _ ->
           igniter

@@ -112,6 +112,9 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :authentication_error_container_class, "text-black dark:text-white text-center"
     set :authentication_error_text_class, ""
     set :strategy_display_order, :forms_first
+    set :dev_mailbox_container_class, "mx-auto w-full max-w-sm lg:w-96 text-center"
+    set :dev_mailbox_link_class, "block mt-4 text-sm text-blue-500 hover:text-blue-600"
+    set :dev_mailbox_text, "View sent emails in the development mailbox"
   end
 
   override Components.Banner do
