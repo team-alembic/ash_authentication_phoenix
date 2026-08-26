@@ -149,7 +149,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:slugify, "~> 1.3"},
       {:gettext, "~> 0.26 or ~> 1.0", optional: true},
       {:eqrcode, "~> 0.1", optional: true},
-      {:igniter, "~> 0.5 and >= 0.5.25", optional: true},
+      {:igniter, "~> 0.5 and >= 0.8.3", optional: true},
       {:igniter_js, "~> 0.4", optional: true},
       {:rustler, ">= 0.0.0", optional: true, runtime: false},
       {:bandit, "~> 1.0", only: [:dev, :test]},

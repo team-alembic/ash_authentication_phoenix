@@ -80,7 +80,11 @@ if Code.ensure_loaded?(Igniter) do
     defp upgrade_sender(igniter, sender, _options) do
       case Igniter.Libs.Swoosh.list_mailers(igniter) do
         {igniter, [mailer]} ->
-          web_module = Igniter.Libs.Phoenix.web_module(igniter)
+          {igniter, _router, web_module} =
+            AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+              igniter,
+              "Which Phoenix router defines the authentication routes?"
+            )
 
           contents =
             """

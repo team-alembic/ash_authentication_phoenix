@@ -108,7 +108,11 @@ if Code.ensure_loaded?(Igniter) do
           igniter
         end
 
-      web_module = Igniter.Libs.Phoenix.web_module(igniter)
+      {igniter, _router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+          igniter,
+          "Which Phoenix router should be modified for authentication?"
+        )
 
       igniter
       |> Igniter.compose_task("ash_authentication_phoenix.setup", [

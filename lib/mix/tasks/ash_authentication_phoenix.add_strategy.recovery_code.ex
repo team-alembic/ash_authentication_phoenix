@@ -59,10 +59,16 @@ if Code.ensure_loaded?(Igniter) do
     def igniter(igniter) do
       options = parse_options(igniter)
 
+      {igniter, router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+          igniter,
+          "Which Phoenix router should be modified for recovery code routes?"
+        )
+
       igniter
-      |> add_recovery_code_routes(options)
-      |> add_cross_link_overrides()
-      |> maybe_modify_controller()
+      |> add_recovery_code_routes(options, router, web_module)
+      |> add_cross_link_overrides(web_module)
+      |> maybe_modify_controller(web_module)
     end
 
     defp parse_options(igniter) do
@@ -84,17 +90,11 @@ if Code.ensure_loaded?(Igniter) do
     defp maybe_parse_module(value) when is_binary(value), do: Igniter.Project.Module.parse(value)
     defp maybe_parse_module(value), do: value
 
-    defp add_recovery_code_routes(igniter, options) do
-      {igniter, router} =
-        Igniter.Libs.Phoenix.select_router(
-          igniter,
-          "Which Phoenix router should be modified for recovery code routes?"
-        )
-
+    defp add_recovery_code_routes(igniter, options, router, web_module) do
       if router do
         user = inspect(options[:user])
         strategy_name = inspect(options[:name])
-        overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+        overrides = Module.concat(web_module, AuthOverrides)
 
         override_module =
           if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
@@ -115,7 +115,7 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           routes,
           with_pipelines: [:browser],
-          arg2: Igniter.Libs.Phoenix.web_module(igniter),
+          arg2: web_module,
           router: router
         )
       else
@@ -123,8 +123,8 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp add_cross_link_overrides(igniter) do
-      overrides_module = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+    defp add_cross_link_overrides(igniter, web_module) do
+      overrides_module = Module.concat(web_module, AuthOverrides)
       {exists?, igniter} = Igniter.Project.Module.module_exists(igniter, overrides_module)
 
       if exists? do
@@ -160,8 +160,7 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp maybe_modify_controller(igniter) do
-      web_module = Igniter.Libs.Phoenix.web_module(igniter)
+    defp maybe_modify_controller(igniter, web_module) do
       controller = Module.concat(web_module, AuthController)
 
       {exists?, igniter} = Igniter.Project.Module.module_exists(igniter, controller)
