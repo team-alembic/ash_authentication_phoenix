@@ -20,6 +20,18 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
 
   This is a child of `AshAuthentication.Phoenix.Components.Password`.
 
+  ## Handing the sign in token to the server
+
+  When `sign_in_tokens_enabled?` is set, this component signs the user in and
+  then hands the resulting token to the `sign_in_with_token` route, so that the
+  route can write the session that a LiveView process cannot write itself.
+
+  By default the token goes in the query string of a redirect. Query strings are
+  recorded by reverse proxies, CDNs, load balancers, full-URL telemetry and
+  browser history, so the token is written to all of them. Set
+  `sign_in_token_via_post?` on the password strategy to hand the token over in a
+  POST body instead, which none of those record.
+
   Children:
 
     * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
@@ -80,6 +92,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
       |> assign_new(:remember_me_field, fn -> Helpers.remember_me_field(assigns.strategy) end)
+      |> assign_new(:sign_in_token_params, fn -> nil end)
 
     context =
       Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
@@ -176,6 +189,26 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           gettext_fn={@gettext_fn}
         />
       </.form>
+
+      <.form
+        :if={sign_in_token_via_post?(@strategy)}
+        for={%{}}
+        id={@form.id <> "-sign-in-with-token"}
+        action={
+          auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :sign_in_with_token)
+        }
+        method="POST"
+        phx-trigger-action={@sign_in_token_params != nil}
+        class="hidden"
+      >
+        <input type="hidden" name="token" value={@sign_in_token_params[:token]} />
+        <input
+          :if={@sign_in_token_params[:remember_me]}
+          type="hidden"
+          name="remember_me"
+          value={@sign_in_token_params[:remember_me]}
+        />
+      </.form>
     </div>
     """
   end
@@ -204,19 +237,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
              read_one?: true
            ) do
         {:ok, user} ->
-          auth_path_params = get_auth_path_params(params, user)
-
-          validate_sign_in_token_path =
-            auth_path(
-              socket,
-              socket.assigns.subject_name,
-              socket.assigns.auth_routes_prefix,
-              socket.assigns.strategy,
-              :sign_in_with_token,
-              auth_path_params
-            )
-
-          {:noreply, redirect(socket, to: validate_sign_in_token_path)}
+          {:noreply, hand_off_sign_in_token(socket, params, user)}
 
         {:error, form} ->
           debug_form_errors(form)
@@ -236,7 +257,30 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     end
   end
 
-  defp get_auth_path_params(params, user) do
+  defp hand_off_sign_in_token(socket, params, user) do
+    sign_in_token_params = sign_in_token_params(params, user)
+
+    if sign_in_token_via_post?(socket.assigns.strategy) do
+      assign(socket, :sign_in_token_params, sign_in_token_params)
+    else
+      redirect(socket,
+        to:
+          auth_path(
+            socket,
+            socket.assigns.subject_name,
+            socket.assigns.auth_routes_prefix,
+            socket.assigns.strategy,
+            :sign_in_with_token,
+            sign_in_token_params
+          )
+      )
+    end
+  end
+
+  defp sign_in_token_via_post?(strategy),
+    do: Map.get(strategy, :sign_in_token_via_post?, false)
+
+  defp sign_in_token_params(params, user) do
     case Map.get(params, "remember_me") do
       nil -> %{token: user.__metadata__.token}
       remember_me -> %{token: user.__metadata__.token, remember_me: remember_me}

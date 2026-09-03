@@ -151,6 +151,14 @@ defmodule Example.Accounts.User do
         end
       end
 
+      password :password_via_post do
+        identity_field(:email)
+        hashed_password_field(:hashed_password)
+        registration_enabled? false
+        sign_in_tokens_enabled? true
+        sign_in_token_via_post?(true)
+      end
+
       auth0 do
         client_id(&get_config/2)
         redirect_uri(&get_config/2)

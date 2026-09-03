@@ -76,6 +76,42 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
       assert Ash.CiString.value(conn.assigns.current_user.email) == email
     end
 
+    test "sign-in user with password over a posted sign in token", %{conn: conn} do
+      strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password_via_post)
+      email = "sign.in.post@email"
+      password = "sign.in.secret"
+      create_user!(strategy, email, password)
+
+      conn = get(conn, ~p"/sign-in")
+      {:ok, lv, _html} = live(conn)
+
+      lv
+      |> form(~s{[action="/auth/user/password_via_post/sign_in"]},
+        user: %{
+          strategy.identity_field => email,
+          strategy.password_field => password
+        }
+      )
+      |> render_submit()
+
+      form =
+        lv
+        |> render()
+        |> Floki.parse_fragment!()
+        |> Floki.find("form[phx-trigger-action]")
+
+      params =
+        for input <- Floki.find(form, "input"),
+            into: %{},
+            do: {Floki.attribute(input, "name") |> hd(), Floki.attribute(input, "value") |> hd()}
+
+      conn = post(conn, form |> Floki.attribute("action") |> hd(), params)
+
+      assert html_response(conn, 200) =~ "Success"
+      assert get_session(conn, :user) != nil
+      assert Ash.CiString.value(conn.assigns.current_user.email) == email
+    end
+
     test "sign-out user via DELETE", %{conn: conn} do
       strategy = AshAuthentication.Info.strategy!(Example.Accounts.User, :password)
       email = "sign.out@email"
