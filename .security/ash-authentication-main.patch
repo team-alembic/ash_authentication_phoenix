@@ -1,0 +1,47 @@
+Apply to `ash_authentication` on its 5.x line, before this package releases.
+
+The password sign in form hands its sign in token to the `sign_in_with_token`
+route in a POST body instead of a query string. That route declares GET only, so
+`AshAuthentication.Phoenix.StrategyRouter` rejects the POST until this lands.
+
+POST is added alongside GET, so GET keeps working. `StrategyRouter` already wraps
+the result of `method_for_phase/2` in a list, and `OAuth2` already returns
+`[:get, :post]` for its `:callback` phase, so the list shape is not new.
+
+This package cannot release its side until an `ash_authentication` version that
+carries this change is on Hex, and its dependency floor moves to that version.
+
+Apply with:
+
+    git apply /path/to/ash-authentication-main.patch
+
+diff --git a/lib/ash_authentication/strategies/password/strategy.ex b/lib/ash_authentication/strategies/password/strategy.ex
+index b55c1ba..339c025 100644
+--- a/lib/ash_authentication/strategies/password/strategy.ex
++++ b/lib/ash_authentication/strategies/password/strategy.ex
+@@ -46,8 +46,8 @@ defimpl AshAuthentication.Strategy, for: AshAuthentication.Strategy.Password do
+   def actions(strategy), do: phases(strategy)
+ 
+   @doc false
+-  @spec method_for_phase(Password.t(), phase) :: Strategy.http_method()
+-  def method_for_phase(_, phase) when phase in [:sign_in_with_token], do: :get
++  @spec method_for_phase(Password.t(), phase) :: Strategy.http_method() | [Strategy.http_method()]
++  def method_for_phase(_, phase) when phase in [:sign_in_with_token], do: [:get, :post]
+   def method_for_phase(_, _), do: :post
+ 
+   @doc """
+diff --git a/test/ash_authentication/strategies/password/strategy_test.exs b/test/ash_authentication/strategies/password/strategy_test.exs
+index 0b94ea4..7581d29 100644
+--- a/test/ash_authentication/strategies/password/strategy_test.exs
++++ b/test/ash_authentication/strategies/password/strategy_test.exs
+@@ -74,8 +74,8 @@ defmodule AshAuthentication.Strategy.Password.StrategyTest do
+     end
+ 
+     for phase <- ~w[sign_in_with_token]a do
+-      test "it is get for the #{phase} phase" do
+-        assert :get ==
++      test "it accepts both get and post for the #{phase} phase" do
++        assert [:get, :post] ==
+                  %Password{}
+                  |> Strategy.method_for_phase(unquote(phase))
+       end

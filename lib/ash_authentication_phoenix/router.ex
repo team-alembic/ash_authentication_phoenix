@@ -169,8 +169,10 @@ defmodule AshAuthentication.Phoenix.Router do
 
       scope path, scope_opts do
         for strategy <- strategies do
-          for {path, phase} <- AshAuthentication.Strategy.routes(strategy) do
-            match AshAuthentication.Strategy.method_for_phase(strategy, phase),
+          for {path, phase} <- AshAuthentication.Strategy.routes(strategy),
+              method <-
+                List.wrap(AshAuthentication.Strategy.method_for_phase(strategy, phase)) do
+            match method,
                   path,
                   controller,
                   {subject_name, AshAuthentication.Strategy.name(strategy), phase},
