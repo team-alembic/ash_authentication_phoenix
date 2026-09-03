@@ -23,6 +23,6 @@
     {:mix_audit, false},
     {:hex_audit, command: "mix hex.audit"},
     {:sobelow, "mix sobelow --config"},
-    {:reuse, command: ["pipx", "run", "reuse", "lint", "-q"]}
+    {:reuse, command: ["pipx", "run", "--spec", "reuse[charset-normalizer]", "reuse", "lint", "-q"]}
   ]
 ]
