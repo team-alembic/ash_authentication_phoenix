@@ -9,3 +9,5 @@ if config_env() in [:dev, :test] do
 end
 
 import_config "#{config_env()}.exs"
+
+config :ash, default_string_length_count: :codepoints
