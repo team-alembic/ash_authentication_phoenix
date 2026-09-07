@@ -5,3 +5,5 @@
 import Config
 
 import_config "#{config_env()}.exs"
+
+config :ash, default_string_length_count: :codepoints
