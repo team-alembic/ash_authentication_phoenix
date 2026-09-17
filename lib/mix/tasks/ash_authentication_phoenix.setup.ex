@@ -25,6 +25,11 @@ if Code.ensure_loaded?(Igniter) do
     * Pipeline plugs for session and bearer token loading
     * Tailwind CSS configuration for authentication components
 
+    The generated modules are namespaced under the web module that the selected
+    router belongs to — read from the router's `use <WebModule>, :router` — so
+    an application with more than one router gets its authentication modules
+    alongside the router being modified.
+
     This task is composed automatically when adding OAuth/OIDC strategies via
     `mix ash_authentication_phoenix.add_strategy`.
 
@@ -62,15 +67,14 @@ if Code.ensure_loaded?(Igniter) do
     def igniter(igniter) do
       options = parse_options(igniter)
 
-      {igniter, router} =
-        Igniter.Libs.Phoenix.select_router(
+      {igniter, router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
           igniter,
           "Which Phoenix router should be modified for authentication?"
         )
 
       if router do
-        web_module = Igniter.Libs.Phoenix.web_module(igniter)
-        overrides = Igniter.Libs.Phoenix.web_module_name(igniter, "AuthOverrides")
+        overrides = Module.concat(web_module, AuthOverrides)
         otp_app = Igniter.Project.Application.app_name(igniter)
         scope_module = Module.concat(options[:accounts], Scope)
 
@@ -79,11 +83,11 @@ if Code.ensure_loaded?(Igniter) do
         |> Igniter.compose_task("igniter.add_extension", ["phoenix"])
         |> setup_routes_alias()
         |> do_or_explain_tailwind_changes()
-        |> create_auth_controller(otp_app)
+        |> create_auth_controller(otp_app, web_module)
         |> create_overrides_module(overrides)
         |> create_live_user_auth(web_module)
         |> create_scope_module(scope_module)
-        |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial()
+        |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(web_module)
         |> add_auth_routes(overrides, options, router, web_module, scope_module)
         |> add_live_session_scopes(web_module, router, scope_module)
       else
@@ -183,7 +187,7 @@ if Code.ensure_loaded?(Igniter) do
             overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
           """,
           with_pipelines: [:browser],
-          arg2: Igniter.Libs.Phoenix.web_module(igniter),
+          arg2: web_module,
           router: router
         )
       else
@@ -266,14 +270,14 @@ if Code.ensure_loaded?(Igniter) do
               # on_mount {#{inspect(web_module)}.LiveUserAuth, :live_no_user}
             end
             """,
-            arg2: Igniter.Libs.Phoenix.web_module(igniter),
+            arg2: web_module,
             router: router
           )
       end
     end
 
     defp create_live_user_auth(igniter, web_module) do
-      live_user_auth = Igniter.Libs.Phoenix.web_module_name(igniter, "LiveUserAuth")
+      live_user_auth = Module.concat(web_module, LiveUserAuth)
 
       Igniter.Project.Module.create_module(
         igniter,
@@ -356,12 +360,12 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
-    defp create_auth_controller(igniter, otp_app) do
+    defp create_auth_controller(igniter, otp_app, web_module) do
       Igniter.Project.Module.create_module(
         igniter,
-        Igniter.Libs.Phoenix.web_module_name(igniter, "AuthController"),
+        Module.concat(web_module, AuthController),
         """
-        use #{inspect(Igniter.Libs.Phoenix.web_module(igniter))}, :controller
+        use #{inspect(web_module)}, :controller
         use AshAuthentication.Phoenix.Controller
 
         def success(conn, activity, user, token) do

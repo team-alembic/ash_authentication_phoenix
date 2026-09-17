@@ -224,7 +224,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         current_subject_name = String.to_atom("current_#{subject_name}")
 
         with subject when is_binary(subject) <- session[subject_name],
-             {:ok, subject} <- split_identifier(subject, resource) do
+             {:ok, jti, subject} <- split_identifier(subject, resource),
+             :ok <- validate_session_jti(resource, jti, opts) do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
         else
           _ ->
@@ -339,11 +340,24 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   defp split_identifier(subject, resource) do
     if Info.authentication_session_identifier!(resource) == :jti do
       case String.split(subject, ":", parts: 2) do
-        [_jti, subject] -> {:ok, subject}
+        [jti, subject] -> {:ok, jti, subject}
         _ -> :error
       end
     else
-      {:ok, subject}
+      {:ok, nil, subject}
+    end
+  end
+
+  # An `:unsafe` session carries no JTI, so there is nothing to consult.
+  defp validate_session_jti(_resource, nil, _opts), do: :ok
+
+  defp validate_session_jti(resource, jti, opts) do
+    token_resource = Info.authentication_tokens_token_resource!(resource)
+
+    if Actions.jti_revoked?(token_resource, jti, opts) do
+      :error
+    else
+      :ok
     end
   end
 end

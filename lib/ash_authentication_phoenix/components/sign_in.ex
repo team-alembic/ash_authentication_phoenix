@@ -12,7 +12,11 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
     authentication_error_text_class: "CSS class for the authentication error text.",
     strategy_display_order:
       "Whether to display the form or link strategies first. Accepted values are `:forms_first` or `:links_first`.",
-    filter_strategy: "A function that decides whether a strategy should be shown"
+    filter_strategy: "A function that decides whether a strategy should be shown",
+    dev_mailbox_container_class:
+      "CSS class for the `div` surrounding the development mailbox link.",
+    dev_mailbox_link_class: "CSS class for the development mailbox `a` tag.",
+    dev_mailbox_text: "Text for the link to the local development mailbox."
 
   @moduledoc """
   Renders sign in mark-up for an authenticated resource.
@@ -107,6 +111,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+      |> assign(:dev_mailbox_path, dev_mailbox_path())
 
     {:ok, socket}
   end
@@ -163,6 +168,12 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           gettext_fn={@gettext_fn}
         />
       <% end %>
+
+      <div :if={@dev_mailbox_path} class={override_for(@overrides, :dev_mailbox_container_class)}>
+        <a class={override_for(@overrides, :dev_mailbox_link_class)} href={@dev_mailbox_path}>
+          {_gettext(override_for(@overrides, :dev_mailbox_text))}
+        </a>
+      </div>
     </div>
     """
   end
@@ -214,6 +225,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   end
 
   defp sort_strategies_by_name(strategies), do: Enum.sort_by(strategies, & &1.name)
+
+  # A library can't consult `Mix.env/0` at runtime, so the host application
+  # opts in by configuring the path its Swoosh mailbox preview is mounted at.
+  defp dev_mailbox_path, do: Application.get_env(:ash_authentication, :dev_mailbox_path)
 
   defp ordered_strategies(overrides, strategy_group) do
     case override_for(overrides, :strategy_display_order, :forms_first) do

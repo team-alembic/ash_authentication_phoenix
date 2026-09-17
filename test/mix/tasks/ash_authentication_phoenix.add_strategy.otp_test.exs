@@ -20,6 +20,14 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.OtpTest do
     |> apply_igniter!()
   end
 
+  defp setup_with_otp_and_mailer do
+    setup_with_otp()
+    |> Igniter.Project.Module.create_module(Test.Mailer, """
+    use Swoosh.Mailer, otp_app: :test
+    """)
+    |> apply_igniter!()
+  end
+
   describe "without Swoosh" do
     test "leaves the SendOtp module untouched" do
       igniter = setup_with_otp()
@@ -28,19 +36,20 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.OtpTest do
       |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.otp", [])
       |> assert_unchanged("lib/test/accounts/user/senders/send_otp.ex")
     end
+
+    test "does not configure the development mailbox path" do
+      result =
+        setup_with_otp()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.otp", [])
+
+      refute diff(result) =~ "dev_mailbox_path"
+    end
   end
 
   describe "with Swoosh" do
     test "upgrades SendOtp to use Swoosh" do
-      igniter =
-        setup_with_otp()
-        |> Igniter.Project.Module.create_module(Test.Mailer, """
-        use Swoosh.Mailer, otp_app: :test
-        """)
-        |> apply_igniter!()
-
       result =
-        igniter
+        setup_with_otp_and_mailer()
         |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.otp", [])
 
       diff = diff(result, path: "lib/test/accounts/user/senders/send_otp.ex")
@@ -51,19 +60,38 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.OtpTest do
     end
 
     test "uses the user's email address in the To field" do
-      igniter =
-        setup_with_otp()
-        |> Igniter.Project.Module.create_module(Test.Mailer, """
-        use Swoosh.Mailer, otp_app: :test
-        """)
-        |> apply_igniter!()
-
       result =
-        igniter
+        setup_with_otp_and_mailer()
         |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.otp", [])
 
       diff = diff(result, path: "lib/test/accounts/user/senders/send_otp.ex")
       assert diff =~ "to(to_string(user.email))"
+    end
+
+    test "configures the development mailbox path" do
+      result =
+        setup_with_otp_and_mailer()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy.otp", [])
+
+      assert diff(result, path: "config/dev.exs") =~
+               ~s{config :ash_authentication, dev_mailbox_path: "/dev/mailbox"}
+    end
+
+    test "leaves an existing development mailbox path alone" do
+      igniter =
+        setup_with_otp_and_mailer()
+        |> Igniter.Project.Config.configure_new(
+          "dev.exs",
+          :ash_authentication,
+          [:dev_mailbox_path],
+          "/inbox"
+        )
+        |> apply_igniter!()
+
+      result =
+        Igniter.compose_task(igniter, "ash_authentication_phoenix.add_strategy.otp", [])
+
+      assert_unchanged(result, "config/dev.exs")
     end
   end
 

@@ -60,7 +60,13 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     defp generate_oauth_interstitial(igniter, _opts) do
-      AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(igniter)
+      {igniter, _router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+          igniter,
+          "Which Phoenix router should the OAuth interstitial be generated alongside?"
+        )
+
+      AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(igniter, web_module)
     end
 
     defp add_scope_support(igniter, _opts) do

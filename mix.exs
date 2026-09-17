@@ -135,7 +135,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc.13"},
+      {:ash_authentication, "~> 5.0.0-rc.14"},
       {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.26"},
@@ -150,7 +150,7 @@ defmodule AshAuthentication.Phoenix.MixProject do
       {:slugify, "~> 1.3"},
       {:gettext, "~> 0.26 or ~> 1.0", optional: true},
       {:eqrcode, "~> 0.1", optional: true},
-      {:igniter, "~> 0.5 and >= 0.5.25", optional: true},
+      {:igniter, "~> 0.5 and >= 0.8.3", optional: true},
       {:igniter_js, "~> 0.4", optional: true},
       {:rustler, ">= 0.0.0", optional: true, runtime: false},
       {:bandit, "~> 1.0", only: [:dev, :test]},

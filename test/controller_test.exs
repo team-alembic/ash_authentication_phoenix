@@ -107,20 +107,30 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
   end
 
   defp sign_in_user(conn, strategy, email, password) do
-    {:ok, lv, _html} = live(conn, ~p"/sign-in")
+    conn = get(conn, ~p"/sign-in")
+    {:ok, lv, _html} = live(conn)
 
-    {:ok, conn} =
+    lv
+    |> form(~s{[action="/auth/user/password/sign_in"]},
+      user: %{
+        strategy.identity_field => email,
+        strategy.password_field => password
+      }
+    )
+    |> render_submit()
+
+    form =
       lv
-      |> form(~s{[action="/auth/user/password/sign_in"]},
-        user: %{
-          strategy.identity_field => email,
-          strategy.password_field => password
-        }
-      )
-      |> render_submit()
-      |> follow_redirect(conn)
+      |> render()
+      |> Floki.parse_fragment!()
+      |> Floki.find("form[phx-trigger-action]")
 
-    conn
+    params =
+      for input <- Floki.find(form, "input"),
+          into: %{},
+          do: {Floki.attribute(input, "name") |> hd(), Floki.attribute(input, "value") |> hd()}
+
+    post(conn, form |> Floki.attribute("action") |> hd(), params)
   end
 
   defp create_user!(strategy, email, password) do

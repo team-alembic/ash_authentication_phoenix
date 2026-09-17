@@ -45,7 +45,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
   alias Phoenix.LiveView.{Rendered, Socket}
 
   import AshAuthentication.Phoenix.Components.Helpers,
-    only: [auth_path: 5, auth_path: 6, debug_form_errors: 1]
+    only: [auth_path: 5, debug_form_errors: 1]
 
   import PhoenixHTMLHelpers.Form
   import Slug
@@ -80,6 +80,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
       |> assign_new(:remember_me_field, fn -> Helpers.remember_me_field(assigns.strategy) end)
+      |> assign_new(:sign_in_token_params, fn -> nil end)
 
     context =
       Ash.Helpers.deep_merge_maps(assigns[:context] || %{}, %{
@@ -90,7 +91,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     context =
       if Map.get(socket.assigns.strategy, :sign_in_tokens_enabled?) do
         # Skip remember_me token generation in the sign_in action because we'll
-        # pass remember_me as a query param to sign_in_with_token instead.
+        # hand remember_me to sign_in_with_token instead.
         # This avoids creating unused tokens in the database.
         context
         |> Map.put(:token_type, :sign_in)
@@ -176,6 +177,26 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
           gettext_fn={@gettext_fn}
         />
       </.form>
+
+      <.form
+        :if={Map.get(@strategy, :sign_in_tokens_enabled?)}
+        for={%{}}
+        id={@form.id <> "-sign-in-with-token"}
+        action={
+          auth_path(@socket, @subject_name, @auth_routes_prefix, @strategy, :sign_in_with_token)
+        }
+        method="POST"
+        phx-trigger-action={@sign_in_token_params != nil}
+        class="hidden"
+      >
+        <input type="hidden" name="token" value={@sign_in_token_params[:token]} />
+        <input
+          :if={@sign_in_token_params[:remember_me]}
+          type="hidden"
+          name="remember_me"
+          value={@sign_in_token_params[:remember_me]}
+        />
+      </.form>
     </div>
     """
   end
@@ -204,8 +225,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
              read_one?: true
            ) do
         {:ok, user} ->
-          redirect_path = get_redirect_path(socket, params, user)
-          {:noreply, redirect(socket, to: redirect_path)}
+          {:noreply, assign(socket, :sign_in_token_params, sign_in_token_params(params, user))}
 
         {:error, form} ->
           debug_form_errors(form)
@@ -225,20 +245,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.SignInForm do
     end
   end
 
-  defp get_redirect_path(socket, params, user) do
-    auth_path_params = get_auth_path_params(params, user)
-
-    auth_path(
-      socket,
-      socket.assigns.subject_name,
-      socket.assigns.auth_routes_prefix,
-      socket.assigns.strategy,
-      :sign_in_with_token,
-      auth_path_params
-    )
-  end
-
-  defp get_auth_path_params(params, user) do
+  defp sign_in_token_params(params, user) do
     case Map.get(params, "remember_me") do
       nil -> %{token: user.__metadata__.token}
       remember_me -> %{token: user.__metadata__.token, remember_me: remember_me}

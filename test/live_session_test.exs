@@ -7,7 +7,7 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
 
   use ExUnit.Case, async: false
   alias Ash.Scope.ToOpts
-  alias AshAuthentication.Phoenix.LiveSession
+  alias AshAuthentication.{Jwt, Phoenix.LiveSession, TokenResource.Actions}
 
   describe "on_mount with multiple authenticated resources" do
     test "loads first resource when only user credentials present" do
@@ -248,6 +248,66 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
 
       refute Map.has_key?(result_socket.assigns, :current_scope)
     end
+  end
+
+  describe "on_mount with a revoked `:jti` session" do
+    test "does not load the user once the session's jti is revoked" do
+      user = register_and_sign_in_user("revoked-jti-user@example.com")
+      {jti, session_value} = session_identifier_for(user)
+
+      session = %{"user" => session_value}
+
+      socket = build_socket()
+      {:cont, before_revocation} = LiveSession.on_mount(:default, %{}, session, socket)
+      assert before_revocation.assigns.current_user.id == user.id
+
+      :ok =
+        Actions.revoke_jti(
+          Example.Accounts.Token,
+          jti,
+          AshAuthentication.user_to_subject(user)
+        )
+
+      socket = build_socket()
+      {:cont, after_revocation} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      assert Actions.jti_revoked?(Example.Accounts.Token, jti)
+      assert after_revocation.assigns.current_user == nil
+    end
+
+    test "still loads the user while the session's jti remains valid" do
+      user = register_and_sign_in_user("live-jti-user@example.com")
+      {_jti, session_value} = session_identifier_for(user)
+
+      socket = build_socket()
+
+      {:cont, result_socket} =
+        LiveSession.on_mount(:default, %{}, %{"user" => session_value}, socket)
+
+      assert result_socket.assigns.current_user.id == user.id
+    end
+  end
+
+  defp register_and_sign_in_user(email) do
+    Example.Accounts.User
+    |> Ash.Changeset.for_create(:register_with_password, %{
+      email: email,
+      password: "secure-password",
+      password_confirmation: "secure-password"
+    })
+    |> Ash.create!()
+
+    Example.Accounts.User
+    |> Ash.Query.for_read(:sign_in_with_password, %{
+      email: email,
+      password: "secure-password"
+    })
+    |> Ash.read_one!()
+  end
+
+  defp session_identifier_for(user) do
+    {:ok, %{"sub" => subject, "jti" => jti}} = Jwt.peek(user.__metadata__.token)
+    {jti, jti <> ":" <> subject}
   end
 
   defp build_socket do
