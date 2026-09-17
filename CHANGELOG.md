@@ -11,6 +11,101 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.11](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.10...v3.0.0-rc.11) (2026-09-17)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by James Harton
+
+* add TOTP authentication components and routes (#706) by James Harton
+
+
+
+### Features:
+
+* add DynamicOidc sign-in component by Zach Daniel
+
+* add WebAuthn/Passkey Phoenix components (#734) by James Harton
+
+* add Phoenix integration for the OTP strategy (#732) by James Harton
+
+* extract sign-in setup task, register OAuth strategies (#725) by James Harton
+
+* add Phoenix integration for recovery code strategy (#724) by James Harton
+
+* add convention-named Phoenix strategy tasks for auth integration (#719) by James Harton
+
+* After user sign out all other tabs will disconnect (#662) by Abdessabour Moutik
+
+* Allow filtering auth routes (#696) by Andrés
+
+### Improvements:
+
+* link to the Swoosh dev mailbox from the sign-in page (#773) by James Harton
+
+* replace `mix_audit` with `mix hex.audit` in the `mix check` gate (#769) by James Harton
+
+* escape `@reflected_param` and note EEx escaping in the generated interstitial (#766) by James Harton
+
+* avoid compile-time dependencies from route macro options (#757) by Dekkon
+
+* Ash.Scope support (generated scope struct + set_scope plug) (#756) by James Harton
+
+* route OAuth2/OIDC callbacks on POST + generate form_post interstitial (#755) by James Harton
+
+* add optional password visibility toggle (#657) (#752) by James Harton
+
+* allow overriding the reset password submit label (#665) (#751) by James Harton
+
+* add `id` to form components to enable LiveView form recovery (#749) (#750) by James Harton
+
+* consolidate on_mount/4 clauses to avoid Elixir 1.19 type-checker slowdown (#748) by James Harton
+
+* handle `ConfirmationRequired` in the generated auth controller by James Harton
+
+* generated confirmation sender demonstrates identity-link copy by James Harton
+
+* register `okta` and `dynamic_oidc` strategies in `add_strategy` dispatcher by James Harton
+
+### Bug Fixes:
+
+* check `jti` revocation when mounting a live session by James Harton
+
+* hand the sign in token to the server in a `POST` body by James Harton
+
+* derive generated module namespaces from the selected router (#771) by James Harton
+
+* Add ID to webauthn credential form (#758) by James Harton
+
+* Apply overrides to the generated `sign_out_route` (#760) by sevenseacat
+
+* Update type for Ash records. by James Harton
+
+* capture path-param bindings in StrategyRouter by Zach Daniel
+
+* LiveView 1.2 compatibility (#733) by Frank Polasek Dugan III
+
+* use raw paths for reset/register route definitions in sign_in_route (#729) by James Harton
+
+* use consistent underscored subject name for form param keys (#728) by James Harton
+
+* read session data from Plug session in generate_session (#716) by Jinkyou Son
+
+* respect override for submit_label in Confirm.Input component (#717) by Jinkyou Son
+
+* improve TOTP helpers and documentation (#715) by James Harton
+
+* add dark mode background to input fields (#713) by James Harton
+
+* setting `image_url` to nil now also suppresses dark mode image (#708) by James Harton
+
+* auto-submit MagicLink.Form when `require_interaction?` is false (#710) by James Harton
+
+* check override for `submit_label` in Confirm.Input component (#709) by James Harton
+
+* remove double translation in MagicLink.Form disable_text (#707) by James Harton
+
+* only show separator when alternative strategies are visible (#705) by James Harton
+
 ## [v3.0.0-rc.10](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.9...v3.0.0-rc.10) (2026-08-25)
 
 
