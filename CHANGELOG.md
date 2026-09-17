@@ -11,6 +11,31 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.17.4](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.17.3...v2.17.4) (2026-09-17)
+### Breaking Changes:
+
+* prevent logout CSRF by replacing GET sign-out with confirmation page by [@jimsynz](https://github.com/jimsynz)
+
+
+
+### Bug Fixes:
+
+* check `jti` revocation when mounting a live session by [@jimsynz](https://github.com/jimsynz)
+
+* allow the sign in token to be handed over in a `POST` body by [@jimsynz](https://github.com/jimsynz)
+
+* apply overrides to generated sign-out route (#761) by [@jimsynz](https://github.com/jimsynz) [(#761)](https://github.com/team-alembic/ash_authentication_phoenix/pull/761)
+
+* add form IDs for liveview forms (#759) by [@jimsynz](https://github.com/jimsynz) [(#759)](https://github.com/team-alembic/ash_authentication_phoenix/pull/759)
+
+* read session data from Plug session in generate_session (#716) (#747) by [@jimsynz](https://github.com/jimsynz) [(#747)](https://github.com/team-alembic/ash_authentication_phoenix/pull/747)
+
+### Improvements:
+
+* replace `mix_audit` with `mix hex.audit` in the `mix check` gate (#770) by [@jimsynz](https://github.com/jimsynz) [(#770)](https://github.com/team-alembic/ash_authentication_phoenix/pull/770)
+
+* handle `ConfirmationRequired` in the generated auth controller (#744) by [@jimsynz](https://github.com/jimsynz) [(#744)](https://github.com/team-alembic/ash_authentication_phoenix/pull/744)
+
 ## [v2.17.3](https://github.com/team-alembic/ash_authentication_phoenix/compare/v2.17.2...v2.17.3) (2026-08-25)
 ### Breaking Changes:
 
