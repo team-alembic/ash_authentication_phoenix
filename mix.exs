@@ -36,7 +36,8 @@ defmodule AshAuthentication.Phoenix.MixProject do
             {"documentation/tutorials/recovery-codes.md", title: "Recovery Codes"},
             {"documentation/tutorials/webauthn.md", title: "WebAuthn / Passkeys"},
             {"documentation/tutorials/webauthn-2fa.md", title: "Passkeys as 2FA"},
-            {"documentation/topics/scopes.md", title: "Scopes"}
+            {"documentation/topics/scopes.md", title: "Scopes"},
+            {"documentation/topics/multitenancy.md", title: "Multitenancy"}
           ],
           redirects: %{
             "getting-started-with-ash-authentication-phoenix" => "get-started"
