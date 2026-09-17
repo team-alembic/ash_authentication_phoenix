@@ -20,8 +20,14 @@ This guide covers where to set it and what changes for each of those sources.
 
 ## Setting the tenant
 
-Use [`Ash.PlugHelpers.set_tenant/2`](https://hexdocs.pm/ash/Ash.PlugHelpers.html#set_tenant/2)
-in a plug in your browser pipeline. It must run before `load_from_session` and
+The tenant is set by a plug you write yourself.
+[`Ash.PlugHelpers.set_tenant/2`](https://hexdocs.pm/ash/Ash.PlugHelpers.html#set_tenant/2)
+takes the tenant as its second argument, so it is a function you call, not a
+plug you install. Your plug works out the tenant for the request, then calls it.
+
+This guide calls that plug `set_tenant` and defines it as a private function in
+your router. Every example under [Choosing a source](#choosing-a-source) is a
+body for it. Add it to your browser pipeline, before `load_from_session` and
 before any request reaches `auth_routes`, `sign_in_route` or `sign_out_route`:
 
 ```elixir
@@ -39,6 +45,9 @@ pipeline :browser do
 end
 ```
 
+Only `:set_tenant` is yours. `use AshAuthentication.Phoenix.Router` imports
+`load_from_session/2` and `set_scope/2`, so those two need nothing from you.
+
 `set_tenant/2` stores the tenant under `conn.private.ash`, so it does not
 collide with your assigns, and
 [`Ash.PlugHelpers.get_tenant/1`](https://hexdocs.pm/ash/Ash.PlugHelpers.html#get_tenant/1)
@@ -47,6 +56,40 @@ than looking at the connection itself, so the source stays entirely up to you.
 
 Do the same in your `:api` and `:graphql` pipelines, ahead of
 `load_from_bearer`.
+
+## Validating the tenant
+
+`set_tenant/2` records a value. It does not check that the value names a tenant
+you have, and nothing downstream checks it either. Every source in the next
+section is chosen by the client, so treat the value as untrusted input.
+
+An unknown tenant does not reach another tenant's data. Under `strategy
+:attribute` it becomes a filter value, so reads come back empty. Writes are
+less tidy: the attribute is set to the unknown value, which lands you a cast
+error, a foreign key error, or a row belonging to a tenant that does not exist
+— and registration is a write that anonymous visitors can reach. Under
+`strategy :context` with AshPostgres the value becomes a schema name, which
+Ecto quotes as an identifier, so an unknown tenant is a database error rather
+than an injection.
+
+So validate for the sake of the behaviour you want, not for isolation. Look the
+tenant up in your plug and halt with a 404 when it does not exist. That is
+better than an empty page, a 500, or a stray row. The lookup is usually already
+there, because resolving a subdomain or a slug to the value your resources use
+as the tenant is the same query.
+
+The check that matters more is a different one: may *this* user use *this*
+tenant? Confirming that a subdomain names a real organisation does not answer
+that. Where it gets enforced depends on the user resource:
+
+* A multitenant user resource enforces it itself. The identity lookups and the
+  read behind `load_from_session/2` both run against the tenant on the
+  connection, and a stored token carries a `tenant` claim which must match. A
+  user belonging to another tenant does not load.
+* A user resource that is readable without a tenant enforces nothing. The user
+  loads, and the tenant stays whatever the request asked for. Enforce the
+  pairing yourself, with policies on the resources you read, or by comparing
+  the tenant against the organisation the user belongs to.
 
 ## Choosing a source
 
@@ -70,7 +113,8 @@ the two differ.
 
 ### Request header
 
-For APIs, where there is no session to fall back on:
+For APIs, where the host is usually the same for every tenant, ask the client to
+name the tenant on each request:
 
 ```elixir
 defp set_tenant(conn, _opts) do
@@ -80,6 +124,11 @@ defp set_tenant(conn, _opts) do
   end
 end
 ```
+
+`x-tenant` is a name this example invented. Neither Ash nor this package knows
+it, and nothing sends it for you. Choose whatever name suits you, document it
+for the people who call your API, and have their clients send it on every
+request. A request without the header has no tenant.
 
 ### Path segment
 
