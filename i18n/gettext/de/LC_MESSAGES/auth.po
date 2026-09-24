@@ -55,7 +55,7 @@ msgid "Request password reset token"
 msgstr "Passwort zurücksetzen"
 
 msgid "Requesting ..."
-msgstr "Anfrage låuft..."
+msgstr "Anfrage läuft..."
 
 msgid "Reset password with token"
 msgstr "Neues Passwort setzen"
