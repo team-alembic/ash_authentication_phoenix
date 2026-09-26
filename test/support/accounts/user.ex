@@ -180,9 +180,6 @@ defmodule Example.Accounts.User do
         redirect_uri(&get_config/2)
         client_secret(&get_config/2)
         base_url(&get_config/2)
-        authorize_url(&get_config/2)
-        token_url(&get_config/2)
-        user_url(&get_config/2)
         warn_on_missing_identity_resource? false
       end
 
