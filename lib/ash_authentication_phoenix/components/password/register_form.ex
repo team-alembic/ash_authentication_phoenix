@@ -9,7 +9,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
     form_class: "CSS class for the `form` element.",
     slot_class: "CSS class for the `div` surrounding the slot.",
     button_text: "Text for the submit button.",
-    disable_button_text: "Text for the submit button when the request is happening."
+    disable_button_text: "Text for the submit button when the request is happening.",
+    show_custom_fields:
+      "Whether to automatically render inputs for the fields declared in the strategy's `register_action_accept`. Defaults to `true`."
 
   @moduledoc """
   Generates a default registration form.
@@ -23,7 +25,17 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
     * `AshAuthentication.Phoenix.Components.Password.Input.identity_field/1`
     * `AshAuthentication.Phoenix.Components.Password.Input.password_field/1`
     * `AshAuthentication.Phoenix.Components.Password.Input.password_confirmation_field/1`
+    * `AshAuthentication.Phoenix.Components.CustomFields.field/1`
     * `AshAuthentication.Phoenix.Components.Password.Input.submit/1`
+
+  ## Custom fields
+
+  Any writable attributes listed in the strategy's `register_action_accept`
+  DSL option are automatically rendered between the password inputs and the
+  slot, with input types derived from the attribute definitions and errors
+  surfaced from the action's regular validation rules. Set the
+  `show_custom_fields` override to `false` to render them yourself via the
+  slot instead.
 
   ## Props
 
@@ -39,6 +51,7 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
   use AshAuthentication.Phoenix.Web, :live_component
 
   alias AshAuthentication.{Info, Phoenix.Components.Password.Input, Strategy}
+  alias AshAuthentication.Phoenix.Components.CustomFields
   alias AshPhoenix.Form
   alias Phoenix.LiveView.{Rendered, Socket}
 
@@ -79,6 +92,9 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:context, fn -> %{} end)
       |> assign_new(:auth_routes_prefix, fn -> nil end)
+      |> assign_new(:custom_fields, fn ->
+        AshAuthentication.Strategy.CustomFields.register_fields(strategy)
+      end)
 
     context =
       socket.assigns[:context]
@@ -156,6 +172,17 @@ defmodule AshAuthentication.Phoenix.Components.Password.RegisterForm do
           <Input.password_confirmation_field
             strategy={@strategy}
             form={form}
+            overrides={@overrides}
+            gettext_fn={@gettext_fn}
+          />
+        <% end %>
+
+        <%= if override_for(@overrides, :show_custom_fields, true) do %>
+          <CustomFields.field
+            :for={{attribute, secret?} <- @custom_fields}
+            form={form}
+            attribute={attribute}
+            secret?={secret?}
             overrides={@overrides}
             gettext_fn={@gettext_fn}
           />

@@ -8,6 +8,8 @@ defmodule AshAuthentication.Phoenix.WebAuthnHelpersTest do
 
   alias AshAuthentication.Phoenix.WebAuthnHelpers
 
+  @moduletag feature: :webauthn
+
   defmodule FakeUser do
     defstruct id: nil, __metadata__: %{}
   end

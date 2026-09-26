@@ -21,9 +21,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     last_credential_warning: "Warning when trying to delete the last credential.",
     label_input_class: "CSS class for the label input.",
     timestamp_class: "CSS class for timestamp text.",
+    synced_badge_text:
+      "Badge text shown for synced passkeys (credentials whose backup state flag is set).",
+    synced_badge_class: "CSS class for the synced passkey badge.",
     continue_button_text:
       "Text for the continue button shown after at least one credential is registered.",
-    continue_button_class: "CSS class for the continue button."
+    continue_button_class: "CSS class for the continue button.",
+    add_form_class: "CSS class for the `form` wrapping the passkey name input and add button.",
+    show_key_name_field:
+      "Whether to show a passkey name input before adding a new credential, so the name is set before the browser ceremony stores it in the user's password manager. Defaults to `true`."
 
   @moduledoc """
   Credential management panel for authenticated users.
@@ -46,6 +52,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
+  alias AshAuthentication.Phoenix.Components.WebAuthn.Input
   alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias AshAuthentication.Strategy.WebAuthn
   # alias Phoenix.LiveView.{Rendered, Socket}
@@ -61,6 +68,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       |> assign_new(:editing_label, fn -> "" end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:adding, fn -> false end)
+      |> assign_new(:key_name_value, fn -> "" end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:continue_path, fn -> nil end)
 
@@ -115,6 +123,11 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
               <% else %>
                 <div>
                   <strong>{credential.label || "Security Key"}</strong>
+                  <%= if Map.get(credential, @strategy.backed_up_field) == true do %>
+                    <span class={override_for(@overrides, :synced_badge_class)}>
+                      {_gettext(override_for(@overrides, :synced_badge_text, "Synced passkey"))}
+                    </span>
+                  <% end %>
                   <span class={override_for(@overrides, :timestamp_class)}>
                     <%= if added = Map.get(credential, :inserted_at) do %>
                       Added: {Calendar.strftime(added, "%B %d, %Y")}
@@ -151,14 +164,29 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       <% end %>
 
       <div id={"#{@id}-add-key"} phx-hook="WebAuthnRegistrationHook">
-        <button
-          phx-click="add-credential"
+        <form
+          id={"#{@id}-add-key-form"}
+          phx-change="update-key-name"
+          phx-submit="add-credential"
           phx-target={@myself}
-          class={override_for(@overrides, :add_button_class)}
-          disabled={@adding}
+          class={override_for(@overrides, :add_form_class)}
         >
-          {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
-        </button>
+          <%= if override_for(@overrides, :show_key_name_field, true) do %>
+            <Input.key_name_field
+              id={"#{@id}-key-name"}
+              value={@key_name_value}
+              overrides={@overrides}
+              gettext_fn={@gettext_fn}
+            />
+          <% end %>
+          <button
+            type="submit"
+            class={override_for(@overrides, :add_button_class)}
+            disabled={@adding}
+          >
+            {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
+          </button>
+        </form>
       </div>
 
       <%= if @continue_path && @credentials != [] do %>
@@ -232,7 +260,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     end
   end
 
-  def handle_event("add-credential", _params, socket) do
+  def handle_event("update-key-name", params, socket) do
+    {:noreply,
+     assign(socket, :key_name_value, Map.get(params, "key_name", socket.assigns.key_name_value))}
+  end
+
+  def handle_event("add-credential", params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
     origin = PhoenixWebAuthn.origin_from_socket(socket)
@@ -240,31 +273,36 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     {:ok, challenge} =
       WebAuthn.Actions.registration_challenge(strategy, tenant, origin: origin)
 
-    rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
-    rp_name = WebAuthn.Helpers.resolve_rp_name(strategy, tenant)
-    user_id = Base.url_encode64(:crypto.strong_rand_bytes(64), padding: false)
     user = socket.assigns.current_user
+    credentials = socket.assigns.credentials
+    key_name = Map.get(params, "key_name", socket.assigns.key_name_value)
+
+    # For an existing user the handle must be stable so all of their
+    # passkeys share it — reuse the one stored with an existing credential
+    # (falling back to the primary key). Existing credential ids go in
+    # `excludeCredentials` so re-registering an already-enrolled
+    # authenticator fails client-side instead of creating a duplicate.
+    {user_descriptor, user_handle} =
+      PhoenixWebAuthn.actor_user_descriptor(strategy, user, credentials, key_name)
+
+    exclude_ids = Enum.map(credentials, &Map.get(&1, strategy.credential_id_field))
+
+    options =
+      PhoenixWebAuthn.registration_options(
+        strategy,
+        challenge,
+        tenant,
+        user_descriptor,
+        exclude_ids
+      )
 
     socket =
       socket
       |> assign(:add_challenge, challenge)
+      |> assign(:add_user_handle, user_handle)
       |> assign(:adding, true)
-      |> Phoenix.LiveView.push_event("registration-challenge", %{
-        challenge: Base.url_encode64(challenge.bytes, padding: false),
-        rp_id: rp_id,
-        rp_name: rp_name,
-        user_id: user_id,
-        user_name: to_string(Map.get(user, strategy.identity_field)),
-        timeout: strategy.timeout,
-        attestation: strategy.attestation,
-        authenticator_attachment:
-          if(strategy.authenticator_attachment,
-            do: to_string(strategy.authenticator_attachment),
-            else: nil
-          ),
-        user_verification: strategy.user_verification,
-        resident_key: to_string(strategy.resident_key)
-      })
+      |> assign(:key_name_value, key_name)
+      |> Phoenix.LiveView.push_event("registration-challenge", options)
 
     {:noreply, socket}
   end
@@ -275,21 +313,32 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     user = socket.assigns.current_user
     tenant = socket.assigns.current_tenant
 
+    # A blank label is passed as `nil` so the credential resource's
+    # attribute default applies.
+    label =
+      case socket.assigns.key_name_value do
+        "" -> nil
+        key_name -> key_name
+      end
+
     add_params = %{
       "attestation_object" => params["attestation_object"],
       "client_data_json" => params["client_data_json"],
-      "label" => "New Key"
+      "label" => label,
+      "transports" => params["transports"],
+      "cred_props" => params["cred_props"]
     }
 
     case WebAuthn.Actions.add_credential(strategy, add_params,
            challenge: challenge,
            user: user,
-           tenant: tenant
+           tenant: tenant,
+           user_handle: socket.assigns[:add_user_handle]
          ) do
       {:ok, _credential} ->
         socket =
           socket
-          |> assign(adding: false, add_challenge: nil, error_message: nil)
+          |> assign(adding: false, add_challenge: nil, error_message: nil, key_name_value: "")
           |> load_credentials()
 
         {:noreply, socket}
@@ -304,12 +353,20 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     end
   end
 
-  def handle_event("registration-error", _params, socket) do
+  def handle_event("registration-error", params, socket) do
+    # `excludeCredentials` makes the browser reject an already-enrolled
+    # authenticator client-side with InvalidStateError.
+    error_message =
+      case params["name"] do
+        "InvalidStateError" -> "This device is already registered."
+        _ -> "Registration was cancelled."
+      end
+
     {:noreply,
      assign(socket,
        adding: false,
        add_challenge: nil,
-       error_message: "Registration was cancelled."
+       error_message: error_message
      )}
   end
 

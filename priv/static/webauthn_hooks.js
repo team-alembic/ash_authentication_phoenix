@@ -21,6 +21,12 @@
  *       // your other hooks...
  *     }
  *   });
+ *
+ * The server pushes spec-shaped PublicKeyCredentialCreationOptions /
+ * PublicKeyCredentialRequestOptions (the same JSON the strategy's Plug
+ * endpoints return). Binary fields are base64url without padding in both
+ * directions. Options are passed through generically so server-added keys
+ * (e.g. future extensions) survive without changes here.
  */
 
 // Utility: base64url string to Uint8Array
@@ -46,6 +52,37 @@ function arrayBufferToBase64Url(buffer) {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// Decode a list of PublicKeyCredentialDescriptor entries, keeping any
+// extra keys (e.g. transports) intact. `id` arrives base64url-encoded.
+function decodeCredentialDescriptors(descriptors) {
+  return (descriptors || []).map((cred) => ({
+    ...cred,
+    id: base64UrlToArray(cred.id),
+    type: cred.type || "public-key",
+  }));
+}
+
+// The server JSON-encodes the authenticator attachment atom with an
+// underscore, but the WebAuthn API expects a hyphen.
+function normalizeAuthenticatorSelection(selection) {
+  const normalized = { ...(selection || {}) };
+
+  for (const key of Object.keys(normalized)) {
+    if (normalized[key] == null) delete normalized[key];
+  }
+
+  if (normalized.authenticatorAttachment === "cross_platform") {
+    normalized.authenticatorAttachment = "cross-platform";
+  }
+
+  // Back-compat for authenticators that predate residentKey.
+  if (normalized.residentKey === "required") {
+    normalized.requireResidentKey = true;
+  }
+
+  return normalized;
 }
 
 /**
@@ -76,8 +113,10 @@ export const WebAuthnSupportHook = {
  * WebAuthnRegistrationHook
  *
  * Handles the registration ceremony.
- * Listens for "registration-challenge" event from server,
- * calls navigator.credentials.create(), pushes "registration-attestation" back.
+ * Listens for "registration-challenge" event from server (spec-shaped
+ * creation options), calls navigator.credentials.create(), pushes
+ * "registration-attestation" back — including the credential's transports
+ * and client extension results, which only the client can report.
  */
 export const WebAuthnRegistrationHook = {
   mounted() {
@@ -88,53 +127,24 @@ export const WebAuthnRegistrationHook = {
 
   async handleRegistration(data) {
     try {
+      // Use the server's options verbatim (decoding binary fields) so
+      // server-added keys pass through untouched. In particular the
+      // server's user.id is the canonical user handle — it is persisted
+      // with the credential, so it must not be synthesized client-side.
       const publicKeyOptions = {
+        ...data,
         challenge: base64UrlToArray(data.challenge),
-        rp: {
-          id: data.rp_id,
-          name: data.rp_name,
-        },
         user: {
-          id: base64UrlToArray(data.user_id),
-          name: data.user_name,
-          displayName: data.user_display_name || data.user_name,
+          ...data.user,
+          id: base64UrlToArray(data.user.id),
         },
-        pubKeyCredParams: [
-          { alg: -7, type: "public-key" },  // ES256
-          { alg: -257, type: "public-key" }, // RS256
-        ],
+        excludeCredentials: decodeCredentialDescriptors(data.excludeCredentials),
+        authenticatorSelection: normalizeAuthenticatorSelection(
+          data.authenticatorSelection
+        ),
         timeout: data.timeout || 60000,
         attestation: data.attestation || "none",
-        authenticatorSelection: {},
       };
-
-      if (data.authenticator_attachment) {
-        publicKeyOptions.authenticatorSelection.authenticatorAttachment =
-          data.authenticator_attachment === "cross_platform"
-            ? "cross-platform"
-            : data.authenticator_attachment;
-      }
-
-      if (data.user_verification) {
-        publicKeyOptions.authenticatorSelection.userVerification =
-          data.user_verification;
-      }
-
-      if (data.resident_key) {
-        publicKeyOptions.authenticatorSelection.residentKey = data.resident_key;
-        if (data.resident_key === "required") {
-          publicKeyOptions.authenticatorSelection.requireResidentKey = true;
-        }
-      }
-
-      if (data.exclude_credentials) {
-        publicKeyOptions.excludeCredentials = data.exclude_credentials.map(
-          (cred) => ({
-            id: base64UrlToArray(cred.id),
-            type: "public-key",
-          })
-        );
-      }
 
       const credential = await navigator.credentials.create({
         publicKey: publicKeyOptions,
@@ -155,10 +165,25 @@ export const WebAuthnRegistrationHook = {
       const clientDataJSON = arrayBufferToBase64Url(response.clientDataJSON);
       const rawId = arrayBufferToBase64Url(credential.rawId);
 
+      const transports =
+        typeof response.getTransports === "function"
+          ? response.getTransports()
+          : [];
+
+      const clientExtensionResults =
+        typeof credential.getClientExtensionResults === "function"
+          ? credential.getClientExtensionResults()
+          : {};
+
       this.pushEventTo(this.el, "registration-attestation", {
         attestation_object: attestationObject,
         client_data_json: clientDataJSON,
         raw_id: rawId,
+        transports: transports,
+        // Today only credProps is consumed server-side; sending the whole
+        // object is forward-compatible with future extensions.
+        cred_props: clientExtensionResults.credProps || null,
+        client_extension_results: clientExtensionResults,
       });
     } catch (error) {
       this.pushEventTo(this.el, "registration-error", {
@@ -173,8 +198,9 @@ export const WebAuthnRegistrationHook = {
  * WebAuthnAuthenticationHook
  *
  * Handles the authentication ceremony.
- * Listens for "authentication-challenge" event from server,
- * calls navigator.credentials.get(), pushes "authentication-assertion" back.
+ * Listens for "authentication-challenge" event from server (spec-shaped
+ * request options), calls navigator.credentials.get(), pushes
+ * "authentication-assertion" back.
  */
 export const WebAuthnAuthenticationHook = {
   mounted() {
@@ -190,19 +216,20 @@ export const WebAuthnAuthenticationHook = {
   async handleAuthentication(data, mediation) {
     try {
       const publicKeyOptions = {
+        ...data,
         challenge: base64UrlToArray(data.challenge),
-        rpId: data.rp_id,
         timeout: data.timeout || 60000,
-        userVerification: data.user_verification || "preferred",
+        userVerification: data.userVerification || "preferred",
       };
 
-      if (data.allow_credentials && data.allow_credentials.length > 0) {
-        publicKeyOptions.allowCredentials = data.allow_credentials.map(
-          (cred) => ({
-            id: base64UrlToArray(cred.id),
-            type: "public-key",
-          })
+      if (data.allowCredentials && data.allowCredentials.length > 0) {
+        // Entries may carry a transports hint captured at registration —
+        // decode the id, keep everything else as-is.
+        publicKeyOptions.allowCredentials = decodeCredentialDescriptors(
+          data.allowCredentials
         );
+      } else {
+        delete publicKeyOptions.allowCredentials;
       }
 
       const credential = await navigator.credentials.get({

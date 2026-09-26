@@ -38,6 +38,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
       |> assign(overrides: overrides)
       |> assign_new(:otp_app, fn -> nil end)
       |> assign(:path, session["path"] || "/")
+      |> assign(:webauthn_path, session["webauthn_path"])
       |> assign(:reset_path, session["reset_path"])
       |> assign(:register_path, session["register_path"])
       |> assign(:current_tenant, session["tenant"])
@@ -65,6 +66,7 @@ defmodule AshAuthentication.Phoenix.SignInLive do
         otp_app={@otp_app}
         live_action={@live_action}
         path={@path}
+        webauthn_path={@webauthn_path}
         auth_routes_prefix={@auth_routes_prefix}
         resources={@resources}
         reset_path={@reset_path}

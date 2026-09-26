@@ -135,7 +135,9 @@ defmodule AshAuthentication.Phoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ash_authentication, "~> 5.0.0-rc.14"},
+      # Tracks team-alembic/ash_authentication#1178 until it is merged and released.
+      {:ash_authentication,
+       github: "simpers/ash_authentication", branch: "feat/webauthn-no-identity"},
       {:wax_, "~> 0.7"},
       {:ash_phoenix, "~> 2.3 and >= 2.3.11"},
       {:ash, "~> 3.26"},

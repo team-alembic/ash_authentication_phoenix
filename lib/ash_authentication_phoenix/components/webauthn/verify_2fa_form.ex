@@ -47,7 +47,6 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
   alias AshAuthentication.Info
   alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthnLib
   alias AshAuthentication.Strategy.WebAuthn
-  alias AshAuthentication.Strategy.WebAuthn.Helpers, as: WebAuthnHelpers
   alias Phoenix.LiveView.{Rendered, Socket}
 
   import AshAuthentication.Phoenix.Components.Helpers,
@@ -177,30 +176,27 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     origin = PhoenixWebAuthnLib.origin_from_socket(socket)
 
     if actor do
-      {:ok, allow_credentials} = load_allow_credentials(strategy, actor, tenant)
+      credentials = load_credentials(strategy, actor, tenant)
+
+      allow_credentials =
+        Enum.map(credentials, fn cred ->
+          {Map.get(cred, strategy.credential_id_field), Map.get(cred, strategy.public_key_field)}
+        end)
 
       {:ok, challenge} =
         WebAuthn.Actions.authentication_challenge(strategy, allow_credentials, tenant,
           origin: origin
         )
 
-      rp_id = WebAuthnHelpers.resolve_rp_id(strategy, tenant)
+      options =
+        PhoenixWebAuthnLib.authentication_options(strategy, challenge, tenant, credentials)
 
       socket =
         socket
         |> assign(:challenge, challenge)
         |> assign(:submitting, true)
         |> assign(:error_message, nil)
-        |> Phoenix.LiveView.push_event("authentication-challenge", %{
-          challenge: Base.url_encode64(challenge.bytes, padding: false),
-          rp_id: rp_id,
-          timeout: strategy.timeout,
-          user_verification: strategy.user_verification,
-          allow_credentials:
-            Enum.map(allow_credentials, fn {cred_id, _cose_key} ->
-              %{id: Base.url_encode64(cred_id, padding: false), type: "public-key"}
-            end)
-        })
+        |> Phoenix.LiveView.push_event("authentication-challenge", options)
 
       {:noreply, socket}
     else
@@ -281,24 +277,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
 
   defp resolve_actor(_), do: nil
 
-  defp load_allow_credentials(strategy, actor, tenant) do
+  defp load_credentials(strategy, actor, tenant) do
     ash_opts = [authorize?: false]
     ash_opts = if tenant, do: Keyword.put(ash_opts, :tenant, tenant), else: ash_opts
 
     case Ash.load(actor, [strategy.credentials_relationship_name], ash_opts) do
-      {:ok, loaded} ->
-        creds =
-          loaded
-          |> Map.get(strategy.credentials_relationship_name, [])
-          |> Enum.map(fn cred ->
-            {Map.get(cred, strategy.credential_id_field),
-             Map.get(cred, strategy.public_key_field)}
-          end)
-
-        {:ok, creds}
-
-      _ ->
-        {:ok, []}
+      {:ok, loaded} -> Map.get(loaded, strategy.credentials_relationship_name, [])
+      _ -> []
     end
   end
 end

@@ -5,6 +5,8 @@
 defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   use AshAuthentication.Phoenix.Overrides.Overridable,
     root_class: "CSS class for the root `div` element.",
+    label_class: "CSS class for the heading `h2` element (or `nil` to hide).",
+    label_text: "Heading text (or `nil` to hide).",
     form_class: "CSS class for the `form` element.",
     button_text: "Text for the authentication button.",
     disable_button_text: "Text shown while the authentication ceremony is in progress.",
@@ -29,22 +31,29 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
-  alias AshAuthentication.{Info, Phoenix.Components.WebAuthn}
-  # alias Phoenix.LiveView.{Rendered, Socket}
+
+  require Logger
+
+  alias AshAuthentication.Info
+  alias AshAuthentication.Phoenix.Components.WebAuthn
 
   import AshAuthentication.Phoenix.Components.Helpers,
     only: [auth_path: 6]
 
   import Slug
 
-  @impl true
+  @authentication_timeout_ms 60_000
+
+  @impl Phoenix.LiveComponent
   def update(assigns, socket) do
-    strategy = assigns.strategy
+    # `send_update/2` (e.g. the timeout path in `WebAuthnLive`) only passes a
+    # subset of assigns, so read everything through the merged socket assigns.
+    socket = assign(socket, assigns)
+    strategy = socket.assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
 
     socket =
       socket
-      |> assign(assigns)
       |> assign(:subject_name, subject_name)
       |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
       |> assign_new(:identity_value, fn -> "" end)
@@ -62,13 +71,19 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     {:ok, socket}
   end
 
-  @impl true
+  @impl Phoenix.LiveComponent
   def render(assigns) do
-    show_identity = override_for(assigns.overrides, :show_identity_field, false)
+    show_identity =
+      assigns.strategy.require_identity? &&
+        override_for(assigns.overrides, :show_identity_field, false)
+
     assigns = assign(assigns, :show_identity, show_identity)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)} id={@id} phx-hook="WebAuthnAuthenticationHook">
+      <%= if label_text = override_for(@overrides, :label_text) do %>
+        <h2 class={override_for(@overrides, :label_class)}>{_gettext(label_text)}</h2>
+      <% end %>
       <form
         id={"#{@id}-form"}
         phx-change="update-identity"
@@ -78,6 +93,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       >
         <%= if @show_identity do %>
           <WebAuthn.Input.identity_field
+            id={@id <> "-identity"}
             identity_field={@strategy.identity_field}
             value={@identity_value}
             overrides={@overrides}
@@ -128,7 +144,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     """
   end
 
-  @impl true
+  @impl Phoenix.LiveComponent
   def handle_event("update-identity", params, socket) do
     identity_field_name = to_string(socket.assigns.strategy.identity_field)
     value = Map.get(params, identity_field_name, "")
@@ -146,24 +162,22 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     {:ok, challenge} =
       WebAuthn.Actions.authentication_challenge(strategy, [], tenant, origin: origin)
 
-    rp_id = WebAuthn.Helpers.resolve_rp_id(strategy, tenant)
+    options = PhoenixWebAuthn.authentication_options(strategy, challenge, tenant, [])
+
+    timer_ref = Process.send_after(self(), :authentication_timeout, @authentication_timeout_ms)
 
     socket =
       socket
       |> assign(:challenge, challenge)
+      |> assign(:authentication_timer_ref, timer_ref)
       |> assign(:submitting, true)
-      |> Phoenix.LiveView.push_event("authentication-challenge", %{
-        challenge: Base.url_encode64(challenge.bytes, padding: false),
-        rp_id: rp_id,
-        timeout: strategy.timeout,
-        user_verification: strategy.user_verification,
-        allow_credentials: []
-      })
+      |> Phoenix.LiveView.push_event("authentication-challenge", options)
 
     {:noreply, socket}
   end
 
   def handle_event("authentication-assertion", params, socket) do
+    socket = cancel_timer(socket)
     strategy = socket.assigns.strategy
     challenge = socket.assigns.challenge
 
@@ -176,10 +190,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       "user_handle" => params["user_handle"]
     }
 
+    origin = PhoenixWebAuthn.origin_from_socket(socket)
+
     case WebAuthn.Actions.sign_in(
            strategy,
            sign_in_params,
            challenge: challenge,
+           origin: origin,
            tenant: socket.assigns.current_tenant
          ) do
       {:ok, user} ->
@@ -190,7 +207,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
            trigger_action: true
          )}
 
-      {:error, _error} ->
+      {:error, error} ->
+        Logger.error("WebAuthn authentication failed: #{inspect(error)}")
+
         {:noreply,
          assign(socket,
            challenge: nil,
@@ -201,6 +220,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   end
 
   def handle_event("authentication-error", %{"name" => name, "message" => message}, socket) do
+    socket = cancel_timer(socket)
+
     error_msg =
       case name do
         "NotAllowedError" -> "The operation was cancelled or not allowed."
@@ -208,5 +229,14 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       end
 
     {:noreply, assign(socket, challenge: nil, submitting: false, error_message: error_msg)}
+  end
+
+  defp cancel_timer(socket) do
+    if timer_ref = socket.assigns[:authentication_timer_ref] do
+      Process.cancel_timer(timer_ref)
+      assign(socket, :authentication_timer_ref, nil)
+    else
+      socket
+    end
   end
 end

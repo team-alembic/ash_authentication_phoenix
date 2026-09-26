@@ -9,6 +9,7 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.WebauthnTest do
   import Igniter.Test
 
   @moduletag :igniter
+  @moduletag feature: :webauthn
 
   @vanilla_app_js """
   import "phoenix_html"
