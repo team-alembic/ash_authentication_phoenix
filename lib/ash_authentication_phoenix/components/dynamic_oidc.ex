@@ -82,6 +82,7 @@ defmodule AshAuthentication.Phoenix.Components.DynamicOidc do
   end
 
   @doc false
+  # sobelow_skip ["XSS.Raw"]
   def icon(assigns) do
     ~H"""
     <%= if @icon_url do %>

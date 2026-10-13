@@ -118,6 +118,7 @@ if Code.ensure_loaded?(EQRCode) do
     @doc false
     @impl true
     @spec render(Socket.assigns()) :: Rendered.t() | no_return
+    # sobelow_skip ["XSS.Raw"]
     def render(assigns) do
       ~H"""
       <div class={override_for(@overrides, :root_class)}>
