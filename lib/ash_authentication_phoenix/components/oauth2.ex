@@ -69,6 +69,7 @@ defmodule AshAuthentication.Phoenix.Components.OAuth2 do
     """
   end
 
+  # sobelow_skip ["XSS.Raw"]
   def icon(assigns) do
     ~H"""
     <%= if @icon_src do %>

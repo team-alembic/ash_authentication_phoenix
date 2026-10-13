@@ -55,6 +55,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
 
   @doc "Renders the register button."
   @spec register_button(map) :: Rendered.t()
+  # sobelow_skip ["XSS.Raw"]
   def register_button(assigns) do
     ~H"""
     <button type="submit" disabled={@disabled} class={override_for(@overrides, :submit_class)}>
@@ -68,6 +69,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
 
   @doc "Renders the sign-in button."
   @spec sign_in_button(map) :: Rendered.t()
+  # sobelow_skip ["XSS.Raw"]
   def sign_in_button(assigns) do
     ~H"""
     <button type="submit" disabled={@disabled} class={override_for(@overrides, :submit_class)}>

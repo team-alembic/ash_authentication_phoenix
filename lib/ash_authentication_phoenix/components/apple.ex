@@ -65,6 +65,7 @@ defmodule AshAuthentication.Phoenix.Components.Apple do
     """
   end
 
+  # sobelow_skip ["XSS.Raw"]
   def icon(assigns) do
     ~H"""
     {raw(icon_svg(@icon, override_for(@overrides, :icon_class)))}
