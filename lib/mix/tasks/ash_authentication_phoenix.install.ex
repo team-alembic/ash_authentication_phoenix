@@ -86,8 +86,9 @@ if Code.ensure_loaded?(Igniter) do
         |> module_option(:accounts)
         |> module_option(:token)
 
+      # `get_dep/2` returns `{:ok, nil}` when the dependency is missing
       install? =
-        !match?({:ok, _}, Igniter.Project.Deps.get_dep(igniter, :ash_authentication))
+        match?({:ok, nil}, Igniter.Project.Deps.get_dep(igniter, :ash_authentication))
 
       igniter =
         if install? do
@@ -173,8 +174,8 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
-    defp handle_missing_module(igniter, _options, argv, false = _install?, type) do
-      if prompt_to_run_installer?(type) do
+    defp handle_missing_module(igniter, options, argv, false = _install?, type) do
+      if options[:yes] || prompt_to_run_installer?(type) do
         Igniter.compose_task(igniter, "ash_authentication.install", argv)
       else
         igniter
@@ -182,7 +183,7 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     defp prompt_to_run_installer?(type) do
-      Mix.shell().yes?("""
+      Igniter.Util.IO.yes?("""
       Could not find #{type} module. Please set the equivalent CLI flag.
 
       There are two likely causes:
