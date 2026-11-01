@@ -70,6 +70,7 @@ defmodule MyApp.Accounts.User do
         credential_resource MyApp.Accounts.WebAuthnCredential
         rp_id MyApp.Secrets
         rp_name MyApp.Secrets
+        # Optional allowlist; unset, any origin on the rp_id is accepted.
         origin MyApp.Secrets
         identity_field :email
       end
@@ -79,7 +80,9 @@ end
 ```
 
 Static literals (`rp_id "example.com"`, etc.) are still accepted; the
-Secrets-module form is what the installer uses by default.
+Secrets-module form is what the installer uses by default. See
+[Origin and `rp_id` configuration](#origin-and-rp_id-configuration) for
+what each setting does, and why `origin` is usually best left unset.
 
 The `credential_resource` is a separate Ash resource that stores each
 registered credential (public key, sign count, label, etc.).
@@ -143,6 +146,34 @@ Each hook drives a different part of the ceremony:
 The hooks communicate with the server via `pushEventTo` / `handle_event`
 — you don't need to write any custom JavaScript.
 
+## Sign-in uses discoverable credentials
+
+The sign-in challenge never lists credentials. It is issued before anyone
+is authenticated, and listing the credentials of a submitted email address
+would tell whoever typed it whether the account exists and what its
+credential ids are. So `allowCredentials` is always empty, the browser
+offers the passkeys it holds for the site, and the credential id resolves
+the user — in identity mode as much as in passkey-first mode. An identity
+submitted with the sign-in is optional and only has to match the
+credential's owner; the `AuthenticationForm` hides the input by default
+(`show_identity_field`).
+
+Two things follow:
+
+- Only **discoverable** credentials (passkeys, resident keys) can sign in.
+  Keep the strategy's `resident_key :required`, which is the default;
+  `ash_authentication` warns at compile time if a strategy that signs users
+  in would let an authenticator create a non-discoverable credential.
+  `:preferred` and `:discouraged` are only for a second-factor-only strategy
+  (`sign_in_enabled? false`), whose verify challenge lists the
+  authenticated user's credentials so that both kinds can answer.
+- There is no "enter your email to find your passkey" step to build. The
+  browser's own picker, or passkey autofill (conditional UI), is the path.
+
+See "Discoverable and non-discoverable credentials" in the
+[AshAuthentication WebAuthn guide](https://hexdocs.pm/ash_authentication/webauthn.html)
+for the background.
+
 ## Origin and `rp_id` configuration
 
 The installer seeds three application-environment-driven settings on the
@@ -152,14 +183,33 @@ strategy via the user's `Secrets` module:
 | -------------------- | ----------------------------------------- | --------------------------- | -------------------------------- |
 | `:webauthn_rp_id`    | Domain only (Relying Party ID)            | `"localhost"`               | `System.get_env("WEBAUTHN_RP_ID")` |
 | `:webauthn_rp_name`  | Display name shown in the browser prompt  | humanised app name          | `System.get_env("WEBAUTHN_RP_NAME")` |
-| `:webauthn_origin`   | Optional explicit origin override         | *(unset)*                   | `System.get_env("WEBAUTHN_ORIGIN")` |
+| `:webauthn_origin`   | Optional exact allowlist of origins       | *(unset)*                   | `System.get_env("WEBAUTHN_ORIGIN")` |
 
-When `:webauthn_origin` is unset the strategy uses the request origin —
-`scheme://host[:port]` derived from `socket.host_uri` (LiveView) or the
-`Plug.Conn` (controllers). That keeps dev "just work" against whatever
-port Phoenix is on (`4000`, `4001`, …) without anyone editing config.
-Set `:webauthn_origin` explicitly in prod (or any env where you don't
-want to trust the request origin) to enforce a known value.
+Which origins a ceremony is accepted from is the strategy's own policy,
+decided from configuration alone (see
+`AshAuthentication.Strategy.WebAuthn.Origin`). The request that minted the
+challenge plays no part: behind a TLS-terminating proxy or load balancer
+that request says `http://10.0.0.5:4000` while the browser truthfully signs
+`https://app.example.com` into the ceremony, so a check built on the
+request would reject every ceremony. The LiveView components accordingly
+never pass the socket's host along.
+
+- **`:webauthn_origin` unset** (the installer's default, and the Secrets
+  module returning `:error`): any `https` origin whose host is the `rp_id`
+  or a subdomain of it is accepted, on any port, plus `http://localhost` on
+  any port when the `rp_id` is `"localhost"`. That is exactly the set of
+  origins a browser lets use that RP ID in the first place, so nothing is
+  granted the browser hadn't already, and the RP ID hash in the signed
+  authenticator data is checked separately. Development on whatever port
+  Phoenix is on (`4000`, `4001`, …) needs no configuration, and neither
+  does a deployment behind a proxy or across several subdomains. No
+  `Plug.RewriteOn` is needed for WebAuthn's sake.
+- **`:webauthn_origin` set**: an exact allowlist, port included — one
+  origin or a list. Set it only when ceremonies should be narrowed to
+  specific hosts or ports. With `origin "https://example.com"` a ceremony
+  from `https://app.example.com` or `https://example.com:8443` is refused.
+
+Leave `:webauthn_origin` unset unless you want that allowlist.
 
 **`rp_id` must be a hostname** — no scheme, no port. WebAuthn rejects
 `"localhost:4000"` or `"https://example.com"` with a `SecurityError`
@@ -188,7 +238,28 @@ The library ships with a `ManageCredentials` component that lets authenticated u
 />
 ```
 
-Deletion of the last credential is prevented to avoid locking users out of their accounts. All credential operations route through `AshAuthentication.Strategy.WebAuthn.Actions`, so policies, hooks, and validations defined on the credential resource are honored.
+Deletion of the last credential is prevented to avoid locking users out of their accounts. All credential operations route through `AshAuthentication.Strategy.WebAuthn.Actions`, so policies, hooks, and validations defined on the credential resource are honored. Credential fields are read through the strategy's accessors, so a credential resource that renames them, or uses a primary key other than `:id`, works unchanged.
+
+### Who may add a passkey
+
+A passkey is a lasting way into the account, so the strategy decides who
+may add one, and the component follows:
+
+- `add_credential_enabled? false` removes the add affordance altogether.
+- `add_credential_max_authentication_age` (e.g. `{5, :minutes}`) requires
+  the user to have authenticated within that window. The component checks
+  this *before* the browser prompt; when the session is too old it sends
+  the user to re-authenticate — to the second-factor verify page when they
+  already hold a passkey, to the sign-in page otherwise — and does the same
+  if the window lapses mid-ceremony. The destination is the
+  `reauthentication_path` override. What counts as authenticating is the
+  actor's metadata, which `AshAuthentication.Phoenix.LiveSession` restores
+  from the session: the sign-in token's issue time, or a second-factor
+  verification (`webauthn_verified_at`, `totp_verified_at`). Pass
+  `authenticated_at` to the component if your application knows better.
+
+Set `add_credential_max_authentication_age`. Without it any authenticated
+session, however old, can enrol a passkey of its own.
 
 ## Cross-device sign-in (QR / hybrid)
 
@@ -230,6 +301,8 @@ See [UI Overrides](ui-overrides.md) for the full list of overridable slots.
 
 - **"SecurityError" / "The relying party ID is not a registrable domain suffix"** — Your `rp_id` includes a port (e.g. `"localhost:4000"`) or a scheme (e.g. `"https://example.com"`). Strip it to the bare hostname.
 - **"NotAllowedError" in the browser** — Usually a mismatch between `rp_id` and the page origin, or the user cancelled the prompt.
+- **Ceremonies verify locally but fail behind a proxy, or on another port or subdomain** — Check `:webauthn_origin`. Unset, the strategy accepts any `https` origin on the `rp_id` (and `http://localhost` on any port for `"localhost"`); set, the browser's exact origin, port included, must be in the list. Nothing is read from the request, so `Plug.RewriteOn` makes no difference here.
+- **"Sign in with Passkey" shows no passkey for a registered security key** — The credential is non-discoverable: it was created with `resident_key` other than `:required`, or on a key whose storage for discoverable credentials was full. Sign-in never lists credentials, so only discoverable ones can answer; such a key can still serve as a second factor.
 - **WebAuthn prompt never appears in dev** — You're serving over plain HTTP from a hostname other than `localhost` / `127.0.0.1`. Either use `localhost` or run dev over HTTPS.
 - **Credentials missing after deploy** — The `rp_id` likely changed. Credentials are bound to the exact `rp_id` they were registered under.
 - **Hooks not firing** — Verify all three hooks are registered in `app.js` and that the LiveView is using them. Check the browser console for hook initialization errors.

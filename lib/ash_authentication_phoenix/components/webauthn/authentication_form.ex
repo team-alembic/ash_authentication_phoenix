@@ -12,17 +12,27 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     disable_button_text: "Text shown while the authentication ceremony is in progress.",
     slot_class: "CSS class for the `div` surrounding the slot.",
     show_identity_field:
-      "Whether to show the identity input (false for discoverable credentials)."
+      "Whether to show an optional identity input above the sign-in button. Sign-in never needs one — the browser offers the discoverable passkeys it holds for the site and the credential resolves the user — and a submitted identity is only checked against the credential's owner. Defaults to `false`; never shown when the strategy requires no identity."
 
   @moduledoc """
   Authentication form for WebAuthn.
 
-  Renders a "Sign in with Passkey" button. Optionally shows an identity input
-  for non-discoverable credentials.
+  Renders a "Sign in with Passkey" button. Every sign-in is a
+  discoverable-credential sign-in: the challenge lists no credentials (it
+  is issued before anyone is authenticated, and a submitted identity's
+  credential ids must not be disclosed), the browser offers the passkeys it
+  holds for the site, and the credential id resolves the user. The form
+  therefore never asks for an identity in order to find a passkey, and
+  only discoverable credentials (`resident_key :required`, the strategy's
+  default) can sign in.
 
-  Supports conditional UI (passkey autofill) when the browser supports it
-  and `show_identity_field` is true — the identity input gets
-  `autocomplete="username webauthn"` which triggers browser autofill.
+  With `show_identity_field` on, and a strategy that requires an identity,
+  an optional identity input is rendered. Its value is submitted with the
+  assertion and must match the credential's owner; that is all it is used
+  for. The input carries `autocomplete="username webauthn"`, the token the
+  browser's passkey autofill (conditional UI) keys on. The JS hook also
+  listens for an `authentication-challenge-conditional` event for a
+  conditional-mediation ceremony.
 
   On successful authentication, redirects to the `sign_in_with_token` auth path
   (matching the existing auth completion flow used by Password.SignInForm).
