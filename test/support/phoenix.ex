@@ -309,6 +309,9 @@ defmodule AshAuthentication.Phoenix.Test.Router do
 
     ash_authentication_live_session :test_session do
       live("/", HomeLive, :index)
+
+      # ManageCredentials against variants of the User WebAuthn strategy.
+      live("/webauthn-manage/:variant", WebAuthnManageLive, :index)
     end
   end
 
