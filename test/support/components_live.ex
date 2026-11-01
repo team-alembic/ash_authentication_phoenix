@@ -24,3 +24,66 @@ defmodule AshAuthentication.Phoenix.Test.ComponentsLive do
     """
   end
 end
+
+defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
+  @moduledoc """
+  Renders `ManageCredentials` for the signed-in user against a variant of
+  the User resource's WebAuthn strategy, so the add-credential gating can
+  be exercised without a resource per configuration.
+
+  The `:variant` path segment picks the strategy options; an
+  `authenticated_at` query parameter (ISO 8601) is passed through to the
+  component as the application-known authentication time.
+  """
+  use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
+  alias AshAuthentication.Info
+  alias AshAuthentication.Phoenix.Components
+
+  @impl true
+  def mount(params, _session, socket) do
+    strategy = Info.strategy!(Example.Accounts.User, :webauthn)
+
+    strategy =
+      case params["variant"] do
+        "disabled" ->
+          %{strategy | add_credential_enabled?: false}
+
+        "recent" ->
+          %{strategy | add_credential_max_authentication_age: {5, :minutes}}
+
+        "recent-second" ->
+          %{strategy | add_credential_max_authentication_age: 1}
+
+        "recent-no-verify" ->
+          %{strategy | add_credential_max_authentication_age: 60, verify_enabled?: false}
+
+        _ ->
+          strategy
+      end
+
+    authenticated_at =
+      case params["authenticated_at"] do
+        nil ->
+          nil
+
+        iso8601 ->
+          {:ok, at, _offset} = DateTime.from_iso8601(iso8601)
+          at
+      end
+
+    {:ok, assign(socket, strategy: strategy, authenticated_at: authenticated_at)}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <.live_component
+      module={Components.WebAuthn.ManageCredentials}
+      id="manage"
+      strategy={@strategy}
+      current_user={@current_user}
+      authenticated_at={@authenticated_at}
+    />
+    """
+  end
+end
