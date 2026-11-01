@@ -328,13 +328,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
         "cred_props" => params["cred_props"]
       })
 
-    origin = PhoenixWebAuthn.origin_from_socket(socket)
-
     case WebAuthnStrategy.Actions.register(
            strategy,
            register_params,
            challenge: challenge,
-           origin: origin,
            tenant: socket.assigns.current_tenant,
            user_handle: socket.assigns[:user_handle]
          ) do
@@ -374,10 +371,11 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
   defp start_registration_ceremony(socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
-    origin = PhoenixWebAuthn.origin_from_socket(socket)
 
-    {:ok, challenge} =
-      WebAuthnStrategy.Actions.registration_challenge(strategy, tenant, origin: origin)
+    # The origin the ceremony is accepted from is the strategy's own policy
+    # (its `origin` allowlist, or any `https` origin on its `rp_id`), so the
+    # request's host is not consulted.
+    {:ok, challenge} = WebAuthnStrategy.Actions.registration_challenge(strategy, tenant)
 
     # The server mints the user handle (persisted on the credential after
     # the ceremony); the client must use it verbatim. In passkey-first mode

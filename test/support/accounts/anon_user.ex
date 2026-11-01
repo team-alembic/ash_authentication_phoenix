@@ -27,9 +27,10 @@ defmodule Example.Accounts.AnonUser do
       webauthn :webauthn do
         credential_resource Example.Accounts.AnonCredential
         require_identity? false
+        # No `origin`: any `http://localhost[:port]` is accepted under this
+        # `rp_id`, so neither the dev server nor the tests need one.
         rp_id "localhost"
         rp_name "AshAuthenticationPhoenix Dev (passkey-only)"
-        origin fn _resource, _opts -> {:ok, DevWeb.Endpoint.url()} end
         # A machine with no authenticator of its own can still enrol and use a
         # passkey held on a phone, which is the point of passkey-only mode.
         # The QR scan, Bluetooth handshake and prompt on the second device

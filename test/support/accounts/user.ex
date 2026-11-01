@@ -250,9 +250,11 @@ defmodule Example.Accounts.User do
         credential_resource Example.Accounts.WebAuthnCredential
         require_identity? true
         register_action_accept [:name]
+        # No `origin`: with none configured the strategy accepts any origin
+        # on the `rp_id` — here `http://localhost` on whatever port the dev
+        # server or the test endpoint happens to use.
         rp_id "localhost"
         rp_name "AshAuthenticationPhoenix Dev"
-        origin fn _resource, _opts -> {:ok, DevWeb.Endpoint.url()} end
       end
     end
 

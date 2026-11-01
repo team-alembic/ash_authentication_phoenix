@@ -173,20 +173,24 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     strategy = socket.assigns.strategy
     actor = resolve_actor(socket)
     tenant = socket.assigns.current_tenant
-    origin = PhoenixWebAuthnLib.origin_from_socket(socket)
 
     if actor do
       credentials = load_credentials(strategy, actor, tenant)
 
+      # Unlike sign-in, the caller here is already authenticated, so the
+      # actor's own credentials can be listed — which is also what lets a
+      # non-discoverable security key answer. The field names come from the
+      # credential resource, which may rename any of them.
+      credential_id_field = WebAuthn.credential_id_field(strategy)
+      public_key_field = WebAuthn.public_key_field(strategy)
+
       allow_credentials =
         Enum.map(credentials, fn cred ->
-          {Map.get(cred, strategy.credential_id_field), Map.get(cred, strategy.public_key_field)}
+          {Map.get(cred, credential_id_field), Map.get(cred, public_key_field)}
         end)
 
       {:ok, challenge} =
-        WebAuthn.Actions.authentication_challenge(strategy, allow_credentials, tenant,
-          origin: origin
-        )
+        WebAuthn.Actions.authentication_challenge(strategy, allow_credentials, tenant)
 
       options =
         PhoenixWebAuthnLib.authentication_options(strategy, challenge, tenant, credentials)

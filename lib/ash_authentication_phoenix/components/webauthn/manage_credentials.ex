@@ -76,7 +76,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       raise ArgumentError, "ManageCredentials requires a :current_user assign"
     end
 
-    socket = assign_new(socket, :credentials, fn -> fetch_credentials(socket) end)
+    # The credential resource may rename any of its fields; the strategy's
+    # accessors walk its DSL, so resolve them once per update rather than
+    # per credential row.
+    socket =
+      socket
+      |> assign(:backed_up_field, WebAuthn.backed_up_field(socket.assigns.strategy))
+      |> assign_new(:credentials, fn -> fetch_credentials(socket) end)
 
     {:ok, socket}
   end
@@ -123,7 +129,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
               <% else %>
                 <div>
                   <strong>{credential.label || "Security Key"}</strong>
-                  <%= if Map.get(credential, @strategy.backed_up_field) == true do %>
+                  <%= if Map.get(credential, @backed_up_field) == true do %>
                     <span class={override_for(@overrides, :synced_badge_class)}>
                       {_gettext(override_for(@overrides, :synced_badge_text, "Synced passkey"))}
                     </span>
@@ -268,10 +274,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   def handle_event("add-credential", params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
-    origin = PhoenixWebAuthn.origin_from_socket(socket)
 
-    {:ok, challenge} =
-      WebAuthn.Actions.registration_challenge(strategy, tenant, origin: origin)
+    # The origin the ceremony is accepted from is the strategy's own policy,
+    # never the request's host (see `AshAuthentication.Strategy.WebAuthn.Origin`).
+    {:ok, challenge} = WebAuthn.Actions.registration_challenge(strategy, tenant)
 
     user = socket.assigns.current_user
     credentials = socket.assigns.credentials
@@ -285,7 +291,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     {user_descriptor, user_handle} =
       PhoenixWebAuthn.actor_user_descriptor(strategy, user, credentials, key_name)
 
-    exclude_ids = Enum.map(credentials, &Map.get(&1, strategy.credential_id_field))
+    credential_id_field = WebAuthn.credential_id_field(strategy)
+    exclude_ids = Enum.map(credentials, &Map.get(&1, credential_id_field))
 
     options =
       PhoenixWebAuthn.registration_options(
