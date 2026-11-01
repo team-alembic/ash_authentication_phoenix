@@ -80,7 +80,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     assigns = assign(assigns, :show_identity, show_identity)
 
     ~H"""
-    <div class={override_for(@overrides, :root_class)} id={@id} phx-hook="WebAuthnAuthenticationHook">
+    <div
+      class={override_for(@overrides, :root_class)}
+      id={@id}
+      phx-hook="WebAuthnAuthenticationHook"
+      phx-target={@myself}
+    >
       <%= if label_text = override_for(@overrides, :label_text) do %>
         <h2 class={override_for(@overrides, :label_class)}>{_gettext(label_text)}</h2>
       <% end %>

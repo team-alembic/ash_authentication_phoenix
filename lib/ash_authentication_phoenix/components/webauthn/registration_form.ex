@@ -141,7 +141,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       |> assign(:show_display_name, show_display_name)
 
     ~H"""
-    <div class={override_for(@overrides, :root_class)} id={@id} phx-hook="WebAuthnRegistrationHook">
+    <div
+      class={override_for(@overrides, :root_class)}
+      id={@id}
+      phx-hook="WebAuthnRegistrationHook"
+      phx-target={@myself}
+    >
       <%= if label_text = override_for(@overrides, :label_text) do %>
         <h2 class={override_for(@overrides, :label_class)}>{_gettext(label_text)}</h2>
       <% end %>

@@ -93,6 +93,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
       class={override_for(@overrides, :root_class)}
       id={@id}
       phx-hook="WebAuthnAuthenticationHook"
+      phx-target={@myself}
     >
       <h2 class={override_for(@overrides, :label_class)}>
         {_gettext(override_for(@overrides, :label_text))}
@@ -217,11 +218,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     challenge = socket.assigns.challenge
     actor = resolve_actor(socket)
 
+    # `user_handle` is the assertion's `response.userHandle`. The strategy
+    # checks it against the credential's stored handle whenever both are
+    # known (WebAuthn §7.2 step 6), on verify as much as on sign-in.
     verify_params = %{
       "raw_id" => params["raw_id"],
       "authenticator_data" => params["authenticator_data"],
       "signature" => params["signature"],
-      "client_data_json" => params["client_data_json"]
+      "client_data_json" => params["client_data_json"],
+      "user_handle" => params["user_handle"]
     }
 
     case WebAuthn.Actions.verify(strategy, verify_params,

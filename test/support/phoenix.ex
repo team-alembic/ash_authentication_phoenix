@@ -245,6 +245,11 @@ defmodule AshAuthentication.Phoenix.Test.Router do
       as: :webauthn_passkey_first
     )
 
+    # Second-factor verify page (token and step-up flows) and the setup page
+    # that wraps ManageCredentials, at their default paths.
+    webauthn_2fa_route(Example.Accounts.User, :webauthn, auth_routes_prefix: "/auth")
+    webauthn_setup_route(Example.Accounts.User, :webauthn, auth_routes_prefix: "/auth")
+
     # Gettext routes
     sign_in_route path: "/anmeldung",
                   auth_routes_prefix: "/auth",

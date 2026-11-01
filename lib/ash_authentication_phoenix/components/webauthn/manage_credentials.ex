@@ -169,7 +169,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
         </ul>
       <% end %>
 
-      <div id={"#{@id}-add-key"} phx-hook="WebAuthnRegistrationHook">
+      <div id={"#{@id}-add-key"} phx-hook="WebAuthnRegistrationHook" phx-target={@myself}>
         <form
           id={"#{@id}-add-key-form"}
           phx-change="update-key-name"
