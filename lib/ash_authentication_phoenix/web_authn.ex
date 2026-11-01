@@ -13,6 +13,16 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   `PublicKeyCredentialRequestOptions` with all binary fields encoded as
   base64url without padding.
 
+  ## Origins
+
+  Nothing here reads the request's origin. Which origins a ceremony is
+  accepted from is the strategy's own policy — its configured `origin`
+  allowlist, or, when none is configured, any `https` origin on its `rp_id`
+  or a subdomain of it (see `AshAuthentication.Strategy.WebAuthn.Origin`).
+  The browser signs the page's origin into every ceremony and the adapter
+  checks it against that policy, so a LiveView served behind a
+  TLS-terminating proxy needs no help from the socket's `host_uri`.
+
   ## Cross-device (hybrid) passkeys
 
   The strategy's `hints` option is carried through to the browser on both
@@ -46,29 +56,6 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
                          [-7, -8, -35, -36, -37, -38, -39, -257, -258, -259],
                          &%{type: "public-key", alg: &1}
                        )
-
-  @doc """
-  Build a WebAuthn origin string from the LiveView socket's `host_uri`.
-
-  Used to override the strategy's configured origin with the actual request
-  origin during a ceremony, so dev/test environments don't need a hardcoded
-  port baked into config.
-  """
-  @spec origin_from_socket(Phoenix.LiveView.Socket.t()) :: String.t()
-  def origin_from_socket(%Phoenix.LiveView.Socket{host_uri: %URI{} = uri}),
-    do: uri_to_origin(uri)
-
-  defp uri_to_origin(%URI{scheme: scheme, host: host, port: port}) do
-    port_segment =
-      cond do
-        scheme == "http" and port == 80 -> ""
-        scheme == "https" and port == 443 -> ""
-        is_nil(port) -> ""
-        true -> ":#{port}"
-      end
-
-    "#{scheme}://#{host}#{port_segment}"
-  end
 
   @doc """
   Resolve the `webauthn_path` sign-in route option for a given strategy.

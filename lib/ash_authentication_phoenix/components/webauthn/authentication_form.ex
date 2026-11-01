@@ -157,10 +157,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   def handle_event("authenticate", _params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
-    origin = PhoenixWebAuthn.origin_from_socket(socket)
 
-    {:ok, challenge} =
-      WebAuthn.Actions.authentication_challenge(strategy, [], tenant, origin: origin)
+    # Sign-in never lists credentials: the challenge is issued before anyone
+    # is authenticated, and a submitted identity's credential ids must not
+    # be disclosed. The browser offers the discoverable passkeys it holds.
+    # The origin the ceremony is accepted from is the strategy's own policy,
+    # so nothing about the request is passed along.
+    {:ok, challenge} = WebAuthn.Actions.authentication_challenge(strategy, [], tenant)
 
     options = PhoenixWebAuthn.authentication_options(strategy, challenge, tenant, [])
 
@@ -190,13 +193,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       "user_handle" => params["user_handle"]
     }
 
-    origin = PhoenixWebAuthn.origin_from_socket(socket)
-
     case WebAuthn.Actions.sign_in(
            strategy,
            sign_in_params,
            challenge: challenge,
-           origin: origin,
            tenant: socket.assigns.current_tenant
          ) do
       {:ok, user} ->
