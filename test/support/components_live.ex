@@ -39,7 +39,7 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
   alias AshAuthentication.Info
   alias AshAuthentication.Phoenix.Components
 
-  @impl true
+  @impl Phoenix.LiveView
   def mount(params, _session, socket) do
     strategy = Info.strategy!(Example.Accounts.User, :webauthn)
 
@@ -74,7 +74,7 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
     {:ok, assign(socket, strategy: strategy, authenticated_at: authenticated_at)}
   end
 
-  @impl true
+  @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
     <.live_component

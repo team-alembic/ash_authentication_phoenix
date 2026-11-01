@@ -50,13 +50,6 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   alias AshAuthentication.Strategy.WebAuthn
   alias AshAuthentication.Strategy.WebAuthn.Helpers
 
-  # COSE algorithms the default (Wax) adapter can verify, in preference
-  # order. Kept in sync with AshAuthentication.Strategy.WebAuthn.Plug.
-  @pub_key_cred_params Enum.map(
-                         [-7, -8, -35, -36, -37, -38, -39, -257, -258, -259],
-                         &%{type: "public-key", alg: &1}
-                       )
-
   @doc """
   The attribute recording when a credential was created, or `nil` if the
   credential resource has none.
@@ -209,7 +202,9 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
         name: Helpers.resolve_rp_name(strategy, tenant)
       },
       user: user_descriptor,
-      pubKeyCredParams: @pub_key_cred_params,
+      # The algorithms the strategy's adapter can verify, in its order of
+      # preference; the default adapter's list is not assumed here.
+      pubKeyCredParams: strategy.adapter.pub_key_cred_params(),
       excludeCredentials:
         Enum.map(
           exclude_credential_ids,

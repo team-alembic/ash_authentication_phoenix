@@ -94,7 +94,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   @default_verify_path "/webauthn-verify"
   @default_sign_in_path "/sign-in"
 
-  @impl true
+  @impl Phoenix.LiveComponent
   def update(assigns, socket) do
     socket =
       socket
@@ -125,7 +125,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     {:ok, socket}
   end
 
-  @impl true
+  @impl Phoenix.LiveComponent
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)} id={@id}>
@@ -247,7 +247,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     """
   end
 
-  @impl true
+  @impl Phoenix.LiveComponent
   def handle_event("edit-label", %{"id" => id} = params, socket) do
     {:noreply, assign(socket, editing_id: id, editing_label: params["label"] || "")}
   end
