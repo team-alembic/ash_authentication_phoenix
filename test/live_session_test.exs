@@ -250,6 +250,39 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
     end
   end
 
+  describe "on_mount with stored authentication metadata" do
+    test "restores the metadata the Plug session keeps for the subject" do
+      user = register_and_sign_in_user("metadata-user@example.com")
+      {_jti, session_value} = session_identifier_for(user)
+      verified_at = DateTime.utc_now()
+
+      # The shape `AshAuthentication.Plug.Helpers.store_in_session/2` writes.
+      session = %{
+        "user" => session_value,
+        "user_metadata" => %{token: user.__metadata__.token, webauthn_verified_at: verified_at}
+      }
+
+      socket = build_socket()
+      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, socket)
+
+      metadata = result_socket.assigns.current_user.__metadata__
+      assert metadata[:token] == user.__metadata__.token
+      assert metadata[:webauthn_verified_at] == verified_at
+    end
+
+    test "leaves the user untouched when the session holds no metadata" do
+      user = register_and_sign_in_user("no-metadata-user@example.com")
+      {_jti, session_value} = session_identifier_for(user)
+
+      socket = build_socket()
+
+      {:cont, result_socket} =
+        LiveSession.on_mount(:default, %{}, %{"user" => session_value}, socket)
+
+      refute Map.has_key?(result_socket.assigns.current_user.__metadata__ || %{}, :token)
+    end
+  end
+
   describe "on_mount with a revoked `:jti` session" do
     test "does not load the user once the session's jti is revoked" do
       user = register_and_sign_in_user("revoked-jti-user@example.com")
