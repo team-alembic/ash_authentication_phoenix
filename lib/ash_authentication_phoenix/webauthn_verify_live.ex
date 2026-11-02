@@ -22,8 +22,10 @@ defmodule AshAuthentication.Phoenix.WebAuthnVerifyLive do
   ## Step-up flow
 
   Used by an already-signed-in user re-asserting their second factor for a
-  sensitive operation. No token is required — the page reads the
-  `current_user` from the session.
+  sensitive operation. No token is required — the page reads the signed-in
+  subject that `AshAuthentication.Phoenix.LiveSession` assigned from the
+  session, under `current_<subject_name>` for the strategy's resource
+  (`current_user` for a resource whose subject name is `user`).
 
   ## Usage
 
@@ -37,12 +39,15 @@ defmodule AshAuthentication.Phoenix.WebAuthnVerifyLive do
 
   use AshAuthentication.Phoenix.Web, :live_view
   alias AshAuthentication.Phoenix.Components
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias Phoenix.LiveView.{Rendered, Socket}
 
   @impl true
   def mount(_params, session, socket) do
     overrides =
       Map.get(session, "overrides", [AshAuthentication.Phoenix.Overrides.Default])
+
+    resource = session["resource"]
 
     socket =
       socket
@@ -53,7 +58,8 @@ defmodule AshAuthentication.Phoenix.WebAuthnVerifyLive do
       |> assign(:auth_routes_prefix, session["auth_routes_prefix"])
       |> assign(:gettext_fn, session["gettext_fn"])
       |> assign(:strategy, session["strategy"])
-      |> assign(:resource, session["resource"])
+      |> assign(:resource, resource)
+      |> assign(:actor, PhoenixWebAuthn.current_subject(socket, resource))
 
     {:ok, socket}
   end
@@ -66,7 +72,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnVerifyLive do
     mode =
       cond do
         token && token != "" -> :token
-        socket.assigns[:current_user] -> :step_up
+        socket.assigns.actor -> :step_up
         true -> :error
       end
 
@@ -84,7 +90,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnVerifyLive do
         id={override_for(@overrides, :webauthn_verify_id, "webauthn_verify")}
         token={@token}
         mode={@mode}
-        current_user={@current_user}
+        current_user={@actor}
         strategy={@strategy}
         resource={@resource}
         auth_routes_prefix={@auth_routes_prefix}

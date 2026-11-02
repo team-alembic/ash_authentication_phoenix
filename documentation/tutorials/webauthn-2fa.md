@@ -487,10 +487,16 @@ defmodule MyAppWeb.AdminLive do
 end
 ```
 
-`RequireWebAuthn` writes the original destination into `:return_to` for
-you when it does the redirect; for hand-rolled redirects like the example
-above you'll need to thread that yourself if you want to land back on the
-original page. (We're tracking a nicer step-up affordance —
+Neither `RequireWebAuthn` (the plug or the `on_mount` hook) nor the verify
+page records where the user came from: the plug and hook only redirect,
+and after the token exchange the user lands wherever your controller's
+`success/4` sends them. The generated controller reads `:return_to` from
+the session, so a redirect that should come back to its origin has to
+write that key first, as the generated primary sign-in clause does. A
+LiveView cannot write the session, so the example above would have to
+route through a controller action (or carry the destination some other
+way) to land back where it started. (We're tracking a nicer step-up
+affordance —
 `AshAuthentication.Phoenix.WebAuthnHelpers.step_up/2` — alongside the
 multi-factor chooser in
 [#740](https://github.com/team-alembic/ash_authentication_phoenix/issues/740).)
