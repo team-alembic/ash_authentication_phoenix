@@ -193,17 +193,20 @@ strategy via the user's `Secrets` module:
 
 Which origins a ceremony is accepted from is the strategy's own policy,
 decided from configuration alone. The rules are `ash_authentication`'s and
-are spelled out in its WebAuthn guide, under "Relying party and origin"
+are spelled out in its WebAuthn guide, under
+[Relying party and origin](https://hexdocs.pm/ash_authentication/webauthn.html#relying-party-and-origin)
 (see also `AshAuthentication.Strategy.WebAuthn.Origin`); in short:
 
-- **`:webauthn_origin` unset** — missing from the config, or `nil` (the
-  installer's default, and the Secrets module returning `:error`): any
-  `https` origin whose host is the `rp_id` or a subdomain of it is
-  accepted, on any port, plus `http://localhost` on any port when the
-  `rp_id` is `"localhost"`. That is exactly the set of origins a browser
-  lets use that RP ID in the first place. Development on whatever port
-  Phoenix is on needs no configuration, and neither does a deployment
-  behind a proxy or across several subdomains.
+- **`:webauthn_origin` unset** — missing from the config, or resolving to
+  `nil`, `""`, `[]` or a list of blanks (the installer's default, the
+  Secrets module returning `:error`, and `System.get_env("WEBAUTHN_ORIGIN")`
+  with the variable undefined or empty): any `https` origin whose host is
+  the `rp_id` or a subdomain of it is accepted, on any port, plus
+  `http://localhost` on any port when the `rp_id` is `"localhost"`. That is
+  exactly the set of origins a browser lets use that RP ID in the first
+  place. Development on whatever port Phoenix is on needs no configuration,
+  and neither does a deployment behind a proxy or across several
+  subdomains.
 - **`:webauthn_origin` set**: an exact allowlist, port included — one
   origin or a list. Set it only when ceremonies should be narrowed to
   specific hosts or ports. With `"https://example.com"` a ceremony from

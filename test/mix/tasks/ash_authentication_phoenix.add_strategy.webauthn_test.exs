@@ -176,6 +176,57 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.WebauthnTest do
       # ash_authentication notes that the flag changes nothing in 2FA mode.
       assert_has_notice(result, &String.contains?(&1, "`--passkey-only` has no effect"))
     end
+
+    # `--cross-device` is ash_authentication's too, and writes three options
+    # on the strategy.
+    test "forwards --cross-device to ash_authentication's webauthn task" do
+      diff =
+        installed_project()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
+          "webauthn",
+          "--cross-device"
+        ])
+        |> diff(path: "lib/test/accounts/user.ex")
+
+      assert_cross_device(diff)
+      refute diff =~ "require_identity? false"
+    end
+
+    test "forwards --cross-device together with --passkey-only" do
+      diff =
+        installed_project()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
+          "webauthn",
+          "--cross-device",
+          "--passkey-only"
+        ])
+        |> diff(path: "lib/test/accounts/user.ex")
+
+      assert_cross_device(diff)
+      assert diff =~ "require_identity? false"
+    end
+
+    test "forwards --cross-device together with --mode 2fa" do
+      diff =
+        installed_project()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
+          "webauthn",
+          "--cross-device",
+          "--mode",
+          "2fa"
+        ])
+        |> diff(path: "lib/test/accounts/user.ex")
+
+      assert_cross_device(diff)
+      assert diff =~ "registration_enabled? false"
+      assert diff =~ "sign_in_enabled? false"
+    end
+  end
+
+  defp assert_cross_device(diff) do
+    assert diff =~ "hints [:hybrid, :security_key]"
+    assert diff =~ "timeout 180_000"
+    assert diff =~ "allow_hint_override? true"
   end
 
   describe "--mode primary (default)" do
