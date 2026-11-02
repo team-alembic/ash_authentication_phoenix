@@ -18,7 +18,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     show_display_name_field:
       "Whether to show a display name input in passkey-first mode (`require_identity?` is `false`), where it is the only way to label the account inside the passkey. Defaults to `true`; never shown when the strategy requires an identity.",
     show_custom_fields:
-      "Whether to automatically render inputs for the fields declared in the strategy's `register_action_accept`. Defaults to `true`."
+      "Whether to automatically render inputs for the fields declared in the strategy's `register_action_accept`. Defaults to `true`.",
+    timeout_text: "Error shown when the browser does not answer within the strategy's `timeout`.",
+    expired_text:
+      "Error shown when an attestation arrives for a ceremony that has already timed out."
 
   @moduledoc """
   Registration form for WebAuthn.
@@ -41,6 +44,25 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
   `show_custom_fields` override to `false` to render them yourself via the
   slot instead.
 
+  ## Cross-device registration
+
+  When the strategy offers the `:hybrid` hint, or allows the client to ask
+  for it (`allow_hint_override? true`), a second "Use a phone or tablet"
+  button is rendered (see `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`),
+  so a machine with no authenticator of its own can enrol a passkey held on
+  a phone. It requests the ceremony with `hints: [:hybrid]`, which only
+  takes effect when the override is allowed. The button's text and class are
+  the `AshAuthentication.Phoenix.Components.WebAuthn.Input` overrides
+  `cross_device_button_text` and `cross_device_button_class`.
+
+  ## Timeouts
+
+  The ceremony is bounded by the strategy's `timeout` on every side: the
+  browser gets it in the creation options, the strategy rejects a challenge
+  answered after it, and this component stops waiting for the browser when
+  it elapses, with no message to the host LiveView. An attestation that
+  arrives after that is refused without consulting the strategy.
+
   On successful registration, redirects to the `sign_in_with_token` auth path
   (matching the existing auth completion flow used by Password.SignInForm).
 
@@ -50,6 +72,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
   use AshAuthentication.Phoenix.Web, :live_component
   require Logger
   alias AshAuthentication.{Info, Phoenix.Components.CustomFields, Phoenix.Components.WebAuthn}
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
+  alias AshAuthentication.Strategy.WebAuthn, as: WebAuthnStrategy
   alias AshPhoenix.Form
 
   import AshAuthentication.Phoenix.Components.Helpers,
@@ -57,10 +81,18 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
 
   import Slug
 
+  @expired_text "This registration request has expired. Please try again."
+
   @impl true
+  # The ceremony timer, scheduled with `send_update_after/3` to this very
+  # component; nothing else sends it.
+  def update(%{ceremony_timed_out: true}, socket) do
+    {:ok, ceremony_timed_out(socket)}
+  end
+
   def update(assigns, socket) do
-    # `send_update/2` (e.g. the timeout path in `WebAuthnLive`) only passes a
-    # subset of assigns, so read everything through the merged socket assigns.
+    # `send_update/2` only passes a subset of assigns, so read everything
+    # through the merged socket assigns.
     socket = assign(socket, assigns)
     strategy = socket.assigns.strategy
     subject_name = Info.authentication_subject_name!(strategy.resource)
@@ -69,12 +101,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       socket
       |> assign(:subject_name, subject_name)
       |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
+      |> assign(:cross_device?, PhoenixWebAuthn.cross_device?(strategy))
       |> assign_new(:identity_value, fn -> "" end)
       |> assign_new(:key_name_value, fn -> "" end)
       |> assign_new(:display_name_value, fn -> "" end)
       |> assign_new(:user_params, fn -> %{} end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:submitting, fn -> false end)
+      |> assign_new(:challenge, fn -> nil end)
+      |> assign_new(:ceremony_timer, fn -> nil end)
       |> assign_new(:trigger_action, fn -> false end)
       |> assign_new(:sign_in_token, fn -> nil end)
       |> assign_new(:inner_block, fn -> nil end)
@@ -139,6 +174,11 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       |> assign(:show_key_name, show_key_name)
       |> assign(:show_custom_fields, show_custom_fields)
       |> assign(:show_display_name, show_display_name)
+      |> assign(
+        :disabled,
+        assigns.submitting ||
+          (assigns.strategy.require_identity? && assigns.identity_value == "")
+      )
 
     ~H"""
     <div
@@ -199,10 +239,18 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
         <% end %>
 
         <WebAuthn.Input.register_button
-          disabled={@submitting || (@strategy.require_identity? && @identity_value == "")}
+          disabled={@disabled}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
         />
+
+        <%= if @cross_device? do %>
+          <WebAuthn.Input.cross_device_button
+            disabled={@disabled}
+            overrides={@overrides}
+            gettext_fn={@gettext_fn}
+          />
+        <% end %>
 
         <WebAuthn.Input.error
           message={@error_message}
@@ -263,11 +311,6 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
      )}
   end
 
-  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
-  alias AshAuthentication.Strategy.WebAuthn, as: WebAuthnStrategy
-
-  @registration_timeout_ms 60_000
-
   def handle_event("register", params, socket) do
     user_params = Map.get(params, to_string(socket.assigns.subject_name), %{})
     key_name = Map.get(params, "key_name", socket.assigns.key_name_value)
@@ -297,11 +340,24 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     # `WebAuthn.Actions.register/3` once the attestation comes back.
     case user_facing_errors(form, socket.assigns) do
       [] ->
-        start_registration_ceremony(socket)
+        # `hints` names the button that submitted the form ("Use a phone or
+        # tablet" asks for `hybrid`); the strategy decides whether it is honoured.
+        start_registration_ceremony(socket, params["hints"])
 
       _errors ->
         {:noreply, socket}
     end
+  end
+
+  # The ceremony timed out (or never started) before the browser answered;
+  # the strategy would refuse the stale challenge, and must not be handed a
+  # missing one.
+  def handle_event("registration-attestation", _params, %{assigns: %{challenge: nil}} = socket) do
+    {:noreply,
+     assign(socket,
+       submitting: false,
+       error_message: override_for(socket.assigns.overrides, :expired_text, @expired_text)
+     )}
   end
 
   def handle_event("registration-attestation", params, socket) do
@@ -360,20 +416,20 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     end
   end
 
-  def handle_event("registration-error", %{"name" => name, "message" => message}, socket) do
+  def handle_event("registration-error", params, socket) do
     socket = cancel_timer(socket)
 
     error_msg =
-      case name do
+      case params["name"] do
         "NotAllowedError" -> "The operation was cancelled or not allowed."
         "InvalidStateError" -> "This authenticator is already registered."
-        _ -> message
+        _ -> params["message"] || "Registration failed. Please try again."
       end
 
     {:noreply, assign(socket, challenge: nil, submitting: false, error_message: error_msg)}
   end
 
-  defp start_registration_ceremony(socket) do
+  defp start_registration_ceremony(socket, requested_hints) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
 
@@ -396,16 +452,20 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       )
 
     options =
-      PhoenixWebAuthn.registration_options(strategy, challenge, tenant, user_descriptor, [])
-
-    timer_ref = Process.send_after(self(), :registration_timeout, @registration_timeout_ms)
+      strategy
+      |> PhoenixWebAuthn.registration_options(challenge, tenant, user_descriptor, [],
+        hints: requested_hints
+      )
+      |> PhoenixWebAuthn.target(socket.assigns.id)
 
     socket =
       socket
+      |> cancel_timer()
       |> assign(:challenge, challenge)
       |> assign(:user_handle, user_handle)
-      |> assign(:registration_timer_ref, timer_ref)
+      |> assign(:ceremony_timer, start_timer(socket, strategy))
       |> assign(:submitting, true)
+      |> assign(:error_message, nil)
       |> Phoenix.LiveView.push_event("registration-challenge", options)
 
     {:noreply, socket}
@@ -427,12 +487,34 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     |> Keyword.take(user_fields)
   end
 
+  # The strategy's `timeout` is the browser's deadline too, so once it has
+  # passed nothing more is coming from the hook.
+  defp start_timer(socket, strategy) do
+    send_update_after(socket.assigns.myself, %{ceremony_timed_out: true}, strategy.timeout)
+  end
+
   defp cancel_timer(socket) do
-    if timer_ref = socket.assigns[:registration_timer_ref] do
+    if timer_ref = socket.assigns[:ceremony_timer] do
       Process.cancel_timer(timer_ref)
-      assign(socket, :registration_timer_ref, nil)
+      assign(socket, :ceremony_timer, nil)
     else
       socket
     end
+  end
+
+  defp ceremony_timed_out(%{assigns: %{challenge: nil}} = socket), do: socket
+
+  defp ceremony_timed_out(socket) do
+    assign(socket,
+      challenge: nil,
+      ceremony_timer: nil,
+      submitting: false,
+      error_message:
+        override_for(
+          socket.assigns.overrides,
+          :timeout_text,
+          "Registration timed out. Please try again."
+        )
+    )
   end
 end

@@ -57,6 +57,17 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
         "recent-no-verify" ->
           %{strategy | add_credential_max_authentication_age: 60, verify_enabled?: false}
 
+        "hybrid" ->
+          %{
+            strategy
+            | hints: [:hybrid, :security_key],
+              timeout: 300_000,
+              allow_hint_override?: true
+          }
+
+        "quick" ->
+          %{strategy | timeout: 100}
+
         _ ->
           strategy
       end
@@ -83,6 +94,56 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
       strategy={@strategy}
       current_user={@current_user}
       authenticated_at={@authenticated_at}
+    />
+    """
+  end
+end
+
+defmodule AshAuthentication.Phoenix.Test.WebAuthnVerifyVariantLive do
+  @moduledoc """
+  Renders `Verify2faForm` in step-up mode for the signed-in user against a
+  variant of the User resource's WebAuthn strategy.
+  """
+  use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
+  alias AshAuthentication.Info
+  alias AshAuthentication.Phoenix.Components
+
+  @impl Phoenix.LiveView
+  def mount(params, _session, socket) do
+    strategy = Info.strategy!(Example.Accounts.User, :webauthn)
+
+    strategy =
+      case params["variant"] do
+        "hybrid" ->
+          %{
+            strategy
+            | hints: [:hybrid, :security_key],
+              timeout: 300_000,
+              allow_hint_override?: true
+          }
+
+        "quick" ->
+          %{strategy | timeout: 100}
+
+        _ ->
+          strategy
+      end
+
+    {:ok, assign(socket, strategy: strategy)}
+  end
+
+  @impl Phoenix.LiveView
+  def render(assigns) do
+    ~H"""
+    <.live_component
+      module={Components.WebAuthn.Verify2faForm}
+      id="verify"
+      mode={:step_up}
+      token={nil}
+      current_user={@current_user}
+      strategy={@strategy}
+      resource={Example.Accounts.User}
+      auth_routes_prefix="/auth"
     />
     """
   end

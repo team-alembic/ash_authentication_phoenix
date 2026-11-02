@@ -43,6 +43,21 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   mid-scan. Chrome 128+ honours `hints`; other browsers ignore members they
   don't recognise and fall back to their own picker, so no feature detection is
   needed.
+
+  When the strategy offers `:hybrid`, or allows the client to choose with
+  `allow_hint_override? true`, every ceremony component also renders a
+  dedicated "Use a phone or tablet" action (see `cross_device?/1`). It asks
+  for the ceremony with `hints: [:hybrid]`, which `resolve_hints/2` honours
+  only when the override is allowed — otherwise the configured hints stand,
+  exactly as the strategy's own challenge endpoints treat a `?hints=` request
+  parameter.
+
+  ## Ceremony timeouts
+
+  The strategy's `timeout` is the one bound on a ceremony: the browser gets it
+  in the options, the server rejects a challenge answered after it, and the
+  components give up waiting for the browser after it. Nothing here hardcodes
+  a duration.
   """
 
   alias Ash.Resource.Info, as: ResourceInfo
@@ -189,12 +204,82 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   end
 
   @doc """
+  Whether the components should offer a dedicated "Use a phone or tablet"
+  action for `strategy`.
+
+  They do when the strategy offers `:hybrid` itself, or lets the client ask
+  for it per ceremony (`allow_hint_override?`). `authenticator_attachment
+  :platform` rules out every roaming authenticator, a phone included, so
+  nothing is offered then — the strategy refuses `:hybrid` alongside it at
+  compile time anyway, but the override could still request it.
+  """
+  @spec cross_device?(struct) :: boolean
+  def cross_device?(%{authenticator_attachment: :platform}), do: false
+
+  def cross_device?(strategy),
+    do: :hybrid in strategy.hints or strategy.allow_hint_override? == true
+
+  @doc """
+  The hints a ceremony is issued with: the ones the client requested when
+  the strategy's `allow_hint_override?` permits, otherwise the strategy's own.
+
+  Mirrors the strategy's challenge endpoints and their `?hints=` parameter:
+  `requested` may be a list of hint atoms or strings, or one string of
+  comma-separated hints; anything outside the hint enum is dropped, and a
+  request naming nothing valid falls back to the configured hints. Safe to
+  take from the client, since `hints` only steers the dialog the requesting
+  browser shows itself.
+  """
+  @spec resolve_hints(struct, nil | String.t() | [atom | String.t()]) :: [atom]
+  def resolve_hints(strategy, requested) do
+    with true <- strategy.allow_hint_override? == true,
+         [_ | _] = hints <- requested_hints(requested) do
+      hints
+    else
+      _ -> strategy.hints
+    end
+  end
+
+  @hint_atoms %{
+    "security-key" => :security_key,
+    "security_key" => :security_key,
+    "client-device" => :client_device,
+    "client_device" => :client_device,
+    "hybrid" => :hybrid
+  }
+
+  defp requested_hints(requested) do
+    requested
+    |> List.wrap()
+    |> Enum.flat_map(fn
+      hint when is_binary(hint) -> String.split(hint, ",", trim: true)
+      hint when is_atom(hint) and not is_nil(hint) -> [Atom.to_string(hint)]
+      _ -> []
+    end)
+    |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
+    |> Enum.flat_map(&List.wrap(Map.get(@hint_atoms, &1)))
+    |> Enum.uniq()
+  end
+
+  @doc """
   Build the spec-shaped `PublicKeyCredentialCreationOptions` payload for a
   registration ceremony, ready for `push_event/3` to the
   `WebAuthnRegistrationHook`.
+
+  Options:
+
+    * `:hints` — hints the client requested for this one ceremony, resolved
+      against the strategy with `resolve_hints/2`.
   """
-  @spec registration_options(struct, term, any, map, [binary]) :: map
-  def registration_options(strategy, challenge, tenant, user_descriptor, exclude_credential_ids) do
+  @spec registration_options(struct, term, any, map, [binary], keyword) :: map
+  def registration_options(
+        strategy,
+        challenge,
+        tenant,
+        user_descriptor,
+        exclude_credential_ids,
+        opts \\ []
+      ) do
     %{
       challenge: Base.url_encode64(strategy.adapter.challenge_bytes(challenge), padding: false),
       rp: %{
@@ -215,7 +300,7 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
       attestation: strategy.attestation,
       timeout: strategy.timeout
     }
-    |> put_hints(hints(strategy))
+    |> put_hints(hints(strategy, opts))
   end
 
   @doc """
@@ -225,10 +310,11 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
 
   `credentials` are credential records used to build `allowCredentials`
   entries (with `transports` hints when captured at registration); pass
-  `[]` for the discoverable-credential flow.
+  `[]` for the discoverable-credential flow. `opts` are as for
+  `registration_options/6`.
   """
-  @spec authentication_options(struct, term, any, [Ash.Resource.Record.t()]) :: map
-  def authentication_options(strategy, challenge, tenant, credentials) do
+  @spec authentication_options(struct, term, any, [Ash.Resource.Record.t()], keyword) :: map
+  def authentication_options(strategy, challenge, tenant, credentials, opts \\ []) do
     %{
       challenge: Base.url_encode64(strategy.adapter.challenge_bytes(challenge), padding: false),
       rpId: Helpers.resolve_rp_id(strategy, tenant),
@@ -236,8 +322,22 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
       timeout: strategy.timeout,
       allowCredentials: allow_credentials_entries(strategy, credentials)
     }
-    |> put_hints(hints(strategy))
+    |> put_hints(hints(strategy, opts))
   end
+
+  @doc """
+  Address pushed ceremony options to one hook element.
+
+  LiveView dispatches a pushed event to every hook on the page that listens
+  for its name, so a page holding two ceremony components (two strategies,
+  or a credential manager beside a registration form) would start both
+  browsers prompts from one click. The hooks ignore options whose `target`
+  is not their own element's id, and strip the key before handing the
+  options to the browser.
+  """
+  @spec target(map, String.t()) :: map
+  def target(options, element_id) when is_binary(element_id),
+    do: Map.put(options, :target, element_id)
 
   # `authenticatorAttachment` is a three-valued enum with no member for "no
   # preference" — the absence of the key is how that is expressed, and `null`
@@ -268,10 +368,16 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
     hybrid: "hybrid"
   }
 
-  # Which kinds of authenticator the browser should offer, in the strategy's
-  # order of preference. `:hybrid` is what produces the "use your phone or
-  # tablet" QR option — see the `hints` option on the WebAuthn strategy.
-  defp hints(strategy), do: Enum.map(strategy.hints, &Map.fetch!(@hint_strings, &1))
+  # Which kinds of authenticator the browser should offer, in order of
+  # preference: the client's request for this ceremony when the strategy
+  # allows it, otherwise the strategy's own. `:hybrid` is what produces the
+  # "use your phone or tablet" QR option — see the `hints` option on the
+  # WebAuthn strategy.
+  defp hints(strategy, opts) do
+    strategy
+    |> resolve_hints(Keyword.get(opts, :hints))
+    |> Enum.map(&Map.fetch!(@hint_strings, &1))
+  end
 
   # An empty `hints` means "no preference", which is spelled by leaving the
   # member out — an empty sequence reads to some clients as "nothing is

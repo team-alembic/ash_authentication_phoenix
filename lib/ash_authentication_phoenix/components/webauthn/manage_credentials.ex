@@ -33,7 +33,11 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     reauthentication_path:
       "Where to send the user when adding a passkey needs a more recent authentication than their session carries (the strategy's `add_credential_max_authentication_age`). Defaults to the second-factor verify page (`/webauthn-verify`) when the user already has a passkey and the strategy verifies, otherwise to the sign-in page (`/sign-in`).",
     reauthentication_text:
-      "Flash message shown when the user is sent to re-authenticate before adding a passkey."
+      "Flash message shown when the user is sent to re-authenticate before adding a passkey.",
+    timeout_text:
+      "Error shown when the browser does not answer the add-passkey ceremony within the strategy's `timeout`.",
+    expired_text:
+      "Error shown when an attestation arrives for an add-passkey ceremony that has already timed out."
 
   @moduledoc """
   Credential management panel for authenticated users.
@@ -69,6 +73,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   application that knows better (its own re-authentication step, say) can
   pass `authenticated_at` instead.
 
+  When the strategy offers the `:hybrid` hint, or allows the client to ask
+  for it (`allow_hint_override? true`), the add form also renders a "Use a
+  phone or tablet" button (see
+  `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`) for enrolling a
+  passkey held on a phone. The ceremony is bounded by the strategy's
+  `timeout`; this component stops waiting for the browser when it elapses.
+
   ## Props
 
     * `strategy` - The WebAuthn strategy configuration. Required.
@@ -93,8 +104,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
   @default_verify_path "/webauthn-verify"
   @default_sign_in_path "/sign-in"
+  @expired_text "This request has expired. Please try adding the passkey again."
 
   @impl Phoenix.LiveComponent
+  # The ceremony timer, scheduled with `send_update_after/3` to this very
+  # component; nothing else sends it.
+  def update(%{ceremony_timed_out: true}, socket) do
+    {:ok, ceremony_timed_out(socket)}
+  end
+
   def update(assigns, socket) do
     socket =
       socket
@@ -105,12 +123,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       |> assign_new(:editing_label, fn -> "" end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:adding, fn -> false end)
+      |> assign_new(:add_challenge, fn -> nil end)
+      |> assign_new(:ceremony_timer, fn -> nil end)
       |> assign_new(:key_name_value, fn -> "" end)
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:continue_path, fn -> nil end)
       |> assign_new(:authenticated_at, fn -> nil end)
 
-    unless assigns[:current_user] do
+    # `send_update/2` may carry only a subset of assigns, so the user is
+    # looked for on the merged socket, not on this update alone.
+    unless socket.assigns[:current_user] do
       raise ArgumentError, "ManageCredentials requires a :current_user assign"
     end
 
@@ -120,6 +142,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     socket =
       socket
       |> assign(:fields, credential_fields(socket.assigns.strategy))
+      |> assign(:cross_device?, PhoenixWebAuthn.cross_device?(socket.assigns.strategy))
       |> assign_new(:credentials, fn -> fetch_credentials(socket) end)
 
     {:ok, socket}
@@ -231,6 +254,14 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
             >
               {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
             </button>
+
+            <%= if @cross_device? do %>
+              <Input.cross_device_button
+                disabled={@adding}
+                overrides={@overrides}
+                gettext_fn={@gettext_fn}
+              />
+            <% end %>
           </form>
         </div>
       <% end %>
@@ -334,7 +365,23 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     end
   end
 
+  # The ceremony timed out (or never started) before the browser answered;
+  # the strategy would refuse the stale challenge, and must not be handed a
+  # missing one.
+  def handle_event(
+        "registration-attestation",
+        _params,
+        %{assigns: %{add_challenge: nil}} = socket
+      ) do
+    {:noreply,
+     assign(socket,
+       adding: false,
+       error_message: override_for(socket.assigns.overrides, :expired_text, @expired_text)
+     )}
+  end
+
   def handle_event("registration-attestation", params, socket) do
+    socket = cancel_timer(socket)
     strategy = socket.assigns.strategy
     challenge = socket.assigns.add_challenge
     user = socket.assigns.current_user
@@ -388,6 +435,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   end
 
   def handle_event("registration-error", params, socket) do
+    socket = cancel_timer(socket)
+
     # `excludeCredentials` makes the browser reject an already-enrolled
     # authenticator client-side with InvalidStateError.
     error_message =
@@ -425,25 +474,64 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
     exclude_ids = Enum.map(credentials, &Map.get(&1, socket.assigns.fields.credential_id))
 
+    # `hints` names the button that submitted the form ("Use a phone or
+    # tablet" asks for `hybrid`); the strategy decides whether it is honoured.
+    # The options are addressed to the add form's hook element, so a
+    # registration form on the same page leaves them alone.
     options =
-      PhoenixWebAuthn.registration_options(
-        strategy,
+      strategy
+      |> PhoenixWebAuthn.registration_options(
         challenge,
         tenant,
         user_descriptor,
-        exclude_ids
+        exclude_ids,
+        hints: params["hints"]
       )
+      |> PhoenixWebAuthn.target("#{socket.assigns.id}-add-key")
 
     socket =
       socket
+      |> cancel_timer()
       |> assign(:add_challenge, challenge)
       |> assign(:add_user_handle, user_handle)
+      |> assign(:ceremony_timer, start_timer(socket, strategy))
       |> assign(:adding, true)
       |> assign(:error_message, nil)
       |> assign(:key_name_value, key_name)
       |> Phoenix.LiveView.push_event("registration-challenge", options)
 
     {:noreply, socket}
+  end
+
+  # The strategy's `timeout` is the browser's deadline too, so once it has
+  # passed nothing more is coming from the hook.
+  defp start_timer(socket, strategy) do
+    send_update_after(socket.assigns.myself, %{ceremony_timed_out: true}, strategy.timeout)
+  end
+
+  defp cancel_timer(socket) do
+    if timer_ref = socket.assigns[:ceremony_timer] do
+      Process.cancel_timer(timer_ref)
+      assign(socket, :ceremony_timer, nil)
+    else
+      socket
+    end
+  end
+
+  defp ceremony_timed_out(%{assigns: %{add_challenge: nil}} = socket), do: socket
+
+  defp ceremony_timed_out(socket) do
+    assign(socket,
+      add_challenge: nil,
+      ceremony_timer: nil,
+      adding: false,
+      error_message:
+        override_for(
+          socket.assigns.overrides,
+          :timeout_text,
+          "Adding the passkey timed out. Please try again."
+        )
+    )
   end
 
   # `RecentAuthentication.check/3` refuses for three reasons that share one
@@ -453,7 +541,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   # one redirects; the other two can't happen through the rendered form and
   # get a plain message.
   defp refuse_add(socket, _error) do
-    socket = assign(socket, adding: false, add_challenge: nil)
+    socket = socket |> cancel_timer() |> assign(adding: false, add_challenge: nil)
     strategy = socket.assigns.strategy
     user = socket.assigns.current_user
 
