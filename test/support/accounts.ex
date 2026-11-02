@@ -14,5 +14,7 @@ defmodule Example.Accounts do
     resource Example.Accounts.WebAuthnCredential
     resource Example.Accounts.AnonUser
     resource Example.Accounts.AnonCredential
+    resource Example.Accounts.Member
+    resource Example.Accounts.MemberCredential
   end
 end
