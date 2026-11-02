@@ -58,36 +58,50 @@ defmodule AshAuthentication.Phoenix.Test.HomeLive do
 end
 
 defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
-  @moduledoc false
+  @moduledoc """
+  Renders the top-level WebAuthn component against a mock strategy.
+
+  A `variant` query parameter picks strategy options the fixture resources
+  don't configure, so one route covers them without a resource each.
+  """
   use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
   alias AshAuthentication.Phoenix.Components
   alias AshAuthentication.Phoenix.Test.WebAuthnHelpers
 
   @impl true
-  def mount(_params, session, socket) do
+  def mount(params, session, socket) do
     socket =
       socket
       |> assign(:auth_routes_prefix, session["auth_routes_prefix"] || "/auth")
+      |> assign(:strategy, WebAuthnHelpers.mock_webauthn_strategy(variant(params["variant"])))
 
     {:ok, socket}
   end
 
+  # The strategy offers cross-device passkeys itself; the client can't
+  # change the hints.
+  defp variant("hybrid"), do: %{hints: [:hybrid, :security_key], timeout: 300_000}
+  # No hints configured, but the client may ask for some.
+  defp variant("override"), do: %{allow_hint_override?: true}
+  # Built-in authenticators only: no phone can answer. (The strategy refuses
+  # this alongside `:hybrid` at compile time; the mock bypasses that.)
+  defp variant("platform"), do: %{hints: [:hybrid], authenticator_attachment: :platform}
+  # A ceremony that times out within a test.
+  defp variant("quick"), do: %{timeout: 100}
+  defp variant("no-sign-in"), do: %{sign_in_enabled?: false}
+  defp variant("no-register"), do: %{registration_enabled?: false}
+  defp variant(_), do: %{}
+
   @impl true
   def render(assigns) do
-    # Render the top-level WebAuthn component with a mock strategy
-    # Note: This requires the Strategy.WebAuthn struct to be available
     ~H"""
     <.live_component
       module={Components.WebAuthn}
       id="webauthn-test"
-      strategy={webauthn_strategy()}
+      strategy={@strategy}
       auth_routes_prefix={@auth_routes_prefix}
     />
     """
-  end
-
-  defp webauthn_strategy do
-    WebAuthnHelpers.mock_webauthn_strategy()
   end
 end
 
@@ -310,8 +324,10 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     ash_authentication_live_session :test_session do
       live("/", HomeLive, :index)
 
-      # ManageCredentials against variants of the User WebAuthn strategy.
+      # ManageCredentials and Verify2faForm against variants of the User
+      # WebAuthn strategy.
       live("/webauthn-manage/:variant", WebAuthnManageLive, :index)
+      live("/webauthn-verify-variant/:variant", WebAuthnVerifyVariantLive, :index)
     end
   end
 
