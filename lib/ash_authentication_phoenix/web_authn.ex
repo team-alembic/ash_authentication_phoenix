@@ -66,36 +66,6 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   alias AshAuthentication.Strategy.WebAuthn.Helpers
 
   @doc """
-  The attribute recording when a credential was created, or `nil` if the
-  credential resource has none.
-
-  `inserted_at` when the resource has it, otherwise whatever attribute has
-  the shape `create_timestamp` declares: a datetime defaulting to the
-  current time, never written by callers and never touched on update. The
-  same rule `AshAuthentication.Strategy.WebAuthn.Actions.list_credentials/3`
-  sorts by.
-  """
-  @spec creation_timestamp_field(struct) :: atom | nil
-  def creation_timestamp_field(strategy) do
-    resource = strategy.credential_resource
-
-    if ResourceInfo.attribute(resource, :inserted_at) do
-      :inserted_at
-    else
-      resource
-      |> ResourceInfo.attributes()
-      |> Enum.find_value(&(create_timestamp?(&1) && &1.name))
-    end
-  end
-
-  @datetime_types [Ash.Type.UtcDatetimeUsec, Ash.Type.UtcDatetime, Ash.Type.DateTime]
-
-  defp create_timestamp?(attribute) do
-    Ash.Type.get_type(attribute.type) in @datetime_types and not attribute.writable? and
-      is_function(attribute.default, 0) and is_nil(attribute.update_default)
-  end
-
-  @doc """
   The signed-in record of `resource`, as `AshAuthentication.Phoenix.LiveSession`
   assigned it to the socket: `current_<subject_name>`, which is `current_user`
   only for a resource whose subject name is `user`. `nil` when nobody is

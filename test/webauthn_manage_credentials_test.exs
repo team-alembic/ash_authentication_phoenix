@@ -143,6 +143,19 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
       refute html =~ "Add another security key"
       refute html =~ "manage-add-key"
     end
+
+    test "an add-credential event sent anyway is refused as disabled, with no redirect",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+
+      {:ok, view, _html} = conn |> signed_in(user) |> live("/webauthn-manage/disabled")
+
+      # The form isn't rendered, so this is a hand-made event to the component.
+      html = view |> with_target("#manage") |> render_hook("add-credential", %{})
+
+      assert html =~ "Adding a passkey is not enabled."
+      refute_push_event(view, "registration-challenge", %{})
+    end
   end
 
   describe "with add_credential_max_authentication_age" do

@@ -125,6 +125,9 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnVerifyVariantLive do
         "quick" ->
           %{strategy | timeout: 100}
 
+        "no-verify" ->
+          %{strategy | verify_enabled?: false}
+
         _ ->
           strategy
       end

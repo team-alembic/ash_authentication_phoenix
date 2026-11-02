@@ -23,6 +23,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     timeout_text: "Error shown when the browser does not answer within the strategy's `timeout`.",
     expired_text:
       "Error shown when an assertion arrives for a ceremony that has already timed out.",
+    disabled_text:
+      "Notice shown in place of the form when the strategy has `verify_enabled? false`.",
     sign_in_link_class: "CSS class for the sign-in fallback link.",
     sign_in_link_path: "Path of the sign-in page.",
     sign_in_link_text: "Text for the sign-in fallback link."
@@ -60,11 +62,19 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
   it, and this component stops waiting for the browser when it elapses,
   with no message to the host LiveView.
 
+  ## A strategy that does not verify
+
+  With `verify_enabled? false` the strategy has no verify phase, and refuses
+  `Actions.verify/3` with `caused_by.reason: :disabled` before any ceremony
+  runs. The component then renders the `disabled_text` notice instead of
+  the form, and refuses a `start-verify` event the same way.
+
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
 
+  alias AshAuthentication.Errors.AuthenticationFailed
   alias AshAuthentication.Info
   alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthnLib
   alias AshAuthentication.Strategy.WebAuthn
@@ -76,6 +86,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
   import Slug
 
   @expired_text "This verification request has expired. Please try again."
+  @disabled_text "Passkey verification is not enabled."
 
   @impl true
   @spec update(map, Socket.t()) :: {:ok, Socket.t()}
@@ -112,6 +123,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
         socket
         |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
         |> assign(:cross_device?, PhoenixWebAuthnLib.cross_device?(strategy))
+        |> assign(:verify_enabled?, strategy.verify_enabled?)
         # The strategy keeps the exchange whenever it verifies, so a
         # second-factor-only strategy (`sign_in_enabled? false`) has it too.
         |> assign(:token_exchange?, WebAuthn.sign_in_with_token_enabled?(strategy))
@@ -119,6 +131,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
         socket
         |> assign(:subject_name_slug, nil)
         |> assign(:cross_device?, false)
+        |> assign(:verify_enabled?, false)
         |> assign(:token_exchange?, false)
       end
 
@@ -149,8 +162,14 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
         </div>
       <% end %>
 
-      <%= case @mode do %>
-        <% :error -> %>
+      <%= case {@verify_enabled?, @mode} do %>
+        <% {false, _} -> %>
+          <p class={override_for(@overrides, :error_class)}>
+            {_gettext(
+              override_for(@overrides, :disabled_text, "Passkey verification is not enabled.")
+            )}
+          </p>
+        <% {true, :error} -> %>
           <p class={override_for(@overrides, :error_class)}>
             {_gettext(override_for(@overrides, :error_unauthenticated_text))}
           </p>
@@ -224,6 +243,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
   @impl true
   @spec handle_event(String.t(), %{required(String.t()) => any()}, Socket.t()) ::
           {:noreply, Socket.t()}
+  # No verify phase: the strategy would refuse after the browser prompt, so
+  # refuse before it.
+  def handle_event("start-verify", _params, %{assigns: %{verify_enabled?: false}} = socket) do
+    {:noreply, verify_disabled(socket)}
+  end
+
   def handle_event("start-verify", params, socket) do
     strategy = socket.assigns.strategy
     actor = resolve_actor(socket)
@@ -351,6 +376,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
            trigger_action: true
          )}
 
+      # The strategy refuses a disabled phase before running the ceremony.
+      {:error, %AuthenticationFailed{caused_by: %{reason: :disabled}}} ->
+        {:noreply, verify_disabled(socket)}
+
       {:error, _error} ->
         {:noreply,
          assign(socket,
@@ -359,6 +388,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
            error_message: "Verification failed. Please try again."
          )}
     end
+  end
+
+  defp verify_disabled(socket) do
+    socket
+    |> cancel_timer()
+    |> assign(
+      challenge: nil,
+      submitting: false,
+      error_message: override_for(socket.assigns.overrides, :disabled_text, @disabled_text)
+    )
   end
 
   defp resolve_actor(%{assigns: %{current_user: %_{} = user}}), do: user
