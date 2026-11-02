@@ -106,15 +106,20 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
 
     socket =
       if socket.assigns.strategy && socket.assigns.resource do
+        strategy = socket.assigns.strategy
         subject_name = Info.authentication_subject_name!(socket.assigns.resource)
 
         socket
         |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
-        |> assign(:cross_device?, PhoenixWebAuthnLib.cross_device?(socket.assigns.strategy))
+        |> assign(:cross_device?, PhoenixWebAuthnLib.cross_device?(strategy))
+        # The strategy keeps the exchange whenever it verifies, so a
+        # second-factor-only strategy (`sign_in_enabled? false`) has it too.
+        |> assign(:token_exchange?, WebAuthn.sign_in_with_token_enabled?(strategy))
       else
         socket
         |> assign(:subject_name_slug, nil)
         |> assign(:cross_device?, false)
+        |> assign(:token_exchange?, false)
       end
 
     {:ok, socket}
@@ -189,7 +194,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
             <% end %>
           </form>
 
-          <%= if @subject_name_slug && @strategy do %>
+          <%= if @token_exchange? do %>
             <.form
               for={%{}}
               id={"#{@id}-token-form"}

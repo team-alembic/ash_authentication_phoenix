@@ -98,15 +98,17 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
     # Both forms finish by exchanging the token the ceremony issued at the
-    # strategy's `sign_in_with_token` route, which only exists while
-    # `sign_in_enabled?` is on; so that flag gates registration as well as
-    # sign-in, and `registration_enabled?` can only close registration.
-    sign_in_enabled? = assigns.strategy.sign_in_enabled?
+    # strategy's `sign_in_with_token` route, which the strategy only builds
+    # while sign-in or verification is on
+    # (`AshAuthentication.Strategy.WebAuthn.sign_in_with_token_enabled?/1`).
+    # Registration therefore needs that route as well as its own flag.
+    strategy = assigns.strategy
+    token_exchange? = Strategy.WebAuthn.sign_in_with_token_enabled?(strategy)
 
     assigns =
       assigns
-      |> assign(:sign_in_enabled?, sign_in_enabled?)
-      |> assign(:register_enabled?, sign_in_enabled? and assigns.strategy.registration_enabled?)
+      |> assign(:sign_in_enabled?, strategy.sign_in_enabled?)
+      |> assign(:register_enabled?, token_exchange? and strategy.registration_enabled?)
 
     link_mode? = assigns.webauthn_path && assigns.live_action != :webauthn
 

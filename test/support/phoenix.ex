@@ -88,7 +88,13 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   defp variant("platform"), do: %{hints: [:hybrid], authenticator_attachment: :platform}
   # A ceremony that times out within a test.
   defp variant("quick"), do: %{timeout: 100}
+  # Sign-in off, verification on: the token exchange stays, so registration
+  # can still complete.
   defp variant("no-sign-in"), do: %{sign_in_enabled?: false}
+  # Neither sign-in nor verification: no token exchange at all.
+  defp variant("no-exchange"), do: %{sign_in_enabled?: false, verify_enabled?: false}
+  # What `--mode 2fa` writes.
+  defp variant("second-factor"), do: %{sign_in_enabled?: false, registration_enabled?: false}
   defp variant("no-register"), do: %{registration_enabled?: false}
   defp variant(_), do: %{}
 
