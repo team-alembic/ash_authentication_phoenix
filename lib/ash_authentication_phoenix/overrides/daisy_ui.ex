@@ -543,6 +543,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :submit_disabled_text, "Verifying ..."
     set :timeout_text, "Verification timed out. Please try again."
     set :expired_text, "This verification request has expired. Please try again."
+    set :disabled_text, "Passkey verification is not enabled."
     set :cross_device_button_text, "Use a phone or tablet"
     set :cross_device_button_class, "btn btn-outline w-full mt-2"
     set :error_class, "text-error text-sm mb-4"

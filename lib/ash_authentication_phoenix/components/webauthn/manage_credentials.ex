@@ -534,34 +534,34 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     )
   end
 
-  # `RecentAuthentication.check/3` refuses for three reasons that share one
-  # error shape: adding is disabled, the actor isn't a record of the
-  # strategy's resource, or the authentication is too old. Only the last
-  # is something the user can fix, by authenticating again, so only that
-  # one redirects; the other two can't happen through the rendered form and
-  # get a plain message.
-  defp refuse_add(socket, _error) do
+  # `RecentAuthentication.check/3` says why it refused in
+  # `caused_by.reason`. Only `:stale` is something the user can fix, by
+  # authenticating again, so only that one redirects; the other two can't
+  # happen through the rendered form and get a plain message.
+  defp refuse_add(socket, %AuthenticationFailed{caused_by: %{reason: reason}}) do
     socket = socket |> cancel_timer() |> assign(adding: false, add_challenge: nil)
-    strategy = socket.assigns.strategy
-    user = socket.assigns.current_user
 
-    if strategy.add_credential_enabled? and is_struct(user, strategy.resource) and
-         not is_nil(strategy.add_credential_max_authentication_age) do
-      message =
-        override_for(
-          socket.assigns.overrides,
-          :reauthentication_text,
-          "Please sign in again to add a passkey."
-        )
+    case reason do
+      :stale ->
+        message =
+          override_for(
+            socket.assigns.overrides,
+            :reauthentication_text,
+            "Please sign in again to add a passkey."
+          )
 
-      socket =
-        socket
-        |> put_flash(:error, _gettext(message))
-        |> push_navigate(to: reauthentication_path(socket))
+        socket =
+          socket
+          |> put_flash(:error, _gettext(message))
+          |> push_navigate(to: reauthentication_path(socket))
 
-      {:noreply, socket}
-    else
-      {:noreply, assign(socket, error_message: "A passkey cannot be added to this account.")}
+        {:noreply, socket}
+
+      :disabled ->
+        {:noreply, assign(socket, error_message: "Adding a passkey is not enabled.")}
+
+      :foreign_actor ->
+        {:noreply, assign(socket, error_message: "A passkey cannot be added to this account.")}
     end
   end
 
@@ -608,7 +608,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       label: WebAuthn.label_field(strategy),
       last_used_at: WebAuthn.last_used_at_field(strategy),
       backed_up: WebAuthn.backed_up_field(strategy),
-      added_at: PhoenixWebAuthn.creation_timestamp_field(strategy)
+      added_at: WebAuthn.created_at_field(strategy)
     }
   end
 

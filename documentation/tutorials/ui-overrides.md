@@ -1035,6 +1035,8 @@ Drives the WebAuthn second-factor ceremony.
 
   * `:cross_device_button_text` - Text for the "Use a phone or tablet" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.
 
+  * `:disabled_text` - Notice shown in place of the form when the strategy has `verify_enabled? false`.
+
   * `:error_class` - CSS class for error messages.
 
   * `:error_unauthenticated_text` - Text shown when the user is neither authenticated nor presenting a valid token.

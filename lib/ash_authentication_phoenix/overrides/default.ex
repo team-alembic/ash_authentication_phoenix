@@ -559,6 +559,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :submit_disabled_text, "Verifying ..."
     set :timeout_text, "Verification timed out. Please try again."
     set :expired_text, "This verification request has expired. Please try again."
+    set :disabled_text, "Passkey verification is not enabled."
     set :cross_device_button_text, "Use a phone or tablet"
 
     set :cross_device_button_class,
