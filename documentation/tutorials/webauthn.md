@@ -144,7 +144,13 @@ Each hook drives a different part of the ceremony:
 - **`WebAuthnAuthenticationHook`** — Handles the `navigator.credentials.get` call during sign-in.
 
 The hooks communicate with the server via `pushEventTo` / `handle_event`
-— you don't need to write any custom JavaScript.
+— you don't need to write any custom JavaScript. The options a component
+pushes are the strategy's own (`timeout`, `hints`, `userVerification`,
+`attestation`, …) and reach `navigator.credentials` unchanged; nothing is
+defaulted in the browser. Each push is addressed to the component that
+asked for it, so a page may hold several ceremony components — two
+strategies, or a credential manager beside a registration form — without
+one starting the other's browser prompt.
 
 ## Sign-in uses discoverable credentials
 
@@ -186,30 +192,55 @@ strategy via the user's `Secrets` module:
 | `:webauthn_origin`   | Optional exact allowlist of origins       | *(unset)*                   | `System.get_env("WEBAUTHN_ORIGIN")` |
 
 Which origins a ceremony is accepted from is the strategy's own policy,
-decided from configuration alone (see
-`AshAuthentication.Strategy.WebAuthn.Origin`). The request that minted the
-challenge plays no part: behind a TLS-terminating proxy or load balancer
-that request says `http://10.0.0.5:4000` while the browser truthfully signs
-`https://app.example.com` into the ceremony, so a check built on the
-request would reject every ceremony. The LiveView components accordingly
-never pass the socket's host along.
+decided from configuration alone. The rules are `ash_authentication`'s and
+are spelled out in its WebAuthn guide, under "Relying party and origin"
+(see also `AshAuthentication.Strategy.WebAuthn.Origin`); in short:
 
-- **`:webauthn_origin` unset** (the installer's default, and the Secrets
-  module returning `:error`): any `https` origin whose host is the `rp_id`
-  or a subdomain of it is accepted, on any port, plus `http://localhost` on
-  any port when the `rp_id` is `"localhost"`. That is exactly the set of
-  origins a browser lets use that RP ID in the first place, so nothing is
-  granted the browser hadn't already, and the RP ID hash in the signed
-  authenticator data is checked separately. Development on whatever port
-  Phoenix is on (`4000`, `4001`, …) needs no configuration, and neither
-  does a deployment behind a proxy or across several subdomains. No
-  `Plug.RewriteOn` is needed for WebAuthn's sake.
+- **`:webauthn_origin` unset** — missing from the config, or `nil` (the
+  installer's default, and the Secrets module returning `:error`): any
+  `https` origin whose host is the `rp_id` or a subdomain of it is
+  accepted, on any port, plus `http://localhost` on any port when the
+  `rp_id` is `"localhost"`. That is exactly the set of origins a browser
+  lets use that RP ID in the first place. Development on whatever port
+  Phoenix is on needs no configuration, and neither does a deployment
+  behind a proxy or across several subdomains.
 - **`:webauthn_origin` set**: an exact allowlist, port included — one
   origin or a list. Set it only when ceremonies should be narrowed to
-  specific hosts or ports. With `origin "https://example.com"` a ceremony
-  from `https://app.example.com` or `https://example.com:8443` is refused.
+  specific hosts or ports. With `"https://example.com"` a ceremony from
+  `https://app.example.com` or `https://example.com:8443` is refused.
 
-Leave `:webauthn_origin` unset unless you want that allowlist.
+Set it per environment like any other config, as a string or a list:
+
+```elixir
+# config/dev.exs, config/test.exs: leave :webauthn_origin out.
+config :my_app, webauthn_rp_id: "localhost", webauthn_rp_name: "My App"
+
+# config/prod.exs, when the allowlist is static:
+config :my_app,
+  webauthn_origin: ["https://app.example.com", "https://admin.example.com"]
+
+# config/runtime.exs (what the installer seeds): one origin from the
+# environment, or none at all.
+config :my_app, webauthn_origin: System.get_env("WEBAUTHN_ORIGIN")
+```
+
+What is Phoenix's to get right:
+
+- **The request plays no part.** The request that minted the challenge is
+  not consulted: behind a TLS-terminating proxy or load balancer it says
+  `http://10.0.0.5:4000` while the browser truthfully signs
+  `https://app.example.com` into the ceremony, so a check built on the
+  request would reject every ceremony. Nothing in `ash_authentication_phoenix`
+  derives an origin from the socket or the conn, and no `Plug.RewriteOn` is
+  needed for WebAuthn's sake.
+- **LiveView must accept the same origins.** The ceremony runs over the
+  LiveView socket, and Phoenix checks the WebSocket's `Origin` header
+  against the endpoint's `url` (`check_origin`). Every origin WebAuthn
+  accepts must pass that check too: behind a proxy, a tunnel (`ngrok`,
+  Cloudflare Tunnel, …) or on several subdomains, set the endpoint's `url`
+  to the public host, or list the public origins in `check_origin`.
+  Otherwise the page loads but the LiveView never connects, and no
+  ceremony starts.
 
 **`rp_id` must be a hostname** — no scheme, no port. WebAuthn rejects
 `"localhost:4000"` or `"https://example.com"` with a `SecurityError`
@@ -265,21 +296,34 @@ session, however old, can enrol a passkey of its own.
 
 A passkey stored on a phone can be used to sign in on a laptop that has no authenticator of its own. The browser shows a QR code, the phone scans it, and the ceremony completes over Bluetooth proximity plus a relay — the phone never needs a route to your application, so this works on `localhost` in development.
 
-None of that is yours to implement. It is hybrid transport, handled entirely by the browser and the phone's operating system, and the assertion it produces is indistinguishable from one made by a USB security key. The only thing to do is ask for it, by setting `hints` on the strategy in your `ash_authentication` configuration:
+None of that is yours to implement. It is hybrid transport, handled entirely by the browser and the phone's operating system, and the assertion it produces is indistinguishable from one made by a USB security key. The server's part is to ask for it, and the installer does that for you:
+
+```bash
+mix ash_authentication_phoenix.add_strategy webauthn --cross-device
+```
+
+`--cross-device` is `ash_authentication`'s installer flag, forwarded by this one. It writes three options into the strategy, which you can also set by hand:
 
 ```elixir
 webauthn :webauthn do
   credential_resource MyApp.Accounts.WebAuthnCredential
   hints [:hybrid, :security_key]
-  timeout 300_000
+  timeout 180_000
+  allow_hint_override? true
 end
 ```
 
-`:hybrid` is the "use your phone or tablet" option, `:security_key` a removable USB/NFC key, `:client_device` the authenticator built into this machine. The list is an order of preference. The components carry it into both the registration and the sign-in ceremony, so a machine with no authenticator can enrol a phone passkey and then use it.
+- `hints` orders the kinds of authenticator the browser should lead with: `:hybrid` is the "use your phone or tablet" option, `:security_key` a removable USB/NFC key, `:client_device` the authenticator built into this machine. The components carry it into every ceremony — sign-in, registration, adding a passkey, and second-factor verify — so a machine with no authenticator can enrol a phone passkey and then use it.
+- `timeout` must be raised. The default 60 seconds cannot fit a QR scan, a Bluetooth handshake and a prompt on the second device, and the ceremony expires mid-scan; `ash_authentication` warns at compile time if you offer `:hybrid` with less than 120 seconds. The components wait exactly as long as the strategy says, on every page they are embedded in.
+- `allow_hint_override? true` lets the client ask for one kind of authenticator per ceremony, which is what the next paragraph needs.
 
-Raise the `timeout`. The default 60 seconds cannot fit a QR scan, a Bluetooth handshake and a prompt on the second device, and the ceremony expires mid-scan; `ash_authentication` warns at compile time if you offer `:hybrid` with less than 120 seconds.
+### The "Use a phone or tablet" button
 
-Chrome 128+ honours `hints`. Other browsers ignore members they don't recognise and fall back to their own picker, which generally offers the same thing — no feature detection is needed.
+When the strategy offers `:hybrid`, or allows the hint override, every ceremony component renders a second button, "Use a phone or tablet", next to its main one — on the sign-in and registration forms, on the add-a-passkey form of `ManageCredentials`, and on the second-factor verify page. It requests the ceremony with `hints: [:hybrid]`, so a browser that honours hints opens straight on the QR code instead of its picker. The request is honoured only when `allow_hint_override?` is on; otherwise the configured hints stand, exactly as the strategy's own challenge endpoints treat a `?hints=hybrid` parameter. The button is never shown under `authenticator_attachment :platform`, which rules a phone out.
+
+Its text and class are overridable: `cross_device_button_text` and `cross_device_button_class` on `AshAuthentication.Phoenix.Components.WebAuthn.Input` for the forms, and the same two keys on `AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm`. The predicate behind the button is `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`, should you render your own.
+
+Chrome 128+ honours `hints`. Other browsers ignore members they don't recognise and fall back to their own picker, which already offers the phone — no feature detection is needed. For what happens on the wire, Bluetooth and all, see "Cross-device sign-in" in the [AshAuthentication WebAuthn guide](https://hexdocs.pm/ash_authentication/webauthn.html).
 
 ## Customization
 

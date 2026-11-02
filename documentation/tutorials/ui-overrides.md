@@ -866,6 +866,8 @@ Registration form for WebAuthn.
 
   * `:disable_button_text` - Text shown while the registration ceremony is in progress.
 
+  * `:expired_text` - Error shown when an attestation arrives for a ceremony that has already timed out.
+
   * `:form_class` - CSS class for the `form` element.
 
   * `:label_class` - CSS class for the heading `h2` element (or `nil` to hide).
@@ -884,6 +886,8 @@ Registration form for WebAuthn.
 
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
+  * `:timeout_text` - Error shown when the browser does not answer within the strategy's `timeout`.
+
 
 ### `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`
 
@@ -892,6 +896,8 @@ Authentication form for WebAuthn.
   * `:button_text` - Text for the authentication button.
 
   * `:disable_button_text` - Text shown while the authentication ceremony is in progress.
+
+  * `:expired_text` - Error shown when an assertion arrives for a ceremony that has already timed out.
 
   * `:form_class` - CSS class for the `form` element.
 
@@ -905,10 +911,16 @@ Authentication form for WebAuthn.
 
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
+  * `:timeout_text` - Error shown when the browser does not answer within the strategy's `timeout`.
+
 
 ### `AshAuthentication.Phoenix.Components.WebAuthn.Input`
 
 Function components for WebAuthn form inputs.
+
+  * `:cross_device_button_class` - CSS class for the "Use a phone or tablet" button.
+
+  * `:cross_device_button_text` - Text for the "Use a phone or tablet" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.
 
   * `:disable_button_text` - Text shown on the button while submitting.
 
@@ -982,6 +994,8 @@ Credential management panel for authenticated users.
 
   * `:empty_state_text` - Text shown when no credentials exist.
 
+  * `:expired_text` - Error shown when an attestation arrives for an add-passkey ceremony that has already timed out.
+
   * `:heading_class` - CSS class for the heading.
 
   * `:heading_text` - Heading text for the panel.
@@ -1008,6 +1022,8 @@ Credential management panel for authenticated users.
 
   * `:synced_badge_text` - Badge text shown for synced passkeys (credentials whose backup state flag is set).
 
+  * `:timeout_text` - Error shown when the browser does not answer the add-passkey ceremony within the strategy's `timeout`.
+
   * `:timestamp_class` - CSS class for timestamp text.
 
 
@@ -1015,9 +1031,15 @@ Credential management panel for authenticated users.
 
 Drives the WebAuthn second-factor ceremony.
 
+  * `:cross_device_button_class` - CSS class for the "Use a phone or tablet" button.
+
+  * `:cross_device_button_text` - Text for the "Use a phone or tablet" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.
+
   * `:error_class` - CSS class for error messages.
 
   * `:error_unauthenticated_text` - Text shown when the user is neither authenticated nor presenting a valid token.
+
+  * `:expired_text` - Error shown when an assertion arrives for a ceremony that has already timed out.
 
   * `:form_class` - CSS class for the visible form wrapping the verify button.
 
@@ -1042,6 +1064,8 @@ Drives the WebAuthn second-factor ceremony.
   * `:submit_disabled_text` - Text shown on the verify button while the ceremony is in flight.
 
   * `:submit_text` - Text shown on the verify button.
+
+  * `:timeout_text` - Error shown when the browser does not answer within the strategy's `timeout`.
 
 
 ### `AshAuthentication.Phoenix.WebAuthnVerifyLive`
