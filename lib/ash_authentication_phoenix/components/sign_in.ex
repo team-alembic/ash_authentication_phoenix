@@ -298,10 +298,10 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategy_style(%Strategy.RememberMe{}), do: nil
 
   defp strategy_style(%AshAuthentication.Strategy.WebAuthn{} = strategy) do
-    # With sign-in off the strategy has no `sign_in_with_token` route, which
-    # is how both of its LiveView forms complete — so nothing of it belongs
-    # on the sign-in page. That is the second-factor configuration: the
-    # strategy only exposes `:verify`, reached via the dedicated 2FA page.
+    # With sign-in off nothing of the strategy belongs on the sign-in page.
+    # That is the second-factor configuration: verification happens on the
+    # dedicated 2FA page, and the token exchange the strategy keeps for it
+    # (`sign_in_with_token`) is not a way to sign in from here.
     if Map.get(strategy, :sign_in_enabled?, true) do
       :form
     else

@@ -101,9 +101,11 @@ end
 > `registration_enabled?` at its default would let anyone create a
 > passwordless account through the public registration endpoints and be
 > signed in without the primary factor. With both off the strategy exposes
-> only `verify` and `add_credential`, and both require an authenticated
-> actor. `mix ash_authentication.add_strategy.webauthn --mode 2fa` generates
-> exactly this.
+> `verify` and `add_credential`, which require an authenticated actor, plus
+> the `sign_in_with_token` exchange that turns a verified token into a
+> session (`AshAuthentication.Strategy.WebAuthn.sign_in_with_token_enabled?/1`
+> reports it). `mix ash_authentication.add_strategy.webauthn --mode 2fa`
+> generates exactly this.
 >
 > Because the second-factor verify challenge lists the authenticated user's
 > own credentials, both discoverable and non-discoverable credentials work
