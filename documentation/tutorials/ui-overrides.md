@@ -195,6 +195,8 @@ Generates a default registration form.
 
   * `:root_class` - CSS class for the root `div` element.
 
+  * `:show_custom_fields` - Whether to automatically render inputs for the fields declared in the strategy's `register_action_accept`. Defaults to `true`.
+
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
 
@@ -843,23 +845,17 @@ Generates sign in and registration forms for WebAuthn/Passkey authentication.
 
   * `:authentication_form_module` - The Phoenix component to be used for the authentication form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`.
 
-  * `:hide_class` - CSS class to apply to hide an element.
-
-  * `:interstitial_class` - CSS class for the `div` element between the form and the toggle.
-
-  * `:register_toggle_text` - Toggle text to display when the register form is not showing (or `nil` to disable).
-
   * `:registration_form_module` - The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`.
 
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:show_first` - The form to show on first load. Either `:sign_in` or `:register`. Only relevant if paths aren't set for them in the router.
-
-  * `:sign_in_toggle_text` - Toggle text to display when the sign in form is not showing (or `nil` to disable).
-
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
-  * `:toggler_class` - CSS class for the toggler `a` element.
+  * `:workflow_button_class` - CSS class for the link shown on the sign-in page when `webauthn_path` is configured.
+
+  * `:workflow_button_text` - Text for the link shown on the sign-in page when `webauthn_path` is configured.
+
+  * `:workflow_root_class` - CSS class for the root `div` element in link mode (when `webauthn_path` is configured). Falls back to `root_class` when unset.
 
 
 ### `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`
@@ -872,7 +868,19 @@ Registration form for WebAuthn.
 
   * `:form_class` - CSS class for the `form` element.
 
+  * `:label_class` - CSS class for the heading `h2` element (or `nil` to hide).
+
+  * `:label_text` - Heading text (or `nil` to hide).
+
   * `:root_class` - CSS class for the root `div` element.
+
+  * `:show_custom_fields` - Whether to automatically render inputs for the fields declared in the strategy's `register_action_accept`. Defaults to `true`.
+
+  * `:show_display_name_field` - Whether to show a display name input in passkey-first mode (`require_identity?` is `false`), where it is the only way to label the account inside the passkey. Defaults to `true`; never shown when the strategy requires an identity.
+
+  * `:show_identity_field` - Whether to show the identity input. Defaults to `true`; automatically `false` when `require_identity?` is `false` on the strategy.
+
+  * `:show_key_name_field` - Whether to show a passkey label input so users can name their credential (e.g. "My iPhone"). Defaults to `false`.
 
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
@@ -887,9 +895,13 @@ Authentication form for WebAuthn.
 
   * `:form_class` - CSS class for the `form` element.
 
+  * `:label_class` - CSS class for the heading `h2` element (or `nil` to hide).
+
+  * `:label_text` - Heading text (or `nil` to hide).
+
   * `:root_class` - CSS class for the root `div` element.
 
-  * `:show_identity_field` - Whether to show the identity input (false for discoverable credentials).
+  * `:show_identity_field` - Whether to show an optional identity input above the sign-in button. Sign-in never needs one — the browser offers the discoverable passkeys it holds for the site and the credential resolves the user — and a submitted identity is only checked against the credential's owner. Defaults to `false`; never shown when the strategy requires no identity.
 
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
@@ -900,19 +912,27 @@ Function components for WebAuthn form inputs.
 
   * `:disable_button_text` - Text shown on the button while submitting.
 
+  * `:display_name_label` - Label for the display name field (passkey-first mode).
+
+  * `:display_name_placeholder` - Placeholder for the display name field.
+
   * `:error_li` - CSS class for the error list `li` elements.
 
   * `:error_ul` - CSS class for the error list `ul` element.
 
   * `:field_class` - CSS class for the field wrapper `div`.
 
-  * `:identity_input_label` - Label for the identity (email) input field.
+  * `:identity_input_label` - Label for the identity input. Defaults to the humanized field name (e.g. `:email` → "Email").
 
   * `:identity_input_placeholder` - Placeholder for the identity input field.
 
   * `:input_class` - CSS class for `input` elements.
 
   * `:input_class_with_error` - CSS class for `input` elements when there is an error.
+
+  * `:key_name_label` - Label for the optional passkey name field.
+
+  * `:key_name_placeholder` - Placeholder for the passkey name field.
 
   * `:label_class` - CSS class for `label` elements.
 
@@ -944,6 +964,8 @@ Credential management panel for authenticated users.
 
   * `:add_button_text` - Text for the add credential button.
 
+  * `:add_form_class` - CSS class for the `form` wrapping the passkey name input and add button.
+
   * `:cancel_button_text` - Text for the cancel rename button.
 
   * `:continue_button_class` - CSS class for the continue button.
@@ -968,6 +990,10 @@ Credential management panel for authenticated users.
 
   * `:last_credential_warning` - Warning when trying to delete the last credential.
 
+  * `:reauthentication_path` - Where to send the user when adding a passkey needs a more recent authentication than their session carries (the strategy's `add_credential_max_authentication_age`). Defaults to the second-factor verify page (`/webauthn-verify`) when the user already has a passkey and the strategy verifies, otherwise to the sign-in page (`/sign-in`).
+
+  * `:reauthentication_text` - Flash message shown when the user is sent to re-authenticate before adding a passkey.
+
   * `:rename_button_class` - CSS class for the rename button.
 
   * `:rename_button_text` - Text for the rename button.
@@ -975,6 +1001,12 @@ Credential management panel for authenticated users.
   * `:root_class` - CSS class for the management panel root `div`.
 
   * `:save_button_text` - Text for the save label button.
+
+  * `:show_key_name_field` - Whether to show a passkey name input before adding a new credential, so the name is set before the browser ceremony stores it in the user's password manager. Defaults to `true`.
+
+  * `:synced_badge_class` - CSS class for the synced passkey badge.
+
+  * `:synced_badge_text` - Badge text shown for synced passkeys (credentials whose backup state flag is set).
 
   * `:timestamp_class` - CSS class for timestamp text.
 
@@ -1028,6 +1060,45 @@ A generic, white-label WebAuthn passkey setup page for second-factor flows.
   * `:root_class` - CSS class for the root `div` element.
 
   * `:webauthn_setup_id` - Element ID for the `ManageCredentials` LiveComponent.
+
+
+### `AshAuthentication.Phoenix.WebAuthnLive`
+
+Dedicated WebAuthn sign-in and registration page.
+
+  * `:inner_class` - CSS class for the inner column-width `div` element.
+
+  * `:root_class` - CSS class for the outer full-page `div` element.
+
+
+## Custom Fields
+### `AshAuthentication.Phoenix.Components.CustomFields`
+
+Automatically rendered inputs for custom registration fields.
+
+  * `:checkbox_class` - CSS class for checkbox `input` elements.
+
+  * `:error_li` - CSS class for the `li` elements on error lists.
+
+  * `:error_ul` - CSS class for the `ul` element on error lists.
+
+  * `:field_class` - CSS class for `div` elements surrounding the fields.
+
+  * `:field_input_types` - A map of field name (atom) to HTML input type (e.g. `%{ssn: :password, phone: :tel}`), overriding the type derived from the attribute definition.
+
+  * `:field_labels` - A map of field name (atom) to label text, e.g. `%{name: "Full name"}`. Fields not in the map fall back to the humanized field name.
+
+  * `:field_placeholders` - A map of field name (atom) to placeholder text.
+
+  * `:input_class` - CSS class for text-like `input` elements.
+
+  * `:input_class_with_error` - CSS class for text-like `input` elements when there is a validation error.
+
+  * `:input_debounce` - Number of milliseconds to debounce input by (or `nil` to disable).
+
+  * `:label_class` - CSS class for `label` elements.
+
+  * `:select_class` - CSS class for `select` elements.
 
 
 ## Miscellaneous
