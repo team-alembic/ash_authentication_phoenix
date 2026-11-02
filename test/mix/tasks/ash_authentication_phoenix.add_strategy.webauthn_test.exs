@@ -121,18 +121,60 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.AddStrategy.WebauthnTest do
     end
   end
 
+  # A project with ash_authentication installed, as the front door expects
+  # to find it.
+  defp installed_project do
+    project_with_app_js()
+    |> Igniter.Project.Deps.add_dep({:simple_sat, ">= 0.0.0"})
+    |> Igniter.Project.Deps.add_dep({:ash_authentication, ">= 0.0.0"})
+    |> Igniter.Project.Formatter.add_formatter_plugin(Spark.Formatter)
+    |> Igniter.compose_task("ash_authentication.install", ["--yes"])
+    |> apply_igniter!()
+  end
+
   describe "via parent task" do
     test "ash_authentication_phoenix.add_strategy webauthn composes the JS hook installer" do
-      project_with_app_js()
-      |> Igniter.Project.Deps.add_dep({:simple_sat, ">= 0.0.0"})
-      |> Igniter.Project.Deps.add_dep({:ash_authentication, ">= 0.0.0"})
-      |> Igniter.Project.Formatter.add_formatter_plugin(Spark.Formatter)
-      |> Igniter.compose_task("ash_authentication.install", ["--yes"])
-      |> apply_igniter!()
+      installed_project()
       |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["webauthn"])
       |> assert_has_patch("assets/js/app.js", """
       + |import { WebAuthnRegistrationHook, WebAuthnAuthenticationHook, WebAuthnSupportHook } from "ash_authentication_phoenix/priv/static/webauthn_hooks.js";
       """)
+    end
+
+    # The front door declares no `--passkey-only` itself: Igniter merges the
+    # schemas of the tasks it composes, so ash_authentication's flag passes
+    # through it.
+    test "forwards --passkey-only to ash_authentication's webauthn task" do
+      diff =
+        installed_project()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
+          "webauthn",
+          "--passkey-only"
+        ])
+        |> diff(path: "lib/test/accounts/user.ex")
+
+      assert diff =~ "require_identity? false"
+      refute diff =~ "identity_field :email"
+      refute diff =~ "attribute :email"
+    end
+
+    test "forwards --passkey-only together with --mode 2fa" do
+      result =
+        installed_project()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
+          "webauthn",
+          "--passkey-only",
+          "--mode",
+          "2fa"
+        ])
+
+      diff = diff(result, path: "lib/test/accounts/user.ex")
+      assert diff =~ "require_identity? false"
+      assert diff =~ "registration_enabled? false"
+      assert diff =~ "sign_in_enabled? false"
+
+      # ash_authentication notes that the flag changes nothing in 2FA mode.
+      assert_has_notice(result, &String.contains?(&1, "`--passkey-only` has no effect"))
     end
   end
 
