@@ -557,6 +557,13 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :submit_text, "Verify with passkey"
     set :submit_disabled_text, "Verifying ..."
+    set :timeout_text, "Verification timed out. Please try again."
+    set :expired_text, "This verification request has expired. Please try again."
+    set :cross_device_button_text, "Use a phone or tablet"
+
+    set :cross_device_button_class,
+        "w-full flex justify-center py-2 px-4 mt-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+
     set :error_class, "text-red-500 text-sm mb-4"
 
     set :error_unauthenticated_text,
@@ -708,6 +715,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :disable_button_text, "Registering..."
     set :slot_class, "mt-2"
     set :show_key_name_field, true
+    set :timeout_text, "Registration timed out. Please try again."
+    set :expired_text, "This registration request has expired. Please try again."
   end
 
   override Components.WebAuthn.AuthenticationForm do
@@ -719,6 +728,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :disable_button_text, "Signing in..."
     set :slot_class, "mt-2"
     set :show_identity_field, false
+    set :timeout_text, "Authentication timed out. Please try again."
+    set :expired_text, "This sign-in request has expired. Please try again."
   end
 
   override Components.WebAuthn.Input do
@@ -745,6 +756,15 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :sign_in_button_text, "Sign in with Passkey"
     set :sign_in_button_icon, nil
     set :disable_button_text, "Please wait..."
+    set :cross_device_button_text, "Use a phone or tablet"
+
+    set :cross_device_button_class, """
+    w-full flex justify-center items-center py-2 px-4 mt-2 border border-gray-300
+    rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white
+    hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2
+    focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+    dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600
+    """
   end
 
   override Components.WebAuthn.Support do
@@ -786,5 +806,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     rounded-md shadow-sm text-sm font-medium text-white bg-blue-600
     hover:bg-blue-700 disabled:opacity-50
     """
+
+    set :timeout_text, "Adding the passkey timed out. Please try again."
+    set :expired_text, "This request has expired. Please try adding the passkey again."
   end
 end

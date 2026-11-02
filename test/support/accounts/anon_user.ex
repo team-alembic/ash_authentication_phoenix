@@ -37,6 +37,9 @@ defmodule Example.Accounts.AnonUser do
         # don't fit the default 60s timeout.
         hints [:hybrid, :security_key]
         timeout 300_000
+        # Lets the components' "Use a phone or tablet" button ask for the
+        # QR code directly, as `?hints=hybrid` does on the Plug endpoints.
+        allow_hint_override? true
       end
     end
 

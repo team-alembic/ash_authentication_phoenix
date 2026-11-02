@@ -426,6 +426,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :disable_button_text, "Registering..."
     set :slot_class, "my-4"
     set :show_key_name_field, true
+    set :timeout_text, "Registration timed out. Please try again."
+    set :expired_text, "This registration request has expired. Please try again."
   end
 
   override Components.WebAuthn.AuthenticationForm do
@@ -437,6 +439,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :disable_button_text, "Signing in..."
     set :slot_class, "my-4"
     set :show_identity_field, false
+    set :timeout_text, "Authentication timed out. Please try again."
+    set :expired_text, "This sign-in request has expired. Please try again."
   end
 
   override Components.WebAuthn.Input do
@@ -455,6 +459,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :sign_in_button_text, "Sign in with Passkey"
     set :sign_in_button_icon, nil
     set :disable_button_text, "Please wait..."
+    set :cross_device_button_text, "Use a phone or tablet"
+    set :cross_device_button_class, "btn btn-outline btn-block mb-4"
   end
 
   override Components.WebAuthn.Support do
@@ -482,6 +488,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :timestamp_class, "text-sm text-base-content/60 ml-2"
     set :continue_button_text, "Continue"
     set :continue_button_class, "btn btn-primary mt-4 w-full"
+    set :timeout_text, "Adding the passkey timed out. Please try again."
+    set :expired_text, "This request has expired. Please try adding the passkey again."
   end
 
   override Components.Totp.Verify2faForm do
@@ -533,6 +541,10 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :submit_class, "btn btn-primary w-full"
     set :submit_text, "Verify with passkey"
     set :submit_disabled_text, "Verifying ..."
+    set :timeout_text, "Verification timed out. Please try again."
+    set :expired_text, "This verification request has expired. Please try again."
+    set :cross_device_button_text, "Use a phone or tablet"
+    set :cross_device_button_class, "btn btn-outline w-full mt-2"
     set :error_class, "text-error text-sm mb-4"
 
     set :error_unauthenticated_text,

@@ -24,7 +24,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
     sign_in_button_text: "Text for the sign in button.",
     sign_in_button_icon:
       "SVG icon for the sign in button (or nil to hide). Must be trusted static SVG — rendered with Phoenix.HTML.raw().",
-    disable_button_text: "Text shown on the button while submitting."
+    disable_button_text: "Text shown on the button while submitting.",
+    cross_device_button_text:
+      "Text for the \"Use a phone or tablet\" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.",
+    cross_device_button_class: "CSS class for the \"Use a phone or tablet\" button."
 
   @moduledoc """
   Function components for WebAuthn form inputs.
@@ -190,6 +193,31 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
         {Phoenix.HTML.raw(icon)}
       <% end %>
       {_gettext(override_for(@overrides, :sign_in_button_text, "Sign in with Passkey"))}
+    </button>
+    """
+  end
+
+  @doc """
+  Renders the "Use a phone or tablet" button.
+
+  A second submit button for the enclosing ceremony form. It submits with
+  `hints=hybrid`, which the form passes on when it requests the challenge,
+  so a browser that honours `hints` opens on the QR code instead of its
+  picker. Rendered by the forms only when
+  `AshAuthentication.Phoenix.WebAuthn.cross_device?/1` says the strategy
+  offers cross-device passkeys.
+  """
+  @spec cross_device_button(map) :: Rendered.t()
+  def cross_device_button(assigns) do
+    ~H"""
+    <button
+      type="submit"
+      name="hints"
+      value="hybrid"
+      disabled={@disabled}
+      class={override_for(@overrides, :cross_device_button_class)}
+    >
+      {_gettext(override_for(@overrides, :cross_device_button_text, "Use a phone or tablet"))}
     </button>
     """
   end

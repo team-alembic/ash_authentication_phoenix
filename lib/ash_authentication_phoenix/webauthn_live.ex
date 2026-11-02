@@ -63,37 +63,13 @@ defmodule AshAuthentication.Phoenix.WebAuthnLive do
   end
 
   @doc """
-  Forwards timeout messages from the nested RegistrationForm/AuthenticationForm
-  components.  The components use `Process.send_after` which delivers to this
-  LiveView's PID, so we relay via `send_update/2` to the correct child component.
+  Absorbs the browser-support reports `Components.WebAuthn.Support` sends to
+  its host LiveView. The ceremony forms keep their own timers and send
+  nothing here.
   """
   @impl Phoenix.LiveView
   def handle_info({:passkeys_supported, _}, socket), do: {:noreply, socket}
   def handle_info({:conditional_ui_available, _}, socket), do: {:noreply, socket}
-
-  def handle_info(:registration_timeout, socket) do
-    id = "#{socket.assigns.subject_name}-#{socket.assigns.strategy_name_slug}-register"
-
-    send_update(Components.WebAuthn.RegistrationForm,
-      id: id,
-      submitting: false,
-      error_message: "Registration timed out. Please try again."
-    )
-
-    {:noreply, socket}
-  end
-
-  def handle_info(:authentication_timeout, socket) do
-    id = "#{socket.assigns.subject_name}-#{socket.assigns.strategy_name_slug}-sign-in"
-
-    send_update(Components.WebAuthn.AuthenticationForm,
-      id: id,
-      submitting: false,
-      error_message: "Authentication timed out. Please try again."
-    )
-
-    {:noreply, socket}
-  end
 
   @doc false
   @impl true
