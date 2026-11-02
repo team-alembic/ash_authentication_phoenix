@@ -270,6 +270,22 @@ defmodule AshAuthentication.Phoenix.Test.Router do
     webauthn_2fa_route(Example.Accounts.User, :webauthn, auth_routes_prefix: "/auth")
     webauthn_setup_route(Example.Accounts.User, :webauthn, auth_routes_prefix: "/auth")
 
+    # The same two pages for a resource configured as `--mode 2fa` writes it
+    # (password primary, WebAuthn verify-only), whose subject is `member`.
+    auth_routes AuthController, Example.Accounts.Member, path: "/member-auth"
+
+    webauthn_2fa_route(Example.Accounts.Member, :webauthn,
+      path: "/member/webauthn-verify",
+      auth_routes_prefix: "/member-auth",
+      as: :member_webauthn
+    )
+
+    webauthn_setup_route(Example.Accounts.Member, :webauthn,
+      path: "/member/webauthn-setup",
+      auth_routes_prefix: "/member-auth",
+      as: :member_webauthn
+    )
+
     # Gettext routes
     sign_in_route path: "/anmeldung",
                   auth_routes_prefix: "/auth",
