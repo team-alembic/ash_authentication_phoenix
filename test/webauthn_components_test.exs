@@ -100,6 +100,24 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
     end
   end
 
+  describe "the strategy's enabled flags" do
+    test "sign_in_enabled? false renders neither form", %{conn: conn} do
+      # Registration completes at the `sign_in_with_token` route, which the
+      # strategy only has while sign-in is enabled.
+      {:ok, _view, html} = live(conn, "/webauthn_test?variant=no-sign-in")
+
+      refute html =~ "Sign in with Passkey"
+      refute html =~ "Register with Passkey"
+    end
+
+    test "registration_enabled? false leaves only the sign-in form", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test?variant=no-register")
+
+      assert html =~ "Sign in with Passkey"
+      refute html =~ "Register with Passkey"
+    end
+  end
+
   describe "sign-in page with multiple user types" do
     test "renders a divider between resource groups", %{conn: conn} do
       conn = get(conn, "/sign-in")

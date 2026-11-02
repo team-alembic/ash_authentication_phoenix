@@ -97,7 +97,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
   @impl true
   @spec render(Socket.assigns()) :: Rendered.t() | no_return
   def render(assigns) do
-    assigns = assign(assigns, :register_enabled?, assigns.strategy.registration_enabled?)
+    # Both forms finish by exchanging the token the ceremony issued at the
+    # strategy's `sign_in_with_token` route, which only exists while
+    # `sign_in_enabled?` is on; so that flag gates registration as well as
+    # sign-in, and `registration_enabled?` can only close registration.
+    sign_in_enabled? = assigns.strategy.sign_in_enabled?
+
+    assigns =
+      assigns
+      |> assign(:sign_in_enabled?, sign_in_enabled?)
+      |> assign(:register_enabled?, sign_in_enabled? and assigns.strategy.registration_enabled?)
 
     link_mode? = assigns.webauthn_path && assigns.live_action != :webauthn
 
@@ -130,18 +139,20 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
           overrides={@overrides}
         />
 
-        <.live_component
-          module={
-            override_for(@overrides, :authentication_form_module) || WebAuthn.AuthenticationForm
-          }
-          id={@sign_in_id}
-          strategy={@strategy}
-          overrides={@overrides}
-          current_tenant={@current_tenant}
-          context={@context}
-          gettext_fn={@gettext_fn}
-          auth_routes_prefix={@auth_routes_prefix}
-        />
+        <%= if @sign_in_enabled? do %>
+          <.live_component
+            module={
+              override_for(@overrides, :authentication_form_module) || WebAuthn.AuthenticationForm
+            }
+            id={@sign_in_id}
+            strategy={@strategy}
+            overrides={@overrides}
+            current_tenant={@current_tenant}
+            context={@context}
+            gettext_fn={@gettext_fn}
+            auth_routes_prefix={@auth_routes_prefix}
+          />
+        <% end %>
 
         <%= if @register_enabled? do %>
           <.live_component

@@ -56,6 +56,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnSetupLive do
           id={override_for(@overrides, :webauthn_setup_id, "webauthn_setup")}
           strategy={@strategy}
           current_user={@current_user}
+          current_tenant={@current_tenant}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
           continue_path={@continue_path}
