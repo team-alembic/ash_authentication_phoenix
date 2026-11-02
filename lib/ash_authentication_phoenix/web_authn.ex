@@ -71,8 +71,7 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   only for a resource whose subject name is `user`. `nil` when nobody is
   signed in, or when `resource` is `nil`.
   """
-  @spec current_subject(Phoenix.LiveView.Socket.t(), Ash.Resource.t() | nil) ::
-          Ash.Resource.record() | nil
+  @spec current_subject(Phoenix.LiveView.Socket.t(), Ash.Resource.t() | nil) :: struct | nil
   def current_subject(_socket, nil), do: nil
 
   def current_subject(socket, resource) do
