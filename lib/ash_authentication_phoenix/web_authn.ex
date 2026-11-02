@@ -96,6 +96,21 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   end
 
   @doc """
+  The signed-in record of `resource`, as `AshAuthentication.Phoenix.LiveSession`
+  assigned it to the socket: `current_<subject_name>`, which is `current_user`
+  only for a resource whose subject name is `user`. `nil` when nobody is
+  signed in, or when `resource` is `nil`.
+  """
+  @spec current_subject(Phoenix.LiveView.Socket.t(), Ash.Resource.t() | nil) ::
+          Ash.Resource.record() | nil
+  def current_subject(_socket, nil), do: nil
+
+  def current_subject(socket, resource) do
+    subject_name = Info.authentication_subject_name!(resource)
+    socket.assigns[String.to_atom("current_#{subject_name}")]
+  end
+
+  @doc """
   Resolve the `webauthn_path` sign-in route option for a given strategy.
 
   The option is either a single path (applied to every WebAuthn strategy) or
