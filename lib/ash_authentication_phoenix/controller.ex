@@ -259,7 +259,7 @@ defmodule AshAuthentication.Phoenix.Controller do
     For example:
 
         conn
-        |> clear_session(conn, :my_app)
+        |> clear_session(:my_app)
 
 
     This ensures that session tokens & bearer tokens are revoked on logout.
@@ -284,6 +284,11 @@ defmodule AshAuthentication.Phoenix.Controller do
   @doc """
   Set the live socket id so we can send disconnects from the server when the token is revoked.
 
+  Takes the token, not the user. The token resource's `live_socket_id_template`
+  is called with the token's claims, with the JWT ID available as both
+  `claims["jti"]` and `claims.jti`, so a template written for either key style
+  produces the same id here as in `AshAuthentication.Phoenix.TokenRevocationNotifier`.
+
   This ensures that the user can't use the application with revoked tokens.
   """
   def set_live_socket_id(conn, token) do
@@ -295,7 +300,10 @@ defmodule AshAuthentication.Phoenix.Controller do
          {:ok, template_fn} <-
            Info.token_live_socket_id_template(token_resource) do
       conn
-      |> Plug.Conn.put_session(:live_socket_id, template_fn.(claims))
+      |> Plug.Conn.put_session(
+        :live_socket_id,
+        template_fn.(Map.put(claims, :jti, claims["jti"]))
+      )
     else
       _ -> conn
     end
