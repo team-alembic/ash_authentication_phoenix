@@ -19,6 +19,7 @@ config :ash_authentication_phoenix, AshAuthentication.Phoenix.Test.Endpoint,
   server: false,
   debug_errors: true,
   live_view: [signing_salt: "aaaaaaaa"],
+  pubsub_server: AshAuthentication.Phoenix.Test.PubSub,
   secret_key_base: String.duplicate("a", 64)
 
 config :logger, level: :error

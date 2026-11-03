@@ -26,6 +26,12 @@ defmodule AshAuthentication.Phoenix.TokenRevocationNotifier do
         end
       end
 
+  `live_socket_id_template` is called here with the revoked token, and at sign-in
+  with the token's claims. Both times the token's JWT ID is available as
+  `&1["jti"]` and as `&1.jti`, so a template written either way produces the
+  same socket ID in both places. Only revocations broadcast a disconnect;
+  storing a token at sign-in or expunging expired tokens does not.
+
   Then in your auth controller, call `set_live_socket_id/2` on sign-in to set
   the socket ID in the session:
 
@@ -43,17 +49,22 @@ defmodule AshAuthentication.Phoenix.TokenRevocationNotifier do
   @doc false
   @spec notify(Ash.Notifier.Notification.t()) :: :ok
   def notify(%Ash.Notifier.Notification{
-        data: %{subject: "user"}
-      }),
-      do: :ok
-
-  def notify(%Ash.Notifier.Notification{
-        data: data,
+        action: %{type: type},
+        data: %{purpose: "revocation", jti: jti} = data,
         resource: token_resource
-      }) do
+      })
+      when type in [:create, :update] do
     with {:ok, template_fn} <- Info.token_live_socket_id_template(token_resource),
-         socket_id <- template_fn.(Map.delete(data, :__struct__)),
          {:ok, endpoints} when endpoints != [] <- Info.token_endpoints(token_resource) do
+      # The template also runs at sign-in in `set_live_socket_id/2`, where it gets
+      # the token's claims with string keys. Put the JWT ID under both key styles
+      # so a template written for either produces the same socket id in both places.
+      socket_id =
+        data
+        |> Map.delete(:__struct__)
+        |> Map.put("jti", jti)
+        |> template_fn.()
+
       Enum.each(endpoints, fn endpoint ->
         endpoint.broadcast(socket_id, "disconnect", %{})
       end)
@@ -61,4 +72,8 @@ defmodule AshAuthentication.Phoenix.TokenRevocationNotifier do
 
     :ok
   end
+
+  # Only revocations disconnect sessions. Storing a token at sign-in, expunging
+  # expired tokens and writing other kinds of token are not revocations.
+  def notify(_notification), do: :ok
 end
