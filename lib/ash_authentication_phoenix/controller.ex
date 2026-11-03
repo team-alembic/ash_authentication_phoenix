@@ -259,7 +259,7 @@ defmodule AshAuthentication.Phoenix.Controller do
     For example:
 
         conn
-        |> clear_session(conn, :my_app)
+        |> clear_session(:my_app)
 
 
     This ensures that session tokens & bearer tokens are revoked on logout.
