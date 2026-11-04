@@ -11,16 +11,29 @@
  *     WebAuthnRegistrationHook,
  *     WebAuthnAuthenticationHook,
  *     WebAuthnSupportHook
- *   } from "../../deps/ash_authentication_phoenix/priv/static/webauthn_hooks";
+ *   } from "ash_authentication_phoenix/priv/static/webauthn_hooks.js";
  *
  *   let liveSocket = new LiveSocket("/live", Socket, {
  *     hooks: {
- *       ...WebAuthnRegistrationHook,
- *       ...WebAuthnAuthenticationHook,
- *       ...WebAuthnSupportHook,
+ *       WebAuthnRegistrationHook,
+ *       WebAuthnAuthenticationHook,
+ *       WebAuthnSupportHook,
  *       // your other hooks...
  *     }
  *   });
+ *
+ * The server pushes spec-shaped PublicKeyCredentialCreationOptions /
+ * PublicKeyCredentialRequestOptions (the same JSON the strategy's Plug
+ * endpoints return). Binary fields are base64url without padding in both
+ * directions. Options are passed through to the browser as the server sent
+ * them — `timeout`, `hints`, `userVerification`, `attestation` and any key
+ * added later all survive without changes here, and nothing is defaulted
+ * client-side: the strategy's configuration is the one source of truth.
+ *
+ * A pushed event reaches every hook on the page that listens for it, so the
+ * server addresses each one to a hook element with `target` (its DOM id).
+ * A hook ignores options meant for another element, and `target` is removed
+ * before the options reach the browser.
  */
 
 // Utility: base64url string to Uint8Array
@@ -46,6 +59,50 @@ function arrayBufferToBase64Url(buffer) {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// Decode a list of PublicKeyCredentialDescriptor entries, keeping any
+// extra keys (e.g. transports) intact. `id` arrives base64url-encoded.
+function decodeCredentialDescriptors(descriptors) {
+  return (descriptors || []).map((cred) => ({
+    ...cred,
+    id: base64UrlToArray(cred.id),
+    type: cred.type || "public-key",
+  }));
+}
+
+// `authenticatorSelection` as the browser takes it: no null members (the
+// absence of a key is how "no preference" is spelled), the hyphenated
+// attachment enum should a server ever send the snake-case atom, and the
+// Level 1 `requireResidentKey` for clients predating `residentKey`.
+function normalizeAuthenticatorSelection(selection) {
+  const normalized = { ...(selection || {}) };
+
+  for (const key of Object.keys(normalized)) {
+    if (normalized[key] == null) delete normalized[key];
+  }
+
+  if (normalized.authenticatorAttachment === "cross_platform") {
+    normalized.authenticatorAttachment = "cross-platform";
+  }
+
+  if (normalized.residentKey === "required") {
+    normalized.requireResidentKey = true;
+  }
+
+  return normalized;
+}
+
+// Whether pushed options are meant for this hook's element. Options without
+// a `target` are taken by every hook, as they were before targeting existed.
+function addressedTo(el, data) {
+  return !data || data.target == null || data.target === el.id;
+}
+
+// The options without the delivery address.
+function withoutTarget(data) {
+  const { target, ...options } = data;
+  return options;
 }
 
 /**
@@ -76,65 +133,37 @@ export const WebAuthnSupportHook = {
  * WebAuthnRegistrationHook
  *
  * Handles the registration ceremony.
- * Listens for "registration-challenge" event from server,
- * calls navigator.credentials.create(), pushes "registration-attestation" back.
+ * Listens for "registration-challenge" event from server (spec-shaped
+ * creation options), calls navigator.credentials.create(), pushes
+ * "registration-attestation" back — including the credential's transports
+ * and client extension results, which only the client can report.
  */
 export const WebAuthnRegistrationHook = {
   mounted() {
     this.handleEvent("registration-challenge", (data) => {
-      this.handleRegistration(data);
+      if (addressedTo(this.el, data)) this.handleRegistration(withoutTarget(data));
     });
   },
 
   async handleRegistration(data) {
     try {
+      // The server's options verbatim, with the binary fields decoded, so
+      // server-added keys pass through untouched. In particular the
+      // server's user.id is the canonical user handle — it is persisted
+      // with the credential, so it must not be synthesized client-side —
+      // and `timeout` and `hints` are the strategy's own.
       const publicKeyOptions = {
+        ...data,
         challenge: base64UrlToArray(data.challenge),
-        rp: {
-          id: data.rp_id,
-          name: data.rp_name,
-        },
         user: {
-          id: base64UrlToArray(data.user_id),
-          name: data.user_name,
-          displayName: data.user_display_name || data.user_name,
+          ...data.user,
+          id: base64UrlToArray(data.user.id),
         },
-        pubKeyCredParams: [
-          { alg: -7, type: "public-key" },  // ES256
-          { alg: -257, type: "public-key" }, // RS256
-        ],
-        timeout: data.timeout || 60000,
-        attestation: data.attestation || "none",
-        authenticatorSelection: {},
+        excludeCredentials: decodeCredentialDescriptors(data.excludeCredentials),
+        authenticatorSelection: normalizeAuthenticatorSelection(
+          data.authenticatorSelection
+        ),
       };
-
-      if (data.authenticator_attachment) {
-        publicKeyOptions.authenticatorSelection.authenticatorAttachment =
-          data.authenticator_attachment === "cross_platform"
-            ? "cross-platform"
-            : data.authenticator_attachment;
-      }
-
-      if (data.user_verification) {
-        publicKeyOptions.authenticatorSelection.userVerification =
-          data.user_verification;
-      }
-
-      if (data.resident_key) {
-        publicKeyOptions.authenticatorSelection.residentKey = data.resident_key;
-        if (data.resident_key === "required") {
-          publicKeyOptions.authenticatorSelection.requireResidentKey = true;
-        }
-      }
-
-      if (data.exclude_credentials) {
-        publicKeyOptions.excludeCredentials = data.exclude_credentials.map(
-          (cred) => ({
-            id: base64UrlToArray(cred.id),
-            type: "public-key",
-          })
-        );
-      }
 
       const credential = await navigator.credentials.create({
         publicKey: publicKeyOptions,
@@ -155,10 +184,25 @@ export const WebAuthnRegistrationHook = {
       const clientDataJSON = arrayBufferToBase64Url(response.clientDataJSON);
       const rawId = arrayBufferToBase64Url(credential.rawId);
 
+      const transports =
+        typeof response.getTransports === "function"
+          ? response.getTransports()
+          : [];
+
+      const clientExtensionResults =
+        typeof credential.getClientExtensionResults === "function"
+          ? credential.getClientExtensionResults()
+          : {};
+
       this.pushEventTo(this.el, "registration-attestation", {
         attestation_object: attestationObject,
         client_data_json: clientDataJSON,
         raw_id: rawId,
+        transports: transports,
+        // Today only credProps is consumed server-side; sending the whole
+        // object is forward-compatible with future extensions.
+        cred_props: clientExtensionResults.credProps || null,
+        client_extension_results: clientExtensionResults,
       });
     } catch (error) {
       this.pushEventTo(this.el, "registration-error", {
@@ -173,36 +217,42 @@ export const WebAuthnRegistrationHook = {
  * WebAuthnAuthenticationHook
  *
  * Handles the authentication ceremony.
- * Listens for "authentication-challenge" event from server,
- * calls navigator.credentials.get(), pushes "authentication-assertion" back.
+ * Listens for "authentication-challenge" event from server (spec-shaped
+ * request options), calls navigator.credentials.get(), pushes
+ * "authentication-assertion" back.
  */
 export const WebAuthnAuthenticationHook = {
   mounted() {
     this.handleEvent("authentication-challenge", (data) => {
-      this.handleAuthentication(data, "optional");
+      if (addressedTo(this.el, data)) {
+        this.handleAuthentication(withoutTarget(data), "optional");
+      }
     });
 
     this.handleEvent("authentication-challenge-conditional", (data) => {
-      this.handleAuthentication(data, "conditional");
+      if (addressedTo(this.el, data)) {
+        this.handleAuthentication(withoutTarget(data), "conditional");
+      }
     });
   },
 
   async handleAuthentication(data, mediation) {
     try {
+      // The server's options verbatim, with the challenge decoded; `timeout`,
+      // `hints` and `userVerification` are the strategy's own.
       const publicKeyOptions = {
+        ...data,
         challenge: base64UrlToArray(data.challenge),
-        rpId: data.rp_id,
-        timeout: data.timeout || 60000,
-        userVerification: data.user_verification || "preferred",
       };
 
-      if (data.allow_credentials && data.allow_credentials.length > 0) {
-        publicKeyOptions.allowCredentials = data.allow_credentials.map(
-          (cred) => ({
-            id: base64UrlToArray(cred.id),
-            type: "public-key",
-          })
+      if (data.allowCredentials && data.allowCredentials.length > 0) {
+        // Entries may carry a transports hint captured at registration —
+        // decode the id, keep everything else as-is.
+        publicKeyOptions.allowCredentials = decodeCredentialDescriptors(
+          data.allowCredentials
         );
+      } else {
+        delete publicKeyOptions.allowCredentials;
       }
 
       const credential = await navigator.credentials.get({

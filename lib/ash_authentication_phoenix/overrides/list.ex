@@ -77,7 +77,11 @@ defmodule AshAuthenticationPhoenix.Overrides.List do
       AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials,
       AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm,
       AshAuthentication.Phoenix.WebAuthnVerifyLive,
-      AshAuthentication.Phoenix.WebAuthnSetupLive
+      AshAuthentication.Phoenix.WebAuthnSetupLive,
+      AshAuthentication.Phoenix.WebAuthnLive
+    ],
+    "Custom Fields": [
+      AshAuthentication.Phoenix.Components.CustomFields
     ],
     Miscellaneous: [
       AshAuthentication.Phoenix.Components.HorizontalRule,

@@ -22,40 +22,35 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnHelpers do
   def mock_webauthn_strategy(overrides \\ %{}) do
     defaults = %{
       name: :webauthn,
+      adapter: AshAuthentication.Strategy.WebAuthn.Adapters.Wax,
       resource: Example.Accounts.User,
-      credential_resource: nil,
+      credential_resource: Example.Accounts.WebAuthnCredential,
       rp_id: "localhost",
       rp_name: "Test App",
+      require_identity?: nil,
       identity_field: :email,
       authenticator_attachment: nil,
+      hints: [],
+      allow_hint_override?: false,
       user_verification: "preferred",
       attestation: "none",
+      trusted_attestation_types: [:none, :basic, :self, :uncertain],
+      verify_trust_root?: false,
       timeout: 60_000,
       resident_key: :required,
-      registration_enabled?: true,
-      register_action_name: :register_with_webauthn,
-      sign_in_action_name: :sign_in_with_webauthn,
-      credential_id_field: :credential_id,
-      public_key_field: :public_key,
-      sign_count_field: :sign_count,
-      label_field: :label,
-      last_used_at_field: :last_used_at,
-      user_relationship_name: :user,
+      sign_count_policy: :reject,
       credentials_relationship_name: :webauthn_credentials,
-      store_credential_action_name: nil,
-      update_sign_count_action_name: nil,
-      list_credentials_action_name: :list_webauthn_credentials,
-      delete_credential_action_name: :delete_webauthn_credential,
-      update_credential_label_action_name: :update_webauthn_credential_label,
-      add_credential_action_name: :add_webauthn_credential
+      registration_enabled?: true,
+      sign_in_enabled?: true,
+      verify_enabled?: true,
+      register_action_name: :register_with_webauthn,
+      sign_in_action_name: :sign_in_with_webauthn
     }
 
-    merged = Map.merge(defaults, overrides)
-
-    if Code.ensure_loaded?(AshAuthentication.Strategy.WebAuthn) do
-      struct!(AshAuthentication.Strategy.WebAuthn, merged)
-    else
-      Map.put(merged, :__struct__, AshAuthentication.Strategy.WebAuthn)
-    end
+    # `struct!/2` deliberately: a key that has moved off the struct — as the
+    # credential field and action names did when they became part of the
+    # `AshAuthentication.WebAuthnCredential` resource extension — should fail
+    # loudly here rather than leave the mock quietly out of shape.
+    struct!(AshAuthentication.Strategy.WebAuthn, Map.merge(defaults, overrides))
   end
 end

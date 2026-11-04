@@ -16,8 +16,21 @@
       import { Socket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix@v1.8.3/priv/static/phoenix.mjs';
       import { LiveSocket } from 'https://cdn.jsdelivr.net/gh/phoenixframework/phoenix_live_view@1.1.19/priv/static/phoenix_live_view.esm.js';
 
+      import {
+        WebAuthnRegistrationHook,
+        WebAuthnAuthenticationHook,
+        WebAuthnSupportHook
+      } from '/webauthn_hooks.js';
+
       let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-      let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } })
+      let liveSocket = new LiveSocket("/live", Socket, {
+        params: { _csrf_token: csrfToken },
+        hooks: {
+          WebAuthnRegistrationHook,
+          WebAuthnAuthenticationHook,
+          WebAuthnSupportHook
+        }
+      })
       liveSocket.connect()
       window.liveSocket = liveSocket
     </script>

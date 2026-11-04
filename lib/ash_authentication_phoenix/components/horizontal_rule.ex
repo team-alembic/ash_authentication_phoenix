@@ -22,13 +22,16 @@ defmodule AshAuthentication.Phoenix.Components.HorizontalRule do
   ## Props
 
       * `overrides` - A list of override modules.
+      * `text` - Text to display in the rule. Falls back to the `text`
+        override when unset.
   """
 
   use AshAuthentication.Phoenix.Web, :live_component
   alias Phoenix.LiveView.Rendered
 
   @type props :: %{
-          optional(:overrides) => [module]
+          optional(:overrides) => [module],
+          optional(:text) => String.t()
         }
 
   @doc false
@@ -38,6 +41,7 @@ defmodule AshAuthentication.Phoenix.Components.HorizontalRule do
     assigns =
       assigns
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
+      |> assign_new(:text, fn -> nil end)
 
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
@@ -46,7 +50,7 @@ defmodule AshAuthentication.Phoenix.Components.HorizontalRule do
       </div>
       <div class={override_for(@overrides, :text_outer_class)}>
         <span class={override_for(@overrides, :text_inner_class)}>
-          {override_for(@overrides, :text)}
+          {@text || override_for(@overrides, :text)}
         </span>
       </div>
     </div>

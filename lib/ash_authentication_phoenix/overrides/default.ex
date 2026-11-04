@@ -22,6 +22,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     SignOutLive,
     TotpSetupLive,
     TotpVerifyLive,
+    WebAuthnLive,
     WebAuthnSetupLive,
     WebAuthnVerifyLive
   }
@@ -348,6 +349,44 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :password_hide_label, "Hide password"
   end
 
+  override Components.CustomFields do
+    set :field_class, "mt-2 mb-2 dark:text-white"
+    set :label_class, "block text-sm font-medium text-gray-700 mb-1 dark:text-white"
+
+    @custom_field_base_input_class """
+    appearance-none block w-full px-3 py-2 border rounded-md
+    shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm
+    bg-white dark:bg-gray-800 dark:text-white dark:placeholder-gray-500
+    """
+
+    set :input_class,
+        @custom_field_base_input_class <>
+          """
+          border-gray-300 focus:ring-blue-400 focus:border-blue-500
+          """
+
+    set :input_class_with_error,
+        @custom_field_base_input_class <>
+          """
+          border-red-400 focus:border-red-400 focus:ring-red-300
+          """
+
+    set :checkbox_class, "dark:text-white mr-2"
+
+    set :select_class,
+        @custom_field_base_input_class <>
+          """
+          border-gray-300 focus:ring-blue-400 focus:border-blue-500
+          """
+
+    set :error_ul, "text-red-400 font-light my-3 italic text-sm"
+    set :error_li, nil
+    set :input_debounce, 350
+    set :field_labels, %{}
+    set :field_placeholders, %{}
+    set :field_input_types, %{}
+  end
+
   override Components.OAuth2 do
     set :root_class, "w-full mt-2 mb-4"
 
@@ -492,6 +531,15 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
   end
 
+  override WebAuthnLive do
+    set :root_class, "grid h-screen place-items-center dark:bg-gray-900"
+
+    set :inner_class, """
+    flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
+    lg:px-20 xl:px-24 mx-auto w-full max-w-sm lg:w-96
+    """
+  end
+
   override Components.WebAuthn.Verify2faForm do
     set :root_class, """
     flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none
@@ -509,6 +557,14 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
 
     set :submit_text, "Verify with passkey"
     set :submit_disabled_text, "Verifying ..."
+    set :timeout_text, "Verification timed out. Please try again."
+    set :expired_text, "This verification request has expired. Please try again."
+    set :disabled_text, "Passkey verification is not enabled."
+    set :cross_device_button_text, "Use a phone or tablet"
+
+    set :cross_device_button_class,
+        "w-full flex justify-center py-2 px-4 mt-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+
     set :error_class, "text-red-500 text-sm mb-4"
 
     set :error_unauthenticated_text,
@@ -632,36 +688,52 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
   end
 
   override Components.WebAuthn do
-    set :root_class, "mt-4 mb-4"
-    set :hide_class, "hidden"
-    set :show_first, :sign_in
-    set :sign_in_toggle_text, "Already have a passkey? Sign in"
-    set :register_toggle_text, "New here? Register a passkey"
-    set :toggler_class, "text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
-    set :interstitial_class, "mt-4 text-center"
-    set :slot_class, "mt-4"
+    set :root_class,
+        "mx-auto w-full max-w-sm lg:w-96 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+
+    set :slot_class, "mt-6"
+
+    # Link mode renders alongside the OAuth links on the sign-in page, so it
+    # matches Components.OAuth2's root_class / link_class.
+    set :workflow_root_class, "w-full mt-2 mb-4"
+
+    set :workflow_button_class, """
+    w-full flex justify-center py-2 px-4 border border-transparent rounded-md
+    shadow-sm text-sm font-medium text-black bg-gray-200 hover:bg-gray-300
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+    inline-flex items-center justify-center
+    """
+
+    set :workflow_button_text, "Continue with WebAuthn"
   end
 
   override Components.WebAuthn.RegistrationForm do
     set :root_class, "mt-2"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Register a passkey"
     set :form_class, "space-y-4"
     set :button_text, "Register with Passkey"
     set :disable_button_text, "Registering..."
     set :slot_class, "mt-2"
+    set :show_key_name_field, true
+    set :timeout_text, "Registration timed out. Please try again."
+    set :expired_text, "This registration request has expired. Please try again."
   end
 
   override Components.WebAuthn.AuthenticationForm do
     set :root_class, "mt-2"
+    set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
+    set :label_text, "Sign in with a passkey"
     set :form_class, "space-y-4"
     set :button_text, "Sign in with Passkey"
     set :disable_button_text, "Signing in..."
     set :slot_class, "mt-2"
     set :show_identity_field, false
+    set :timeout_text, "Authentication timed out. Please try again."
+    set :expired_text, "This sign-in request has expired. Please try again."
   end
 
   override Components.WebAuthn.Input do
-    set :identity_input_label, "Email"
-    set :identity_input_placeholder, "you@example.com"
     set :field_class, "mb-4"
     set :label_class, "block text-sm font-medium text-gray-700 mb-1"
 
@@ -685,6 +757,15 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :sign_in_button_text, "Sign in with Passkey"
     set :sign_in_button_icon, nil
     set :disable_button_text, "Please wait..."
+    set :cross_device_button_text, "Use a phone or tablet"
+
+    set :cross_device_button_class, """
+    w-full flex justify-center items-center py-2 px-4 mt-2 border border-gray-300
+    rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white
+    hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2
+    focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+    dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600
+    """
   end
 
   override Components.WebAuthn.Support do
@@ -726,5 +807,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     rounded-md shadow-sm text-sm font-medium text-white bg-blue-600
     hover:bg-blue-700 disabled:opacity-50
     """
+
+    set :timeout_text, "Adding the passkey timed out. Please try again."
+    set :expired_text, "This request has expired. Please try adding the passkey again."
   end
 end

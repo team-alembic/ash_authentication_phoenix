@@ -20,8 +20,14 @@ defmodule DevWeb.AuthController do
   @doc false
   @impl true
   def failure(conn, _activity, reason) do
+    # Surface the reason in a flash — a silent redirect back to the sign-in
+    # page is indistinguishable from nothing having happened.
+    message =
+      if is_exception(reason), do: Exception.message(reason), else: inspect(reason)
+
     conn
     |> assign(:failure_reason, reason)
+    |> put_flash(:error, "Authentication failed: #{message}")
     |> redirect(to: "/sign-in")
   end
 

@@ -26,7 +26,7 @@ defmodule DevWeb.Endpoint do
     at: "/",
     from: :ash_authentication_phoenix,
     gzip: false,
-    only: ~w(assets fonts images favicon.ico robots.txt)
+    only: ~w(assets fonts images favicon.ico robots.txt webauthn_hooks.js)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
@@ -34,6 +34,10 @@ defmodule DevWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
+  end
+
+  if Code.ensure_loaded?(Tidewave) do
+    plug Tidewave
   end
 
   plug Plug.RequestId
