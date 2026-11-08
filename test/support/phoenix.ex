@@ -62,7 +62,11 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   Renders the top-level WebAuthn component against a mock strategy.
 
   A `variant` query parameter picks strategy options the fixture resources
-  don't configure, so one route covers them without a resource each.
+  don't configure, so one route covers them without a resource each. The
+  component's own props come from query parameters too: `live_action`
+  (`sign_in` or `register`), `register_path`, and `overrides=quiet` for
+  `AshAuthentication.Phoenix.Test.WebAuthnQuietOverride` ahead of the
+  defaults.
   """
   use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
   alias AshAuthentication.Phoenix.Components
@@ -74,18 +78,39 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
       socket
       |> assign(:auth_routes_prefix, session["auth_routes_prefix"] || "/auth")
       |> assign(:strategy, WebAuthnHelpers.mock_webauthn_strategy(variant(params["variant"])))
+      |> assign(:action, action(params["live_action"]))
+      |> assign(:register_path, params["register_path"])
+      |> assign(:overrides, overrides(params["overrides"]))
 
     {:ok, socket}
   end
+
+  defp action("register"), do: :register
+  defp action(_), do: :sign_in
+
+  defp overrides("quiet"),
+    do: [
+      AshAuthentication.Phoenix.Test.WebAuthnQuietOverride,
+      AshAuthentication.Phoenix.Overrides.Default
+    ]
+
+  defp overrides(_), do: [AshAuthentication.Phoenix.Overrides.Default]
 
   # The strategy offers cross-device passkeys itself; the client can't
   # change the hints.
   defp variant("hybrid"), do: %{hints: [:hybrid, :security_key], timeout: 300_000}
   # No hints configured, but the client may ask for some.
   defp variant("override"), do: %{allow_hint_override?: true}
-  # Built-in authenticators only: no phone can answer. (The strategy refuses
-  # this alongside `:hybrid` at compile time; the mock bypasses that.)
-  defp variant("platform"), do: %{hints: [:hybrid], authenticator_attachment: :platform}
+  # The phone is offered, but the browser leads with a security key.
+  defp variant("security-key-first"),
+    do: %{hints: [:security_key, :hybrid], timeout: 300_000, allow_hint_override?: true}
+
+  # Built-in authenticators only: no phone can answer, whatever the client
+  # asks for. (The strategy refuses this alongside `:hybrid` at compile
+  # time; the mock bypasses that.)
+  defp variant("platform"),
+    do: %{hints: [:hybrid], authenticator_attachment: :platform, allow_hint_override?: true}
+
   # A ceremony that times out within a test.
   defp variant("quick"), do: %{timeout: 100}
   # Sign-in off, verification on: the token exchange stays, so registration
@@ -106,6 +131,9 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
       id="webauthn-test"
       strategy={@strategy}
       auth_routes_prefix={@auth_routes_prefix}
+      live_action={@action}
+      register_path={@register_path}
+      overrides={@overrides}
     />
     """
   end

@@ -7,6 +7,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     root_class: "CSS class for the root `div` element.",
     label_class: "CSS class for the heading `h2` element (or `nil` to hide).",
     label_text: "Heading text (or `nil` to hide).",
+    description_class: "CSS class for the description `p` element under the heading.",
+    description_text:
+      "One sentence under the heading explaining what the page asks of the user (or `nil` to hide).",
     form_class: "CSS class for the `form` element.",
     button_text: "Text for the authentication button.",
     disable_button_text: "Text shown while the authentication ceremony is in progress.",
@@ -37,16 +40,26 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   listens for an `authentication-challenge-conditional` event for a
   conditional-mediation ceremony.
 
-  ## Cross-device sign-in
+  ## Heading and description
 
-  When the strategy offers the `:hybrid` hint, or allows the client to ask
-  for it (`allow_hint_override? true`), a second "Use a phone or tablet"
-  button is rendered (see `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`).
-  It requests the ceremony with `hints: [:hybrid]`, so the browser goes
-  straight to the QR code; the request only takes effect when the override
-  is allowed. The button's text and class are the
+  The heading (`label_text`) and the one-sentence description under it
+  (`description_text`) are what tells a user landing on a passkey page what
+  is about to happen; set either to `nil` to drop it.
+
+  ## The secondary button
+
+  When the strategy lets the client choose the kind of authenticator
+  (`allow_hint_override? true`), one secondary button is rendered beside
+  the main one, pointing away from where the strategy's `hints` lead (see
+  `AshAuthentication.Phoenix.WebAuthn.secondary_hint/1`): "Use a phone or
+  tablet" requests the ceremony with `hints: [:hybrid]`, so the browser goes
+  straight to the QR code; when the strategy already leads with `:hybrid`,
+  "Use a passkey on this device" requests `hints: [:client_device]` instead.
+  Without the override the request would be ignored, so no button is shown.
+  The texts and the shared class are the
   `AshAuthentication.Phoenix.Components.WebAuthn.Input` overrides
-  `cross_device_button_text` and `cross_device_button_class`.
+  `cross_device_button_text`, `this_device_button_text` and
+  `cross_device_button_class`.
 
   ## Timeouts
 
@@ -97,7 +110,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       socket
       |> assign(:subject_name, subject_name)
       |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
-      |> assign(:cross_device?, PhoenixWebAuthn.cross_device?(strategy))
+      |> assign(:secondary_hint, PhoenixWebAuthn.secondary_hint(strategy))
       |> assign_new(:identity_value, fn -> "" end)
       |> assign_new(:error_message, fn -> nil end)
       |> assign_new(:submitting, fn -> false end)
@@ -133,6 +146,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       <%= if label_text = override_for(@overrides, :label_text) do %>
         <h2 class={override_for(@overrides, :label_class)}>{_gettext(label_text)}</h2>
       <% end %>
+      <%= if description_text = override_for(@overrides, :description_text) do %>
+        <p class={override_for(@overrides, :description_class)}>{_gettext(description_text)}</p>
+      <% end %>
       <form
         id={"#{@id}-form"}
         phx-change="update-identity"
@@ -156,8 +172,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
           gettext_fn={@gettext_fn}
         />
 
-        <%= if @cross_device? do %>
-          <WebAuthn.Input.cross_device_button
+        <%= if @secondary_hint do %>
+          <WebAuthn.Input.hint_button
+            hint={@secondary_hint}
             disabled={@submitting}
             overrides={@overrides}
             gettext_fn={@gettext_fn}
@@ -219,8 +236,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
     # so nothing about the request is passed along.
     {:ok, challenge} = WebAuthnStrategy.Actions.authentication_challenge(strategy, [], tenant)
 
-    # `hints` names the button that submitted the form ("Use a phone or
-    # tablet" asks for `hybrid`); the strategy decides whether it is honoured.
+    # `hints` names the button that submitted the form (the secondary one
+    # asks for `hybrid` or `client-device`); the strategy decides whether it
+    # is honoured.
     options =
       strategy
       |> PhoenixWebAuthn.authentication_options(challenge, tenant, [], hints: params["hints"])

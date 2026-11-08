@@ -845,9 +845,21 @@ Generates sign in and registration forms for WebAuthn/Passkey authentication.
 
   * `:authentication_form_module` - The Phoenix component to be used for the authentication form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm`.
 
+  * `:hide_class` - CSS class to apply to hide the form that is not showing.
+
+  * `:interstitial_class` - CSS class for the `div` holding the link to the other form.
+
+  * `:register_link_class` - CSS class for the link from the sign-in form to registration.
+
+  * `:register_link_text` - Text of the link from the sign-in form to registration (or `nil` to disable). Shown only while the strategy allows registration.
+
   * `:registration_form_module` - The Phoenix component to be used for the registration form. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm`.
 
   * `:root_class` - CSS class for the root `div` element.
+
+  * `:sign_in_link_class` - CSS class for the link from the registration form back to sign-in.
+
+  * `:sign_in_link_text` - Text of the link from the registration form back to sign-in (or `nil` to disable). Shown only while the strategy allows sign-in.
 
   * `:slot_class` - CSS class for the `div` surrounding the slot.
 
@@ -863,6 +875,10 @@ Generates sign in and registration forms for WebAuthn/Passkey authentication.
 Registration form for WebAuthn.
 
   * `:button_text` - Text for the registration button.
+
+  * `:description_class` - CSS class for the description `p` element under the heading.
+
+  * `:description_text` - One sentence under the heading explaining what the page asks of the user (or `nil` to hide).
 
   * `:disable_button_text` - Text shown while the registration ceremony is in progress.
 
@@ -895,6 +911,10 @@ Authentication form for WebAuthn.
 
   * `:button_text` - Text for the authentication button.
 
+  * `:description_class` - CSS class for the description `p` element under the heading.
+
+  * `:description_text` - One sentence under the heading explaining what the page asks of the user (or `nil` to hide).
+
   * `:disable_button_text` - Text shown while the authentication ceremony is in progress.
 
   * `:expired_text` - Error shown when an assertion arrives for a ceremony that has already timed out.
@@ -918,9 +938,9 @@ Authentication form for WebAuthn.
 
 Function components for WebAuthn form inputs.
 
-  * `:cross_device_button_class` - CSS class for the "Use a phone or tablet" button.
+  * `:cross_device_button_class` - CSS class for the secondary button, whichever of the two it is.
 
-  * `:cross_device_button_text` - Text for the "Use a phone or tablet" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.
+  * `:cross_device_button_text` - Text for the secondary button that asks for a passkey on a phone or tablet (`hints=hybrid`). Shown when the strategy allows the hint override and does not lead with `:hybrid` itself.
 
   * `:disable_button_text` - Text shown on the button while submitting.
 
@@ -957,6 +977,8 @@ Function components for WebAuthn form inputs.
   * `:sign_in_button_text` - Text for the sign in button.
 
   * `:submit_class` - CSS class for the submit `button` element.
+
+  * `:this_device_button_text` - Text for the secondary button that asks for a passkey on this device (`hints=client-device`). Shown when the strategy allows the hint override and leads with `:hybrid`.
 
 
 ### `AshAuthentication.Phoenix.Components.WebAuthn.Support`
@@ -1031,9 +1053,9 @@ Credential management panel for authenticated users.
 
 Drives the WebAuthn second-factor ceremony.
 
-  * `:cross_device_button_class` - CSS class for the "Use a phone or tablet" button.
+  * `:cross_device_button_class` - CSS class for the secondary button, whichever of the two it is.
 
-  * `:cross_device_button_text` - Text for the "Use a phone or tablet" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.
+  * `:cross_device_button_text` - Text for the secondary button that asks for a passkey on a phone or tablet (`hints=hybrid`). Shown when the strategy allows the hint override and does not lead with `:hybrid` itself.
 
   * `:disabled_text` - Notice shown in place of the form when the strategy has `verify_enabled? false`.
 
@@ -1066,6 +1088,8 @@ Drives the WebAuthn second-factor ceremony.
   * `:submit_disabled_text` - Text shown on the verify button while the ceremony is in flight.
 
   * `:submit_text` - Text shown on the verify button.
+
+  * `:this_device_button_text` - Text for the secondary button that asks for a passkey on this device (`hints=client-device`). Shown when the strategy allows the hint override and leads with `:hybrid`.
 
   * `:timeout_text` - Error shown when the browser does not answer within the strategy's `timeout`.
 

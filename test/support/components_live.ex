@@ -65,6 +65,9 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
               allow_hint_override?: true
           }
 
+        "override" ->
+          %{strategy | allow_hint_override?: true}
+
         "quick" ->
           %{strategy | timeout: 100}
 
@@ -121,6 +124,9 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnVerifyVariantLive do
               timeout: 300_000,
               allow_hint_override?: true
           }
+
+        "override" ->
+          %{strategy | allow_hint_override?: true}
 
         "quick" ->
           %{strategy | timeout: 100}
