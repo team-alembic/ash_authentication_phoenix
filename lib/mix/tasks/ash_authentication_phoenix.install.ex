@@ -27,6 +27,11 @@ if Code.ensure_loaded?(Igniter) do
     * `--token` or `-t` - The resource that represents a token. Defaults to `<accounts>.Token`.
     """
 
+    # The ash_authentication line this release of ash_authentication_phoenix
+    # is built against. Added to `mix.exs` only when the project has no
+    # ash_authentication yet.
+    @ash_authentication_requirement "~> 5.0-rc"
+
     @phoenix_strategy_tasks %{
       "password" => "ash_authentication_phoenix.add_strategy.password",
       "magic_link" => "ash_authentication_phoenix.add_strategy.magic_link",
@@ -86,14 +91,14 @@ if Code.ensure_loaded?(Igniter) do
         |> module_option(:accounts)
         |> module_option(:token)
 
-      # `get_dep/2` returns `{:ok, nil}` when the dependency is missing
-      install? =
-        match?({:ok, nil}, Igniter.Project.Deps.get_dep(igniter, :ash_authentication))
+      {igniter, install?} = ash_authentication_missing?(igniter)
 
       igniter =
         if install? do
           igniter
-          |> Igniter.Project.Deps.add_dep({:ash_authentication, "~> 4.1"}, yes: options[:yes])
+          |> Igniter.Project.Deps.add_dep({:ash_authentication, @ash_authentication_requirement},
+            yes: options[:yes]
+          )
           |> then(fn
             %{assigns: %{test_mode?: true}} = igniter ->
               igniter
@@ -197,6 +202,44 @@ if Code.ensure_loaded?(Igniter) do
       Run the installer now?
       """)
     end
+
+    # `mix.exs` is read first, but a dependency declared through a helper —
+    # `dep(:ash_authentication)` — isn't a tuple Igniter can see, and adding a
+    # second declaration breaks `deps.get`. So the lock file and the deps Mix
+    # itself has loaded (which covers an umbrella's shared lock) are checked
+    # before ash_authentication is considered missing.
+    defp ash_authentication_missing?(igniter) do
+      case Igniter.Project.Deps.get_dep(igniter, :ash_authentication) do
+        {:ok, nil} ->
+          {igniter, locked?} = ash_authentication_locked?(igniter)
+          {igniter, not (locked? or ash_authentication_loaded?(igniter))}
+
+        _ ->
+          {igniter, false}
+      end
+    end
+
+    defp ash_authentication_locked?(igniter) do
+      if Igniter.exists?(igniter, "mix.lock") do
+        igniter = Igniter.include_existing_file(igniter, "mix.lock")
+
+        locked? =
+          igniter.rewrite
+          |> Rewrite.source!("mix.lock")
+          |> Rewrite.Source.get(:content)
+          |> String.contains?(~s|"ash_authentication":|)
+
+        {igniter, locked?}
+      else
+        {igniter, false}
+      end
+    end
+
+    # In a test the igniter stands in for a project Mix hasn't loaded.
+    defp ash_authentication_loaded?(%{assigns: %{test_mode?: true}}), do: false
+
+    defp ash_authentication_loaded?(_igniter),
+      do: Map.has_key?(Mix.Project.deps_paths(), :ash_authentication)
 
     defp maybe_compose_aa_install(igniter, true = _install?, argv),
       do: Igniter.compose_task(igniter, "ash_authentication.install", argv)

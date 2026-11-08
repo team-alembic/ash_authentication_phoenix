@@ -542,6 +542,45 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     end
   end
 
+  # A project that has ash_authentication, but not as a `{:ash_authentication,
+  # ...}` tuple in `mix.exs` — declared through a helper, or by an umbrella's
+  # parent — must not have a second one added.
+  describe "the ash_authentication dependency" do
+    defp bare_project(files) do
+      test_project(files: files)
+      |> Igniter.Project.Deps.add_dep({:simple_sat, ">= 0.0.0"})
+      |> Igniter.Project.Formatter.add_formatter_plugin(Spark.Formatter)
+      |> Igniter.Project.Module.create_module(TestWeb.Router, """
+      use TestWeb, :router
+
+      pipeline :browser do
+        plug :accepts, ["html"]
+      end
+      """)
+      |> apply_igniter!()
+    end
+
+    test "is added when the project has none, at this release's requirement" do
+      bare_project(%{})
+      |> Igniter.compose_task("ash_authentication_phoenix.install", ["--yes"])
+      |> assert_has_patch("mix.exs", """
+      + |      {:ash_authentication, "~> 5.0-rc"},
+      """)
+    end
+
+    test "is not added when the lock file already has it" do
+      lock =
+        ~s|%{\n  "ash_authentication": {:hex, :ash_authentication, "5.0.0-rc.16", "", [:mix], [], "hexpm", ""},\n}\n|
+
+      diff =
+        bare_project(%{"mix.lock" => lock})
+        |> Igniter.compose_task("ash_authentication_phoenix.install", ["--yes"])
+        |> diff(only: "mix.exs")
+
+      refute diff =~ ":ash_authentication"
+    end
+  end
+
   defp maybe_add_daisy_ui(igniter, %{daisy_ui: true}) do
     Igniter.create_new_file(igniter, "assets/vendor/daisyui.js", "")
   end
