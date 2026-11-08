@@ -29,6 +29,9 @@ if Code.ensure_loaded?(Igniter) do
     * Pipeline plugs for session and bearer token loading
     * Tailwind CSS configuration for authentication components
 
+    The flash messages in the generated `AuthController` go through `gettext/1`
+    when the application has a Gettext backend (`<WebModule>.Gettext`).
+
     The generated modules are namespaced under the web module that the selected
     router belongs to — read from the router's `use <WebModule>, :router` — so
     an application with more than one router gets its authentication modules
@@ -350,7 +353,15 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
+    # The flash messages go through `gettext/1` when the app has a Gettext
+    # backend — `use <Web>, :controller` brings it into scope in a `mix phx.new`
+    # app — and stay plain strings otherwise.
     defp create_auth_controller(igniter, otp_app, web_module) do
+      {gettext?, igniter} =
+        Igniter.Project.Module.module_exists(igniter, Module.concat(web_module, Gettext))
+
+      t = fn message -> flash_message(message, gettext?) end
+
       Igniter.Project.Module.create_module(
         igniter,
         Module.concat(web_module, AuthController),
@@ -363,9 +374,9 @@ if Code.ensure_loaded?(Igniter) do
 
           message =
             case activity do
-              {:confirm_new_user, :confirm} -> "Your email address has now been confirmed"
-              {:password, :reset} -> "Your password has successfully been reset"
-              _ -> "You are now signed in"
+              {:confirm_new_user, :confirm} -> #{t.("Your email address has now been confirmed")}
+              {:password, :reset} -> #{t.("Your password has successfully been reset")}
+              _ -> #{t.("You are now signed in")}
             end
 
           conn
@@ -387,28 +398,28 @@ if Code.ensure_loaded?(Igniter) do
                   errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
                 }
               }} ->
-                \"\"\"
-                You have already signed in another way, but have not confirmed your account.
-                You can confirm your account using the link we sent to you, or by resetting your password.
-                \"\"\"
+                #{t.(~S'''
+        You have already signed in another way, but have not confirmed your account.
+        You can confirm your account using the link we sent to you, or by resetting your password.
+        ''')}
 
               {_,
               %AshAuthentication.Errors.AuthenticationFailed{
                 caused_by: %AshAuthentication.Errors.ConfirmationRequired{}
               }} ->
-                \"\"\"
-                An account with this email already exists. We've sent a link to that
-                address - confirm it to finish linking this provider to your account.
-                \"\"\"
+                #{t.(~S'''
+        An account with this email already exists. We've sent a link to that
+        address - confirm it to finish linking this provider to your account.
+        ''')}
 
               {{:password, _}, _} ->
-                "Incorrect email or password"
+                #{t.("Incorrect email or password")}
 
               {{:magic_link, _}, _} ->
-                "Invalid or expired sign-in link"
+                #{t.("Invalid or expired sign-in link")}
 
               _ ->
-                "Authentication failed"
+                #{t.("Authentication failed")}
             end
 
           conn
@@ -421,11 +432,27 @@ if Code.ensure_loaded?(Igniter) do
 
           conn
           |> clear_session(:#{otp_app})
-          |> put_flash(:info, "You are now signed out")
+          |> put_flash(:info, #{t.("You are now signed out")})
           |> redirect(to: return_to)
         end
         """
       )
+    end
+
+    # A one-line message as a string literal; a multi-line one as a heredoc,
+    # indented to where it lands in the template above.
+    defp flash_message(message, gettext?) do
+      literal =
+        if String.contains?(message, "\n") do
+          body =
+            message |> String.split("\n", trim: true) |> Enum.map_join("\n", &("        " <> &1))
+
+          "\"\"\"\n#{body}\n        \"\"\""
+        else
+          inspect(message)
+        end
+
+      if gettext?, do: "gettext(#{literal})", else: literal
     end
 
     defp use_authentication_phoenix_router(igniter, router) do

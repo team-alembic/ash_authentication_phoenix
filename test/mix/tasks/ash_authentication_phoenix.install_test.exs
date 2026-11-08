@@ -505,6 +505,43 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     end
   end
 
+  describe "the auth controller's flash messages" do
+    test "go through gettext when the app has a Gettext backend", %{igniter: igniter} do
+      igniter =
+        igniter
+        |> Igniter.Project.Module.create_module(TestWeb.Gettext, """
+        use Gettext.Backend, otp_app: :test
+        """)
+        |> apply_igniter!()
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+
+      controller =
+        igniter
+        |> assert_creates("lib/test_web/controllers/auth_controller.ex")
+        |> diff(only: "lib/test_web/controllers/auth_controller.ex")
+
+      assert controller =~ ~s|gettext("You are now signed out")|
+      assert controller =~ ~s|gettext("You are now signed in")|
+      assert controller =~ ~s|gettext("Incorrect email or password")|
+      assert controller =~ ~s|gettext("Authentication failed")|
+
+      assert controller =~ """
+             gettext(\"\"\"
+             """
+
+      refute controller =~ ~s|"You are now signed out"\n|
+    end
+
+    test "stay plain strings otherwise", %{igniter: igniter} do
+      controller =
+        igniter
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+        |> diff(only: "lib/test_web/controllers/auth_controller.ex")
+
+      refute controller =~ "gettext("
+    end
+  end
+
   defp maybe_add_daisy_ui(igniter, %{daisy_ui: true}) do
     Igniter.create_new_file(igniter, "assets/vendor/daisyui.js", "")
   end
