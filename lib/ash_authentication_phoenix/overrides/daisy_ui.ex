@@ -409,6 +409,12 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
         "mx-auto w-full max-w-sm rounded-box border border-base-300 bg-base-100 p-6 shadow-xl"
 
     set :slot_class, "mt-6"
+    set :hide_class, "hidden"
+    set :interstitial_class, "text-sm font-medium"
+    set :register_link_text, "Need an account?"
+    set :register_link_class, "link link-primary"
+    set :sign_in_link_text, "Already have an account?"
+    set :sign_in_link_class, "link link-primary"
 
     # Link mode renders alongside the OAuth links on the sign-in page, so it
     # matches Components.OAuth2's root_class / link_class.
@@ -421,6 +427,11 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :root_class, nil
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
     set :label_text, "Register a passkey"
+    set :description_class, "text-sm text-base-content/70 mb-4"
+
+    set :description_text,
+        "A passkey takes the place of a password. Your browser or phone will create one and ask you to confirm it is you."
+
     set :form_class, nil
     set :button_text, "Register with Passkey"
     set :disable_button_text, "Registering..."
@@ -434,6 +445,8 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :root_class, nil
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-base-content"
     set :label_text, "Sign in with a passkey"
+    set :description_class, "text-sm text-base-content/70 mb-4"
+    set :description_text, "Your browser or phone will ask you to confirm it is you."
     set :form_class, nil
     set :button_text, "Sign in with Passkey"
     set :disable_button_text, "Signing in..."
@@ -460,6 +473,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :sign_in_button_icon, nil
     set :disable_button_text, "Please wait..."
     set :cross_device_button_text, "Use a phone or tablet"
+    set :this_device_button_text, "Use a passkey on this device"
     set :cross_device_button_class, "btn btn-outline btn-block mb-4"
   end
 
@@ -545,6 +559,7 @@ defmodule AshAuthentication.Phoenix.Overrides.DaisyUI do
     set :expired_text, "This verification request has expired. Please try again."
     set :disabled_text, "Passkey verification is not enabled."
     set :cross_device_button_text, "Use a phone or tablet"
+    set :this_device_button_text, "Use a passkey on this device"
     set :cross_device_button_class, "btn btn-outline w-full mt-2"
     set :error_class, "text-error text-sm mb-4"
 

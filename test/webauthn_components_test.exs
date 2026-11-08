@@ -39,18 +39,23 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
   end
 
   describe "WebAuthnLive dedicated page" do
-    test "mounts and renders sign-in form", %{conn: conn} do
+    test "mounts and renders the sign-in form", %{conn: conn} do
       conn = get(conn, "/webauthn")
       assert {:ok, _view, html} = live(conn)
 
       assert html =~ "Sign in with Passkey"
+      refute html =~ ~s(id="user-webauthn-sign-in-wrapper" class="hidden")
     end
 
-    test "renders registration form", %{conn: conn} do
+    test "renders the registration form hidden, behind a link", %{conn: conn} do
+      # The page has no registration route, so the other form is on the page
+      # and the link swaps the two in the browser.
       conn = get(conn, "/webauthn")
-      assert {:ok, _view, html} = live(conn)
+      assert {:ok, view, html} = live(conn)
 
       assert html =~ "Register with Passkey"
+      assert html =~ ~s(id="user-webauthn-register-wrapper" class="hidden")
+      assert view |> element("a[phx-click]", "Need an account?") |> has_element?()
     end
 
     test "does not show a Continue with WebAuthn link (it IS the webauthn page)", %{conn: conn} do
@@ -61,35 +66,72 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
     end
   end
 
-  describe "WebAuthn top-level component" do
-    test "renders both forms (no toggle, always visible)", %{conn: conn} do
+  describe "one form at a time" do
+    test "sign-in shows first, registration is hidden, and nothing divides them",
+         %{conn: conn} do
       conn = get(conn, "/webauthn_test")
-      assert {:ok, view, _html} = live(conn)
-
-      # Both forms are always rendered side by side
-      assert element(view, "[phx-hook='WebAuthnAuthenticationHook']") |> render()
-      assert element(view, "[phx-hook='WebAuthnRegistrationHook']") |> render()
-    end
-
-    test "renders sign-in button", %{conn: conn} do
-      conn = get(conn, "/webauthn_test")
-      assert {:ok, _view, html} = live(conn)
+      assert {:ok, view, html} = live(conn)
 
       assert html =~ "Sign in with Passkey"
+      refute html =~ ~s(id="user-webauthn-sign-in-wrapper" class="hidden")
+      assert html =~ ~s(id="user-webauthn-register-wrapper" class="hidden")
+      refute html =~ "user-webauthn-sign-in-divider"
+
+      # Both hooks are mounted, so the toggle needs no round trip.
+      assert has_element?(view, "[phx-hook='WebAuthnAuthenticationHook']")
+      assert has_element?(view, "[phx-hook='WebAuthnRegistrationHook']")
     end
 
-    test "renders an 'or' divider between sign-in and registration", %{conn: conn} do
-      conn = get(conn, "/webauthn_test")
-      assert {:ok, _view, html} = live(conn)
+    test "the links toggle in the browser when there is no registration route",
+         %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/webauthn_test")
 
-      assert html =~ "or"
+      register_link = view |> element("a[phx-click]", "Need an account?") |> render()
+      assert register_link =~ ~s(href="#")
+      assert register_link =~ "user-webauthn-register-wrapper"
+      assert register_link =~ "user-webauthn-sign-in-wrapper"
+
+      sign_in_link = view |> element("a[phx-click]", "Already have an account?") |> render()
+      assert sign_in_link =~ ~s(href="#")
     end
 
-    test "renders register button in registration form", %{conn: conn} do
-      conn = get(conn, "/webauthn_test")
-      assert {:ok, _view, html} = live(conn)
+    test "live_action :register shows registration and hides sign-in", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test?live_action=register")
 
-      assert html =~ "Register with Passkey"
+      assert html =~ ~s(id="user-webauthn-sign-in-wrapper" class="hidden")
+      refute html =~ ~s(id="user-webauthn-register-wrapper" class="hidden")
+    end
+
+    test "with a register_path only the sign-in form is rendered, linking to it",
+         %{conn: conn} do
+      {:ok, view, html} = live(conn, "/webauthn_test?register_path=/join")
+
+      assert html =~ "WebAuthnAuthenticationHook"
+      refute html =~ "WebAuthnRegistrationHook"
+      refute html =~ "Register with Passkey"
+
+      link = view |> element("a[href='/join']", "Need an account?") |> render()
+      assert link =~ ~s(data-phx-link="patch")
+    end
+
+    test "with a register_path, :register renders only registration, linking back",
+         %{conn: conn} do
+      {:ok, view, html} =
+        live(conn, "/webauthn_test?register_path=/join&live_action=register")
+
+      assert html =~ "WebAuthnRegistrationHook"
+      refute html =~ "WebAuthnAuthenticationHook"
+      refute html =~ "Sign in with Passkey"
+
+      # `path` defaults to "/" on the test component.
+      assert view |> element("a[href='/']", "Already have an account?") |> has_element?()
+    end
+
+    test "a nil link text drops the link", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test?overrides=quiet")
+
+      refute html =~ "Need an account?"
+      refute html =~ "Already have an account?"
     end
 
     test "renders WebAuthn support detection hook", %{conn: conn} do
@@ -100,14 +142,64 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
     end
   end
 
+  describe "on the sign-in route" do
+    test "/sign-in renders the passkey sign-in form alone, with a link to /register",
+         %{conn: conn} do
+      conn = get(conn, "/sign-in")
+      assert {:ok, view, html} = live(conn)
+
+      assert html =~ "anon-user-webauthn-sign-in-form"
+      refute html =~ "anon-user-webauthn-register"
+
+      assert view
+             |> element(~s(a[href="/register"]), "Need an account?")
+             |> has_element?()
+    end
+
+    test "/register renders the passkey registration form alone, with a link to /sign-in",
+         %{conn: conn} do
+      conn = get(conn, "/register")
+      assert {:ok, view, html} = live(conn)
+
+      assert html =~ "anon-user-webauthn-register-form"
+      refute html =~ "anon-user-webauthn-sign-in-form"
+
+      assert view
+             |> element(~s(a[href="/sign-in"]), "Already have an account?")
+             |> has_element?()
+    end
+  end
+
+  describe "the description under the heading" do
+    test "each form explains itself in a sentence", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test")
+
+      assert html =~
+               ~s(<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Your browser or phone will ask you to confirm it is you.</p>)
+
+      assert html =~ "A passkey takes the place of a password."
+    end
+
+    test "nil hides it, as it does the heading", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test?overrides=quiet")
+
+      refute html =~ "Your browser or phone will ask you"
+      refute html =~ "A passkey takes the place of a password."
+      refute html =~ ~s(<p class="text-sm text-gray-600)
+    end
+  end
+
   describe "the strategy's enabled flags" do
-    test "sign_in_enabled? false hides the sign-in form only", %{conn: conn} do
+    test "sign_in_enabled? false leaves the registration form, shown, with no link",
+         %{conn: conn} do
       # Registration completes at the `sign_in_with_token` route, which the
       # strategy keeps while it verifies, so registration still stands.
       {:ok, _view, html} = live(conn, "/webauthn_test?variant=no-sign-in")
 
       refute html =~ "Sign in with Passkey"
       assert html =~ "Register with Passkey"
+      refute html =~ ~s(id="user-webauthn-register-wrapper" class="hidden")
+      refute html =~ "Already have an account?"
     end
 
     test "without sign-in or verification there is no token exchange, so neither form",
@@ -125,11 +217,12 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
       refute html =~ "Register with Passkey"
     end
 
-    test "registration_enabled? false leaves only the sign-in form", %{conn: conn} do
+    test "registration_enabled? false leaves only the sign-in form, with no link", %{conn: conn} do
       {:ok, _view, html} = live(conn, "/webauthn_test?variant=no-register")
 
       assert html =~ "Sign in with Passkey"
       refute html =~ "Register with Passkey"
+      refute html =~ "Need an account?"
     end
   end
 
@@ -141,7 +234,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
       # anon_user sorts before user, so the passkey-first strategies render
       # first, then a divider, then the User strategies.
       assert [_, after_anon] =
-               String.split(html, "anon-user-webauthn-register-token-form", parts: 2)
+               String.split(html, "anon-user-webauthn-sign-in-token-form", parts: 2)
 
       assert [between_groups, _] =
                String.split(after_anon, "user-webauthn-sign-in-form", parts: 2)

@@ -44,13 +44,15 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   don't recognise and fall back to their own picker, so no feature detection is
   needed.
 
-  When the strategy offers `:hybrid`, or allows the client to choose with
-  `allow_hint_override? true`, every ceremony component also renders a
-  dedicated "Use a phone or tablet" action (see `cross_device?/1`). It asks
-  for the ceremony with `hints: [:hybrid]`, which `resolve_hints/2` honours
-  only when the override is allowed — otherwise the configured hints stand,
-  exactly as the strategy's own challenge endpoints treat a `?hints=` request
-  parameter.
+  When the strategy lets the client choose with `allow_hint_override? true`,
+  every ceremony component also renders one secondary action beside its main
+  button, pointing away from where the configured hints lead (see
+  `secondary_hint/1`): "Use a phone or tablet" asks for `hints: [:hybrid]`,
+  "Use a passkey on this device" for `hints: [:client_device]`.
+  `resolve_hints/2` honours the request only when the override is allowed —
+  otherwise the configured hints stand, exactly as the strategy's own
+  challenge endpoints treat a `?hints=` request parameter — which is why no
+  secondary action is offered without it.
 
   ## Ceremony timeouts
 
@@ -188,20 +190,27 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   end
 
   @doc """
-  Whether the components should offer a dedicated "Use a phone or tablet"
-  action for `strategy`.
+  The one secondary action a ceremony form should offer beside its main
+  button for `strategy`: `:hybrid` ("Use a phone or tablet"),
+  `:client_device` ("Use a passkey on this device"), or `nil` for none.
 
-  They do when the strategy offers `:hybrid` itself, or lets the client ask
-  for it per ceremony (`allow_hint_override?`). `authenticator_attachment
-  :platform` rules out every roaming authenticator, a phone included, so
-  nothing is offered then — the strategy refuses `:hybrid` alongside it at
-  compile time anyway, but the override could still request it.
+  A secondary action is only worth rendering when it changes the ceremony.
+  The strategy must let the client choose (`allow_hint_override?`), or the
+  request would be ignored and the button would do exactly what the main one
+  does. Given that, the button points away from where the configured hints
+  lead: with `:hybrid` first the browser already opens on the phone's QR
+  code, so the alternative is a passkey on this device; otherwise the browser
+  leads with whatever is configured — or its own picker, when nothing is —
+  and the alternative is the phone. `authenticator_attachment :platform`
+  rules out every roaming authenticator, a phone included, so nothing is
+  offered then.
   """
-  @spec cross_device?(struct) :: boolean
-  def cross_device?(%{authenticator_attachment: :platform}), do: false
+  @spec secondary_hint(struct) :: :hybrid | :client_device | nil
+  def secondary_hint(%{authenticator_attachment: :platform}), do: nil
 
-  def cross_device?(strategy),
-    do: :hybrid in strategy.hints or strategy.allow_hint_override? == true
+  def secondary_hint(%{allow_hint_override?: true, hints: [:hybrid | _]}), do: :client_device
+  def secondary_hint(%{allow_hint_override?: true}), do: :hybrid
+  def secondary_hint(_strategy), do: nil
 
   @doc """
   The hints a ceremony is issued with: the ones the client requested when
@@ -232,6 +241,12 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
     "hybrid" => :hybrid
   }
 
+  @hint_strings %{
+    security_key: "security-key",
+    client_device: "client-device",
+    hybrid: "hybrid"
+  }
+
   defp requested_hints(requested) do
     requested
     |> List.wrap()
@@ -244,6 +259,14 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
     |> Enum.flat_map(&List.wrap(Map.get(@hint_atoms, &1)))
     |> Enum.uniq()
   end
+
+  @doc """
+  The `hints` form value that asks for `hint`, spelled as the
+  `PublicKeyCredentialHint` enum spells it and as `resolve_hints/2` reads
+  it back.
+  """
+  @spec hint_param(:hybrid | :client_device | :security_key) :: String.t()
+  def hint_param(hint), do: Map.fetch!(@hint_strings, hint)
 
   @doc """
   Build the spec-shaped `PublicKeyCredentialCreationOptions` payload for a
@@ -345,12 +368,6 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
-
-  @hint_strings %{
-    security_key: "security-key",
-    client_device: "client-device",
-    hybrid: "hybrid"
-  }
 
   # Which kinds of authenticator the browser should offer, in order of
   # preference: the client's request for this ceremony when the strategy

@@ -203,12 +203,14 @@ Options for both macros (matching the TOTP versions):
 - `auth_routes_prefix` — **required**, makes the form post URLs work.
 - `overrides` — list of override modules for UI customisation.
 
-Both pages follow the strategy's `hints`: with `:hybrid` offered (or
-`allow_hint_override? true`), the verify page and the add-a-passkey form
-show a "Use a phone or tablet" button that goes straight to the QR code,
-so a second factor can live on the user's phone. See "Cross-device
-sign-in" in the [WebAuthn guide](webauthn.md) for the options and the
-`--cross-device` installer flag.
+Both pages follow the strategy's `hints`, so a second factor can live on
+the user's phone: with `:hybrid` first the browser opens straight on the
+QR code. With `allow_hint_override? true` the verify page and the
+add-a-passkey form also show one secondary button for the other kind of
+authenticator — "Use a phone or tablet", or "Use a passkey on this device"
+when `:hybrid` already leads. See "Cross-device sign-in" in the
+[WebAuthn guide](webauthn.md) for the options and the `--cross-device`
+installer flag.
 
 ## How verification is recorded — the `webauthn_verified_at` claim
 

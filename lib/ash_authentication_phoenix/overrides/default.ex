@@ -561,6 +561,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :expired_text, "This verification request has expired. Please try again."
     set :disabled_text, "Passkey verification is not enabled."
     set :cross_device_button_text, "Use a phone or tablet"
+    set :this_device_button_text, "Use a passkey on this device"
 
     set :cross_device_button_class,
         "w-full flex justify-center py-2 px-4 mt-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
@@ -692,6 +693,12 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
         "mx-auto w-full max-w-sm lg:w-96 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
 
     set :slot_class, "mt-6"
+    set :hide_class, "hidden"
+    set :interstitial_class, "text-sm font-medium"
+    set :register_link_text, "Need an account?"
+    set :register_link_class, "text-blue-500 hover:text-blue-600"
+    set :sign_in_link_text, "Already have an account?"
+    set :sign_in_link_class, "text-blue-500 hover:text-blue-600"
 
     # Link mode renders alongside the OAuth links on the sign-in page, so it
     # matches Components.OAuth2's root_class / link_class.
@@ -711,6 +718,11 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :root_class, "mt-2"
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :label_text, "Register a passkey"
+    set :description_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+
+    set :description_text,
+        "A passkey takes the place of a password. Your browser or phone will create one and ask you to confirm it is you."
+
     set :form_class, "space-y-4"
     set :button_text, "Register with Passkey"
     set :disable_button_text, "Registering..."
@@ -724,6 +736,8 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :root_class, "mt-2"
     set :label_class, "mt-2 mb-4 text-2xl tracking-tight font-bold text-gray-900 dark:text-white"
     set :label_text, "Sign in with a passkey"
+    set :description_class, "text-sm text-gray-600 dark:text-gray-400 mb-4"
+    set :description_text, "Your browser or phone will ask you to confirm it is you."
     set :form_class, "space-y-4"
     set :button_text, "Sign in with Passkey"
     set :disable_button_text, "Signing in..."
@@ -758,6 +772,7 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :sign_in_button_icon, nil
     set :disable_button_text, "Please wait..."
     set :cross_device_button_text, "Use a phone or tablet"
+    set :this_device_button_text, "Use a passkey on this device"
 
     set :cross_device_button_class, """
     w-full flex justify-center items-center py-2 px-4 mt-2 border border-gray-300

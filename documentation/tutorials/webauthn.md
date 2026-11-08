@@ -97,8 +97,13 @@ registered credential (public key, sign count, label, etc.).
 
 WebAuthn uses the same `sign_in_route` macro as other strategies — the
 installer slots it into your existing scope automatically. The `SignIn`
-component auto-discovers the WebAuthn strategy and renders the registration /
-authentication forms beside any other strategies you have configured:
+component auto-discovers the WebAuthn strategy and renders its form beside
+any other strategies you have configured: the sign-in form on the sign-in
+page, the registration form on the `register_path` page, each with a link
+to the other (the `register_link_*` and `sign_in_link_*` overrides on
+`AshAuthentication.Phoenix.Components.WebAuthn`). Without a
+`register_path` the two forms share the page, one hidden, and the link
+swaps them:
 
 ```elixir
 defmodule MyAppWeb.Router do
@@ -326,11 +331,16 @@ end
 - `timeout` must be raised. The default 60 seconds cannot fit a QR scan, a Bluetooth handshake and a prompt on the second device, and the ceremony expires mid-scan; `ash_authentication` warns at compile time if you offer `:hybrid` with less than 120 seconds. The components wait exactly as long as the strategy says, on every page they are embedded in.
 - `allow_hint_override? true` lets the client ask for one kind of authenticator per ceremony, which is what the next paragraph needs.
 
-### The "Use a phone or tablet" button
+### The secondary button
 
-When the strategy offers `:hybrid`, or allows the hint override, every ceremony component renders a second button, "Use a phone or tablet", next to its main one — on the sign-in and registration forms, on the add-a-passkey form of `ManageCredentials`, and on the second-factor verify page. It requests the ceremony with `hints: [:hybrid]`, so a browser that honours hints opens straight on the QR code instead of its picker. The request is honoured only when `allow_hint_override?` is on; otherwise the configured hints stand, exactly as the strategy's own challenge endpoints treat a `?hints=hybrid` parameter. The button is never shown under `authenticator_attachment :platform`, which rules a phone out.
+With `allow_hint_override? true`, every ceremony component renders one secondary button next to its main one — on the sign-in and registration forms, on the add-a-passkey form of `ManageCredentials`, and on the second-factor verify page. It points away from where the strategy's `hints` lead, so that it always changes the ceremony:
 
-Its text and class are overridable: `cross_device_button_text` and `cross_device_button_class` on `AshAuthentication.Phoenix.Components.WebAuthn.Input` for the forms, and the same two keys on `AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm`. The predicate behind the button is `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`, should you render your own.
+- when `hints` leads with `:hybrid`, the main button already opens on the phone's QR code, so the secondary one is **"Use a passkey on this device"** and requests the ceremony with `hints: [:client_device]`;
+- otherwise — a security key first, a built-in authenticator first, or no hints at all — the secondary one is **"Use a phone or tablet"** and requests `hints: [:hybrid]`, so a browser that honours hints opens straight on the QR code instead of its picker.
+
+Without the override the request would be ignored (the configured hints stand, exactly as the strategy's own challenge endpoints treat a `?hints=` parameter the strategy has not opened up), so no secondary button is shown — not even when `:hybrid` is offered, since asking for it again would change nothing. Nothing is shown under `authenticator_attachment :platform` either, which rules a phone out.
+
+The two texts and the shared class are overridable: `cross_device_button_text`, `this_device_button_text` and `cross_device_button_class` on `AshAuthentication.Phoenix.Components.WebAuthn.Input` for the forms, and the same three keys on `AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm`. The decision behind the button is `AshAuthentication.Phoenix.WebAuthn.secondary_hint/1`, should you render your own.
 
 Chrome 128+ honours `hints`. Other browsers ignore members they don't recognise and fall back to their own picker, which already offers the phone — no feature detection is needed. For what happens on the wire, Bluetooth and all, see "Cross-device sign-in" in the [AshAuthentication WebAuthn guide](https://hexdocs.pm/ash_authentication/webauthn.html).
 

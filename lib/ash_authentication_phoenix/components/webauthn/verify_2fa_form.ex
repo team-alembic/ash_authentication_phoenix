@@ -15,8 +15,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     submit_text: "Text shown on the verify button.",
     submit_disabled_text: "Text shown on the verify button while the ceremony is in flight.",
     cross_device_button_text:
-      "Text for the \"Use a phone or tablet\" button, shown when the strategy offers the `:hybrid` hint or allows the client to request it.",
-    cross_device_button_class: "CSS class for the \"Use a phone or tablet\" button.",
+      "Text for the secondary button that asks for a passkey on a phone or tablet (`hints=hybrid`). Shown when the strategy allows the hint override and does not lead with `:hybrid` itself.",
+    this_device_button_text:
+      "Text for the secondary button that asks for a passkey on this device (`hints=client-device`). Shown when the strategy allows the hint override and leads with `:hybrid`.",
+    cross_device_button_class: "CSS class for the secondary button, whichever of the two it is.",
     error_class: "CSS class for error messages.",
     error_unauthenticated_text:
       "Text shown when the user is neither authenticated nor presenting a valid token.",
@@ -47,13 +49,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
   ceremony — the only difference is server-side scoping to the actor's
   credentials.
 
-  ## Cross-device verification
+  ## The secondary button
 
-  When the strategy offers the `:hybrid` hint, or allows the client to ask
-  for it (`allow_hint_override? true`), a second "Use a phone or tablet"
-  button is rendered (see `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`).
-  It requests the ceremony with `hints: [:hybrid]`, which only takes effect
-  when the override is allowed.
+  When the strategy lets the client choose the kind of authenticator
+  (`allow_hint_override? true`), one secondary button is rendered beside
+  the verify button, pointing away from where the strategy's `hints` lead
+  (see `AshAuthentication.Phoenix.WebAuthn.secondary_hint/1`): "Use a phone
+  or tablet" requests the ceremony with `hints: [:hybrid]`; when the
+  strategy already leads with `:hybrid`, "Use a passkey on this device"
+  requests `hints: [:client_device]` instead. Without the override the
+  request would be ignored, so no button is shown.
 
   ## Timeouts
 
@@ -122,7 +127,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
 
         socket
         |> assign(:subject_name_slug, subject_name |> to_string() |> slugify())
-        |> assign(:cross_device?, PhoenixWebAuthnLib.cross_device?(strategy))
+        |> assign(:secondary_hint, PhoenixWebAuthnLib.secondary_hint(strategy))
         |> assign(:verify_enabled?, strategy.verify_enabled?)
         # The strategy keeps the exchange whenever it verifies, so a
         # second-factor-only strategy (`sign_in_enabled? false`) has it too.
@@ -130,7 +135,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
       else
         socket
         |> assign(:subject_name_slug, nil)
-        |> assign(:cross_device?, false)
+        |> assign(:secondary_hint, nil)
         |> assign(:verify_enabled?, false)
         |> assign(:token_exchange?, false)
       end
@@ -198,17 +203,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
               <% end %>
             </button>
 
-            <%= if @cross_device? do %>
+            <%= if @secondary_hint do %>
               <button
                 type="submit"
                 name="hints"
-                value="hybrid"
+                value={PhoenixWebAuthnLib.hint_param(@secondary_hint)}
                 disabled={@submitting}
                 class={override_for(@overrides, :cross_device_button_class)}
               >
-                {_gettext(
-                  override_for(@overrides, :cross_device_button_text, "Use a phone or tablet")
-                )}
+                {_gettext(hint_button_text(@overrides, @secondary_hint))}
               </button>
             <% end %>
           </form>
@@ -272,8 +275,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
       {:ok, challenge} =
         WebAuthn.Actions.authentication_challenge(strategy, allow_credentials, tenant)
 
-      # `hints` names the button that submitted the form ("Use a phone or
-      # tablet" asks for `hybrid`); the strategy decides whether it is honoured.
+      # `hints` names the button that submitted the form (the secondary one
+      # asks for `hybrid` or `client-device`); the strategy decides whether
+      # it is honoured.
       options =
         strategy
         |> PhoenixWebAuthnLib.authentication_options(challenge, tenant, credentials,
@@ -389,6 +393,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
          )}
     end
   end
+
+  defp hint_button_text(overrides, :hybrid),
+    do: override_for(overrides, :cross_device_button_text, "Use a phone or tablet")
+
+  defp hint_button_text(overrides, :client_device),
+    do: override_for(overrides, :this_device_button_text, "Use a passkey on this device")
 
   defp verify_disabled(socket) do
     socket

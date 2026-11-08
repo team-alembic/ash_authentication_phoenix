@@ -73,12 +73,14 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   application that knows better (its own re-authentication step, say) can
   pass `authenticated_at` instead.
 
-  When the strategy offers the `:hybrid` hint, or allows the client to ask
-  for it (`allow_hint_override? true`), the add form also renders a "Use a
-  phone or tablet" button (see
-  `AshAuthentication.Phoenix.WebAuthn.cross_device?/1`) for enrolling a
-  passkey held on a phone. The ceremony is bounded by the strategy's
-  `timeout`; this component stops waiting for the browser when it elapses.
+  When the strategy lets the client choose the kind of authenticator
+  (`allow_hint_override? true`), the add form also renders one secondary
+  button pointing away from where the strategy's `hints` lead (see
+  `AshAuthentication.Phoenix.WebAuthn.secondary_hint/1`): "Use a phone or
+  tablet" for enrolling a passkey held on a phone, or, when the strategy
+  already leads with `:hybrid`, "Use a passkey on this device". The ceremony
+  is bounded by the strategy's `timeout`; this component stops waiting for
+  the browser when it elapses.
 
   ## Props
 
@@ -142,7 +144,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     socket =
       socket
       |> assign(:fields, credential_fields(socket.assigns.strategy))
-      |> assign(:cross_device?, PhoenixWebAuthn.cross_device?(socket.assigns.strategy))
+      |> assign(:secondary_hint, PhoenixWebAuthn.secondary_hint(socket.assigns.strategy))
       |> assign_new(:credentials, fn -> fetch_credentials(socket) end)
 
     {:ok, socket}
@@ -255,8 +257,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
               {_gettext(override_for(@overrides, :add_button_text, "+ Add another security key"))}
             </button>
 
-            <%= if @cross_device? do %>
-              <Input.cross_device_button
+            <%= if @secondary_hint do %>
+              <Input.hint_button
+                hint={@secondary_hint}
                 disabled={@adding}
                 overrides={@overrides}
                 gettext_fn={@gettext_fn}
@@ -474,8 +477,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
     exclude_ids = Enum.map(credentials, &Map.get(&1, socket.assigns.fields.credential_id))
 
-    # `hints` names the button that submitted the form ("Use a phone or
-    # tablet" asks for `hybrid`); the strategy decides whether it is honoured.
+    # `hints` names the button that submitted the form (the secondary one
+    # asks for `hybrid` or `client-device`); the strategy decides whether it
+    # is honoured.
     # The options are addressed to the add form's hook element, so a
     # registration form on the same page leaves them alone.
     options =
