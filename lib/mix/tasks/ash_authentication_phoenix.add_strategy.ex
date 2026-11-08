@@ -124,6 +124,12 @@ if Code.ensure_loaded?(Igniter) do
       - `--passkey-only` - Passkey-first mode: the strategy gets
         `require_identity? false` and the user resource no identity attribute;
         users are resolved from the credential alone.
+      - `--cross-device` - Tunes the strategy for signing in with a passkey
+        held on a phone or tablet.
+      - `--no-config` - Leaves `config/dev.exs`, `config/test.exs` and
+        `config/runtime.exs` alone. The `Secrets` clauses are still generated,
+        for a project that resolves `rp_id`, `rp_name` and `origin` some other
+        way.
       - `--name`, `-n` - The name of the WebAuthn strategy. Defaults to `webauthn`.
     """
 
