@@ -42,6 +42,12 @@ follow the [Passkeys as 2FA](webauthn-2fa.md) guide.
 The installer is idempotent — re-running it will not duplicate config or
 overwrite changes you've made by hand.
 
+Pass `--no-config` if your project doesn't read its settings from the
+application environment: the strategy and the `Secrets` clauses are still
+generated, but `config/dev.exs`, `config/test.exs` and `config/runtime.exs`
+are left alone. Point the clauses at wherever you resolve `rp_id`, `rp_name`
+and `origin` from.
+
 ## Prerequisites
 
 If you're configuring the strategy by hand instead of using the installer,
