@@ -21,7 +21,11 @@ if Code.ensure_loaded?(Igniter) do
     * An `AuthController` for handling authentication callbacks
     * A `LiveUserAuth` module for LiveView authentication
     * An `AuthOverrides` module for customising authentication UI
-    * Authentication routes (`auth_routes`, `sign_in_route`, `sign_out_route`)
+    * Authentication routes (`auth_routes`, `sign_in_route`, `sign_out_route`),
+      plus the routes for the strategies the user resource already declares:
+      `reset_route` for a password strategy, `confirm_route` for a confirmation
+      add-on and `magic_sign_in_route` for a magic link strategy. A strategy
+      added later brings its routes along through its own Phoenix task.
     * Pipeline plugs for session and bearer token loading
     * Tailwind CSS configuration for authentication components
 
@@ -88,7 +92,7 @@ if Code.ensure_loaded?(Igniter) do
         |> create_live_user_auth(web_module)
         |> create_scope_module(scope_module)
         |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(web_module)
-        |> add_auth_routes(overrides, options, router, web_module, scope_module)
+        |> add_auth_routes(options, router, web_module, scope_module)
         |> add_live_session_scopes(web_module, router, scope_module)
       else
         Igniter.add_warning(igniter, """
@@ -136,16 +140,13 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp add_auth_routes(igniter, overrides, options, router, web_module, scope_module) do
+    # The routes every setup needs, then those for the strategies the user
+    # resource declares — a passkey-only resource gets no password reset page.
+    defp add_auth_routes(igniter, options, router, web_module, scope_module) do
       with {_, _source, zipper} <- Igniter.Project.Module.find_module!(igniter, router),
            {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper),
            :error <- Igniter.Code.Module.move_to_use(zipper, AshAuthentication.Phoenix.Router) do
-        override_module =
-          if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
-            AshAuthentication.Phoenix.Overrides.DaisyUI
-          else
-            AshAuthentication.Phoenix.Overrides.Default
-          end
+        overrides = AshAuthentication.Phoenix.Igniter.overrides_option(igniter, web_module)
 
         igniter
         |> use_authentication_phoenix_router(router)
@@ -164,31 +165,20 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           """
           auth_routes AuthController, #{inspect(options[:user])}, path: "/auth"
-          sign_out_route AuthController, "/sign-out",
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
+          sign_out_route AuthController, "/sign-out", #{overrides}
 
-          # Remove these if you'd like to use your own authentication views
-          sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
-
-          # Remove this if you do not want to use the reset password feature
-          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
-
-          # Remove this if you do not use the confirmation strategy
-          confirm_route #{inspect(options[:user])},
-            :confirm_new_user,
-            auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
-
-          # Remove this if you do not use the magic link strategy.
-          magic_sign_in_route #{inspect(options[:user])},
-            :magic_link,
-            auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
+          # Remove this if you'd like to use your own authentication views
+          sign_in_route auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
+            #{overrides}
           """,
           with_pipelines: [:browser],
           arg2: web_module,
           router: router
+        )
+        |> AshAuthentication.Phoenix.Igniter.ensure_strategy_routes(
+          options[:user],
+          router,
+          web_module
         )
       else
         _ ->

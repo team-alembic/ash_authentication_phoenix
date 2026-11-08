@@ -60,7 +60,24 @@ if Code.ensure_loaded?(Igniter) do
 
       igniter
       |> upgrade_sender(sender, options)
+      |> add_routes(options)
       |> maybe_compose_confirmation(options)
+    end
+
+    # `reset_route`, and the register and reset paths on `sign_in_route`.
+    defp add_routes(igniter, options) do
+      {igniter, router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+          igniter,
+          "Which Phoenix router defines the authentication routes?"
+        )
+
+      AshAuthentication.Phoenix.Igniter.ensure_strategy_routes(
+        igniter,
+        options[:user],
+        router,
+        web_module
+      )
     end
 
     defp parse_options(igniter) do

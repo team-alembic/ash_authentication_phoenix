@@ -27,6 +27,14 @@ mix igniter.install ash_authentication_phoenix
 See the [AshAuthentication getting started guide](https://hexdocs.pm/ash_authentication/get-started.html) for information
 on how to add strategies and configure `AshAuthentication` if you have not already.
 
+The router gets `auth_routes`, `sign_in_route` and `sign_out_route`. Routes for
+a strategy's own pages follow the strategy: `reset_route` and the sign-in
+page's `register_path` and `reset_path` come with the password strategy,
+`confirm_route` with the confirmation add-on and `magic_sign_in_route` with
+the magic link strategy — added when `mix ash_authentication_phoenix.add_strategy`
+adds the strategy, or by the installer when the user resource already has it.
+A passkey-only resource gets none of them.
+
 ### Manual
 
 #### Router Setup
