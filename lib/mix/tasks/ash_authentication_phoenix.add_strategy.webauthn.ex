@@ -48,14 +48,14 @@ if Code.ensure_loaded?(Igniter) do
     `navigator.credentials.create` / `.get` and return the signed assertion to
     the server. Without them, the WebAuthn components will not function.
 
-    Automatic wiring is performed via an AST codemod powered by
-    [`igniter_js`](https://hex.pm/packages/igniter_js). If `igniter_js` is not
-    already a dependency, the task adds it to your `mix.exs`, fetches and
-    compiles it, then continues with the codemod in the same run.
+    The file is parsed with [`igniter_js`](https://hex.pm/packages/igniter_js)
+    and edited in place: only the import line and the hook names are added,
+    following the surrounding style, and the rest of the file is left exactly
+    as it was. If `igniter_js` is not already a dependency, the task adds it to
+    your `mix.exs`, fetches and compiles it, then continues in the same run.
 
-    Because the codemod re-emits the file in its canonical form, expect cosmetic
-    formatting changes (e.g. semicolons, indentation) on the first run.
-    Re-running the task is a no-op once the hooks are wired up.
+    Hooks that are already imported or registered are left alone, so
+    re-running the task is a no-op once they are wired up.
 
     ## Example
 
@@ -311,12 +311,17 @@ if Code.ensure_loaded?(Igniter) do
       """
     end
 
+    # The task documents that it adds `igniter_js`, so the mix.exs change is
+    # not asked about again; Igniter's global `--yes` covers the rest of the
+    # dependency fetch.
     defp install_and_update(igniter) do
       igniter =
         igniter
         |> Igniter.Project.Deps.add_dep(@igniter_js_dep, on_exists: :skip)
         |> Igniter.apply_and_fetch_dependencies(
-          operation: "compiling igniter_js for WebAuthn JS hook wiring"
+          operation: "compiling igniter_js for WebAuthn JS hook wiring",
+          yes: igniter.args.options[:yes],
+          yes_to_deps: true
         )
 
       if parser_loaded?() do
@@ -332,36 +337,16 @@ if Code.ensure_loaded?(Igniter) do
     defp update_app_js_source(source) do
       content = Rewrite.Source.get(source, :content)
 
-      cond do
-        already_wired_up?(content) ->
+      case AshAuthentication.Phoenix.Igniter.AppJs.wire_hooks(content, @hooks_module, @hooks) do
+        :unchanged ->
           source
 
-        not call_parser(:exist_live_socket?, [content, :content]) ->
+        {:ok, content} ->
+          Rewrite.Source.update(source, :content, content)
+
+        {:error, reason} ->
           {:warning,
-           manual_instructions(
-             "Could not find a `liveSocket = new LiveSocket(...)` declaration in `#{@app_js_path}`."
-           )}
-
-        true ->
-          transform_content(source, content)
-      end
-    end
-
-    defp already_wired_up?(content) do
-      String.contains?(content, @hooks_module) and
-        Enum.all?(@hooks, &String.contains?(content, &1))
-    end
-
-    defp transform_content(source, content) do
-      with {:ok, _, content} <-
-             call_parser(:insert_imports, [content, @import_line, :content]),
-           {:ok, _, content} <-
-             call_parser(:extend_hook_object, [content, @hooks, :content]) do
-        Rewrite.Source.update(source, :content, content)
-      else
-        {:error, _, message} ->
-          {:warning,
-           manual_instructions("Could not update `#{@app_js_path}` automatically: #{message}")}
+           manual_instructions("Could not update `#{@app_js_path}` automatically: #{reason}.")}
       end
     end
 
@@ -374,8 +359,6 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     defp parser_loaded?, do: Code.ensure_loaded?(parser_module())
-
-    defp call_parser(fun, args), do: apply(parser_module(), fun, args)
 
     defp parser_module, do: Module.concat([IgniterJs, Parsers, Javascript, Parser])
   end
