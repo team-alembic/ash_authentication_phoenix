@@ -268,14 +268,6 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
     :ok
   end
 
-  # The strategy stores "Security Key" for a passkey added with no name, so
-  # a label is only ever missing once it has been cleared.
-  defp clear_label!(strategy, user) do
-    [credential] = credentials_of(strategy, user)
-    {:ok, _} = WebAuthn.Actions.update_credential_label(strategy, credential.id, nil, [])
-    :ok
-  end
-
   defp timestamps_of(strategy, user) do
     [credential] = credentials_of(strategy, user)
 
@@ -284,7 +276,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
   end
 
   describe "text and dates" do
-    test "a fresh credential shows when it was added, in the default format",
+    test "a fresh, unnamed credential shows the fallback label and when it was added",
          %{conn: conn, strategy: strategy} do
       {user, _passkey} = register_user!(strategy)
       {added, nil} = timestamps_of(strategy, user)
@@ -292,7 +284,9 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
       {:ok, _view, html} = conn |> signed_in(user) |> live("/webauthn-manage/plain")
 
       assert html =~ "Added: #{ManageCredentials.format_timestamp(added, :added)}"
-      assert html =~ "Security Key"
+      # The test credential resource gives the label no default, so the
+      # strategy stores none and the panel's own fallback shows.
+      assert html =~ ~r/<strong class="font-semibold">\s*Security Key/
       refute html =~ "Last used"
       refute html =~ ~r/Added: [^<]*\|/
     end
@@ -330,7 +324,6 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
          %{conn: conn, strategy: strategy} do
       {user, passkey} = register_user!(strategy)
       sign_in_with!(strategy, passkey)
-      clear_label!(strategy, user)
       {added, last_used} = timestamps_of(strategy, user)
 
       {:ok, _view, html} =
@@ -347,7 +340,6 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
     test "the fallback label is translated through gettext_fn",
          %{conn: conn, strategy: strategy} do
       {user, _passkey} = register_user!(strategy)
-      clear_label!(strategy, user)
 
       {:ok, _view, html} = conn |> signed_in(user) |> live("/webauthn-manage/plain?gettext=stub")
 
