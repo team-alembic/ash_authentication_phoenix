@@ -807,14 +807,26 @@ defmodule AshAuthentication.Phoenix.Overrides.Default do
     set :rename_button_text, "Rename"
     set :rename_button_class, "text-sm text-blue-600 hover:text-blue-800"
     set :save_button_text, "Save"
+    set :save_button_class, "text-sm text-blue-600 hover:text-blue-800"
     set :cancel_button_text, "Cancel"
+    set :cancel_button_class, "text-sm text-gray-600 hover:text-gray-800"
+    set :rename_form_class, "flex items-center gap-2"
     set :empty_state_text, "No security keys registered."
+    set :empty_state_class, "text-sm text-gray-500"
+    set :error_class, "text-red-600 text-sm mb-4"
 
     set :last_credential_warning,
         "Cannot delete your last security key. You would be locked out."
 
     set :label_input_class, "px-2 py-1 border border-gray-300 rounded text-sm"
+    set :credential_details_class, "min-w-0"
+    set :credential_actions_class, "flex items-center shrink-0"
+    set :label_class, "font-semibold"
+    set :default_label_text, "Security Key"
     set :timestamp_class, "text-sm text-gray-500 ml-2"
+    set :added_text, "Added"
+    set :last_used_text, "Last used"
+    set :timestamp_separator_text, "|"
     set :continue_button_text, "Continue"
 
     set :continue_button_class, """

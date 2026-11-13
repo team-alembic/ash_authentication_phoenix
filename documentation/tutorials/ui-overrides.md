@@ -1000,31 +1000,51 @@ Credential management panel for authenticated users.
 
   * `:add_form_class` - CSS class for the `form` wrapping the passkey name input and add button.
 
+  * `:added_text` - Text before the date a credential was added. Defaults to "Added".
+
+  * `:cancel_button_class` - CSS class for the cancel rename button.
+
   * `:cancel_button_text` - Text for the cancel rename button.
 
   * `:continue_button_class` - CSS class for the continue button.
 
   * `:continue_button_text` - Text for the continue button shown after at least one credential is registered.
 
+  * `:credential_actions_class` - CSS class for the `div` holding a credential's buttons.
+
+  * `:credential_details_class` - CSS class for the `div` holding a credential's label, badge and timestamps.
+
   * `:credential_item_class` - CSS class for each credential row.
 
   * `:credential_list_class` - CSS class for the credential list.
+
+  * `:default_label_text` - Label shown for a credential that has none. Defaults to "Security Key".
 
   * `:delete_button_class` - CSS class for the delete button.
 
   * `:delete_button_text` - Text for the delete button.
 
+  * `:empty_state_class` - CSS class for the empty state `p`.
+
   * `:empty_state_text` - Text shown when no credentials exist.
 
+  * `:error_class` - CSS class for the error message `div` above the list.
+
   * `:expired_text` - Error shown when an attestation arrives for an add-passkey ceremony that has already timed out.
+
+  * `:format_timestamp` - A 2-arity function formatting a timestamp for display: it receives the `DateTime` and `:added` or `:last_used`, and returns a string. Set it with a remote capture, `&MyApp.Dates.format/2`. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials.format_timestamp/2`.
 
   * `:heading_class` - CSS class for the heading.
 
   * `:heading_text` - Heading text for the panel.
 
+  * `:label_class` - CSS class for a credential's label (`strong`).
+
   * `:label_input_class` - CSS class for the label input.
 
   * `:last_credential_warning` - Warning when trying to delete the last credential.
+
+  * `:last_used_text` - Text before the time a credential was last used. Defaults to "Last used".
 
   * `:reauthentication_path` - Where to send the user when adding a passkey needs a more recent authentication than their session carries (the strategy's `add_credential_max_authentication_age`). Defaults to the second-factor verify page (`/webauthn-verify`) when the user already has a passkey and the strategy verifies, otherwise to the sign-in page (`/sign-in`).
 
@@ -1034,7 +1054,11 @@ Credential management panel for authenticated users.
 
   * `:rename_button_text` - Text for the rename button.
 
+  * `:rename_form_class` - CSS class for the rename `form`.
+
   * `:root_class` - CSS class for the management panel root `div`.
+
+  * `:save_button_class` - CSS class for the save label button.
 
   * `:save_button_text` - Text for the save label button.
 
@@ -1047,6 +1071,8 @@ Credential management panel for authenticated users.
   * `:timeout_text` - Error shown when the browser does not answer the add-passkey ceremony within the strategy's `timeout`.
 
   * `:timestamp_class` - CSS class for timestamp text.
+
+  * `:timestamp_separator_text` - Text between the two timestamps when a credential has both (or `nil` for none). Defaults to "|".
 
 
 ### `AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm`

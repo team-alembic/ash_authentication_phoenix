@@ -17,10 +17,27 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     rename_button_class: "CSS class for the rename button.",
     save_button_text: "Text for the save label button.",
     cancel_button_text: "Text for the cancel rename button.",
+    save_button_class: "CSS class for the save label button.",
+    cancel_button_class: "CSS class for the cancel rename button.",
+    rename_form_class: "CSS class for the rename `form`.",
     empty_state_text: "Text shown when no credentials exist.",
+    empty_state_class: "CSS class for the empty state `p`.",
+    error_class: "CSS class for the error message `div` above the list.",
     last_credential_warning: "Warning when trying to delete the last credential.",
     label_input_class: "CSS class for the label input.",
+    credential_details_class:
+      "CSS class for the `div` holding a credential's label, badge and timestamps.",
+    credential_actions_class: "CSS class for the `div` holding a credential's buttons.",
+    label_class: "CSS class for a credential's label (`strong`).",
+    default_label_text:
+      "Label shown for a credential that has none. Defaults to \"Security Key\".",
     timestamp_class: "CSS class for timestamp text.",
+    added_text: "Text before the date a credential was added. Defaults to \"Added\".",
+    last_used_text: "Text before the time a credential was last used. Defaults to \"Last used\".",
+    timestamp_separator_text:
+      "Text between the two timestamps when a credential has both (or `nil` for none). Defaults to \"|\".",
+    format_timestamp:
+      "A 2-arity function formatting a timestamp for display: it receives the `DateTime` and `:added` or `:last_used`, and returns a string. Set it with a remote capture, `&MyApp.Dates.format/2`. Defaults to `AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials.format_timestamp/2`.",
     synced_badge_text:
       "Badge text shown for synced passkeys (credentials whose backup state flag is set).",
     synced_badge_class: "CSS class for the synced passkey badge.",
@@ -72,6 +89,19 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
   `AshAuthentication.Phoenix.LiveSession` restores from the session. An
   application that knows better (its own re-authentication step, say) can
   pass `authenticated_at` instead.
+
+  ## Text and dates
+
+  Every piece of text the panel renders is an override and goes through
+  `gettext_fn`, the label a credential has none of included
+  (`default_label_text`). The two timestamps on a row are introduced by
+  `added_text` and `last_used_text`, separated by `timestamp_separator_text`
+  when a credential has both, and formatted by `format_timestamp`: a
+  2-arity function receiving the `DateTime` and `:added` or `:last_used`.
+  The default, `format_timestamp/2`, writes English dates in US order; an
+  application that translates the panel sets its own, say
+  `set :format_timestamp, &MyApp.Dates.format/2`, and formats for the
+  current locale there.
 
   When the strategy lets the client choose the kind of authenticator
   (`allow_hint_override? true`), the add form also renders one secondary
@@ -155,6 +185,13 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
   @impl Phoenix.LiveComponent
   def render(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :format_timestamp,
+        override_for(assigns.overrides, :format_timestamp) || (&__MODULE__.format_timestamp/2)
+      )
+
     ~H"""
     <div class={override_for(@overrides, :root_class)} id={@id}>
       <h2 class={override_for(@overrides, :heading_class)}>
@@ -162,11 +199,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       </h2>
 
       <%= if @error_message do %>
-        <div class="text-red-600 text-sm mb-4">{_gettext(@error_message)}</div>
+        <div role="alert" class={override_for(@overrides, :error_class)}>
+          {_gettext(@error_message)}
+        </div>
       <% end %>
 
       <%= if @credentials == [] do %>
-        <p>{_gettext(override_for(@overrides, :empty_state_text, "No security keys registered."))}</p>
+        <p class={override_for(@overrides, :empty_state_class)}>
+          {_gettext(override_for(@overrides, :empty_state_text, "No security keys registered."))}
+        </p>
       <% else %>
         <ul class={override_for(@overrides, :credential_list_class)}>
           <%= for credential <- @credentials, credential_id = credential_id(credential, @fields) do %>
@@ -176,6 +217,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
                   id={"credential-#{credential_id}-form"}
                   phx-submit="save-label"
                   phx-target={@myself}
+                  class={override_for(@overrides, :rename_form_class)}
                 >
                   <input type="hidden" name="credential_id" value={credential_id} />
                   <input
@@ -185,31 +227,38 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
                     class={override_for(@overrides, :label_input_class)}
                     autofocus
                   />
-                  <button type="submit">
+                  <button type="submit" class={override_for(@overrides, :save_button_class)}>
                     {_gettext(override_for(@overrides, :save_button_text, "Save"))}
                   </button>
-                  <button type="button" phx-click="cancel-edit" phx-target={@myself}>
+                  <button
+                    type="button"
+                    phx-click="cancel-edit"
+                    phx-target={@myself}
+                    class={override_for(@overrides, :cancel_button_class)}
+                  >
                     {_gettext(override_for(@overrides, :cancel_button_text, "Cancel"))}
                   </button>
                 </form>
               <% else %>
-                <div>
-                  <strong>{Map.get(credential, @fields.label) || "Security Key"}</strong>
+                <div class={override_for(@overrides, :credential_details_class)}>
+                  <strong class={override_for(@overrides, :label_class)}>
+                    {credential_label(credential, @fields) ||
+                      _gettext(override_for(@overrides, :default_label_text, "Security Key"))}
+                  </strong>
                   <%= if Map.get(credential, @fields.backed_up) == true do %>
                     <span class={override_for(@overrides, :synced_badge_class)}>
                       {_gettext(override_for(@overrides, :synced_badge_text, "Synced passkey"))}
                     </span>
                   <% end %>
-                  <span class={override_for(@overrides, :timestamp_class)}>
-                    <%= if added = @fields.added_at && Map.get(credential, @fields.added_at) do %>
-                      Added: {Calendar.strftime(added, "%B %d, %Y")}
-                    <% end %>
-                    <%= if last_used = Map.get(credential, @fields.last_used_at) do %>
-                      | Last used: {Calendar.strftime(last_used, "%B %d, %Y %H:%M")}
-                    <% end %>
-                  </span>
+                  <.timestamps
+                    added={@fields.added_at && Map.get(credential, @fields.added_at)}
+                    last_used={Map.get(credential, @fields.last_used_at)}
+                    format={@format_timestamp}
+                    overrides={@overrides}
+                    gettext_fn={@gettext_fn}
+                  />
                 </div>
-                <div>
+                <div class={override_for(@overrides, :credential_actions_class)}>
                   <button
                     phx-click="edit-label"
                     phx-value-id={credential_id}
@@ -283,6 +332,48 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     </div>
     """
   end
+
+  # When the credential was added and last used, each introduced by its
+  # text and formatted by the `format_timestamp` override; the separator
+  # only between the two.
+  defp timestamps(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :separator,
+        assigns.added && assigns.last_used &&
+          override_for(assigns.overrides, :timestamp_separator_text, "|")
+      )
+
+    ~H"""
+    <span class={override_for(@overrides, :timestamp_class)}>
+      <%= if @added do %>
+        {_gettext(override_for(@overrides, :added_text, "Added"))}: {@format.(@added, :added)}
+      <% end %>
+      <%= if @separator do %>
+        {@separator}
+      <% end %>
+      <%= if @last_used do %>
+        {_gettext(override_for(@overrides, :last_used_text, "Last used"))}: {@format.(
+          @last_used,
+          :last_used
+        )}
+      <% end %>
+    </span>
+    """
+  end
+
+  @doc """
+  The default `format_timestamp` override: the date a passkey was added,
+  the date and time it was last used, with English month names in US order.
+
+  An application that translates the panel sets its own
+  `format_timestamp`, a 2-arity function taking the `DateTime` and
+  `:added` or `:last_used`, and formats for the current locale there.
+  """
+  @spec format_timestamp(Calendar.datetime(), :added | :last_used) :: String.t()
+  def format_timestamp(at, :added), do: Calendar.strftime(at, "%B %d, %Y")
+  def format_timestamp(at, :last_used), do: Calendar.strftime(at, "%B %d, %Y %H:%M")
 
   @impl Phoenix.LiveComponent
   def handle_event("edit-label", %{"id" => id} = params, socket) do
@@ -624,6 +715,15 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       backed_up: WebAuthn.backed_up_field(strategy),
       added_at: WebAuthn.created_at_field(strategy)
     }
+  end
+
+  # The credential's own label, or `nil` when it has none or was renamed to
+  # nothing, so the `default_label_text` fallback covers both.
+  defp credential_label(credential, fields) do
+    case Map.get(credential, fields.label) do
+      label when label in [nil, ""] -> nil
+      label -> label
+    end
   end
 
   # The primary key as the string the rendered buttons and forms carry.

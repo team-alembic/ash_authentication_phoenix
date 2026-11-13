@@ -131,7 +131,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
         id={@input_id}
         name="key_name"
         value={@value}
-        placeholder={override_for(@overrides, :key_name_placeholder, "My passkey")}
+        placeholder={_gettext(override_for(@overrides, :key_name_placeholder, "My passkey"))}
         class={override_for(@overrides, :input_class)}
         autocomplete="off"
         phx-debounce="300"
@@ -163,7 +163,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
         id={@input_id}
         name="display_name"
         value={@value}
-        placeholder={override_for(@overrides, :display_name_placeholder, "Jane Doe")}
+        placeholder={_gettext(override_for(@overrides, :display_name_placeholder, "Jane Doe"))}
         class={override_for(@overrides, :input_class)}
         autocomplete="name"
         phx-debounce="300"
