@@ -68,6 +68,10 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn do
       than the full form. Configure via `sign_in_route(webauthn_path: "/webauthn")` and
       mount `webauthn_route/3` at that path to get a dedicated sign-in/register page.
       When `nil` (the default) the full form renders inline as before.
+    * `context` - The request's Ash context (`Ash.PlugHelpers.get_context/1`,
+      which `sign_in_route` puts in the session). The forms hand it to every
+      strategy call they make, so a Secret resolving the relying party and
+      the register and sign-in actions see what the application put there.
     * `overrides` - A list of override modules.
     * `gettext_fn` - Optional text translation function.
 

@@ -122,7 +122,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
-      |> assign_new(:context, fn -> %{} end)
+      # The request's Ash context, handed to every strategy call below so a
+      # Secret or the sign-in action sees what the application put there.
+      |> assign(:context, socket.assigns[:context] || %{})
       |> assign_new(:auth_routes_prefix, fn -> nil end)
 
     {:ok, socket}
@@ -228,20 +230,25 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
   def handle_event("authenticate", params, socket) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
+    context = socket.assigns.context
 
     # Sign-in never lists credentials: the challenge is issued before anyone
     # is authenticated, and a submitted identity's credential ids must not
     # be disclosed. The browser offers the discoverable passkeys it holds.
     # The origin the ceremony is accepted from is the strategy's own policy,
-    # so nothing about the request is passed along.
-    {:ok, challenge} = WebAuthnStrategy.Actions.authentication_challenge(strategy, [], tenant)
+    # so of the request only its Ash context is passed along.
+    {:ok, challenge} =
+      WebAuthnStrategy.Actions.authentication_challenge(strategy, [], tenant, context: context)
 
     # `hints` names the button that submitted the form (the secondary one
     # asks for `hybrid` or `client-device`); the strategy decides whether it
     # is honoured.
     options =
       strategy
-      |> PhoenixWebAuthn.authentication_options(challenge, tenant, [], hints: params["hints"])
+      |> PhoenixWebAuthn.authentication_options(challenge, tenant, [],
+        hints: params["hints"],
+        context: context
+      )
       |> PhoenixWebAuthn.target(socket.assigns.id)
 
     socket =
@@ -285,7 +292,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.AuthenticationForm do
            strategy,
            sign_in_params,
            challenge: challenge,
-           tenant: socket.assigns.current_tenant
+           tenant: socket.assigns.current_tenant,
+           context: socket.assigns.context
          ) do
       {:ok, user} ->
         {:noreply,
