@@ -38,6 +38,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   `require_token_presence_for_authentication?`. This is because nested live views
   do not need to check *again* for this, as the `:load_from_session` plug already
   does this.
+
+  Pass `:resources`, a list of authenticated resources, to assign only those.
   """
   @spec assign_new_resources(socket :: Phoenix.Socket.t(), session :: map()) :: Phoenix.Socket.t()
   def assign_new_resources(socket, session, opts \\ []) do
@@ -58,6 +60,10 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   Options:
     * `:otp_app` - Set the otp app in which to search for authenticated resources.
+    * `:resources` - A list of authenticated resources to load and assign, in
+      place of every authenticated resource of the otp app. A resource which is
+      not listed is neither assigned nor copied into the session, and a token
+      whose subject names it does not verify.
     * `:scope` - A scope module (implementing `Ash.Scope.ToOpts`) to wrap each
       authenticated subject in. When set, a `current_<subject_name>_scope` assign
       is added to the socket alongside `current_<subject_name>`.
@@ -113,7 +119,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   ```
   """
   def opts(custom_opts \\ []) do
-    on_mount = [LiveSession]
+    resources = custom_opts[:resources]
+
+    on_mount =
+      if resources,
+        do: [{LiveSession, {:default, resources: resources}}],
+        else: [LiveSession]
 
     session =
       {__MODULE__, :generate_session,
@@ -121,12 +132,13 @@ defmodule AshAuthentication.Phoenix.LiveSession do
          custom_opts[:otp_app],
          List.wrap(custom_opts[:session]),
          custom_opts[:scope],
-         custom_opts[:default_scope]
+         custom_opts[:default_scope],
+         resources
        ]}
 
     opts =
       custom_opts
-      |> Keyword.drop([:scope, :default_scope])
+      |> Keyword.drop([:scope, :default_scope, :resources])
       |> Keyword.update(:on_mount, on_mount, &(on_mount ++ List.wrap(&1)))
       |> Keyword.put(:session, session)
 
@@ -155,9 +167,12 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   For example a session containing `{"user",
   "user?id=aa6c179c-ee75-4d49-8796-528c2981b396"}` becomes an assign called
   `current_user` with the loaded user as the value.
+
+  `{:default, resources: resources}` does the same for the listed authenticated
+  resources only, in place of every authenticated resource of the otp app.
   """
   @spec on_mount(
-          atom | {:set_otp_app, atom},
+          atom | {:set_otp_app, atom} | {:default, [{:resources, [module]}]},
           %{required(String.t()) => any},
           %{required(String.t()) => any},
           Socket.t()
@@ -169,7 +184,10 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         {:cont, assign(socket, :otp_app, otp_app)}
 
       :default ->
-        mount_default(session, socket)
+        mount_default(session, socket, nil)
+
+      {:default, opts} ->
+        mount_default(session, socket, opts[:resources])
 
       _ ->
         {:cont, socket}
@@ -177,7 +195,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   end
 
   # sobelow_skip ["DOS.StringToAtom"]
-  defp mount_default(session, socket) do
+  defp mount_default(session, socket, resources) do
     tenant = socket.assigns[:current_tenant] || session["tenant"]
 
     socket =
@@ -192,12 +210,10 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     default_scope_subject = session["default_scope"]
     opts = [tenant: tenant, context: context]
 
-    otp_app =
-      socket
-      |> otp_app_from_socket()
+    resources =
+      resources || AshAuthentication.authenticated_resources(otp_app_from_socket(socket))
 
-    otp_app
-    |> AshAuthentication.authenticated_resources()
+    resources
     |> Stream.map(
       &{&1, Info.authentication_tokens_require_token_presence_for_authentication?(&1),
        to_string(Info.authentication_subject_name!(&1))}
@@ -211,7 +227,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         with token when is_binary(token) <-
                session[session_key],
              {:ok, %{"sub" => subject, "jti" => jti} = claims, _}
-             when not is_map_key(claims, "act") <- Jwt.verify(token, otp_app, opts),
+             when not is_map_key(claims, "act") <- Jwt.verify(token, resources, opts),
              {:ok, [_]} <-
                Actions.get_token(token_resource, %{"jti" => jti, "purpose" => "user"}, opts) do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
@@ -232,16 +248,18 @@ defmodule AshAuthentication.Phoenix.LiveSession do
             {:cont, assign_new(socket, current_subject_name, fn -> nil end)}
         end
     end)
-    |> maybe_assign_scopes(otp_app, scope_module, tenant, default_scope_subject)
+    |> maybe_assign_scopes(resources, scope_module, tenant, default_scope_subject)
     |> then(&{:cont, &1})
   end
 
-  defp maybe_assign_scopes(socket, _otp_app, nil, _tenant, _default_scope_subject), do: socket
+  defp maybe_assign_scopes(socket, _resources, nil, _tenant, _default_scope_subject), do: socket
 
-  defp maybe_assign_scopes(socket, otp_app, scope_module, tenant, default_scope_subject) do
-    otp_app
-    |> AshAuthentication.authenticated_resources()
-    |> Enum.reduce(socket, &assign_scope(&2, &1, scope_module, tenant, default_scope_subject))
+  defp maybe_assign_scopes(socket, resources, scope_module, tenant, default_scope_subject) do
+    Enum.reduce(
+      resources,
+      socket,
+      &assign_scope(&2, &1, scope_module, tenant, default_scope_subject)
+    )
   end
 
   # sobelow_skip ["DOS.StringToAtom"]
@@ -263,13 +281,16 @@ defmodule AshAuthentication.Phoenix.LiveSession do
   @doc """
   Supplements the session with any `current_X` assigns which are authenticated
   resource records from the conn.
+
+  Given a list of `resources`, only the records of those resources are added.
   """
   @spec generate_session(
           Plug.Conn.t(),
           atom | [atom],
           additional_hooks :: [mfa],
           module | nil,
-          atom | nil
+          atom | nil,
+          [module] | nil
         ) ::
           %{
             required(String.t()) => String.t()
@@ -279,9 +300,14 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         otp_app \\ nil,
         additional_hooks \\ [],
         scope_module \\ nil,
-        default_scope_subject \\ nil
+        default_scope_subject \\ nil,
+        resources \\ nil
       ) do
-    otp_app = otp_app || conn.assigns[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
+    resources =
+      resources ||
+        AshAuthentication.authenticated_resources(
+          otp_app || conn.assigns[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
+        )
 
     acc =
       Enum.reduce(additional_hooks, %{}, fn {m, f, a}, acc ->
@@ -296,8 +322,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
           else: &1
       )
 
-    otp_app
-    |> AshAuthentication.authenticated_resources()
+    resources
     |> Stream.map(&{to_string(Info.authentication_subject_name!(&1)), &1})
     |> Enum.reduce(acc, fn {subject_name, resource}, session ->
       put_subject_session(session, conn, subject_name, resource)

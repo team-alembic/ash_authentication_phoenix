@@ -288,8 +288,64 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
     end
   end
 
-  defp register_and_sign_in_user(email) do
-    Example.Accounts.User
+  describe "the resources option" do
+    test "on_mount assigns only the listed resources and their scopes" do
+      user = register_and_sign_in_user("resources-user@example.com")
+      admin = register_and_sign_in_user("resources-admin@example.com", Example.Accounts.Admin)
+
+      session = %{
+        "user" => elem(session_identifier_for(user), 1),
+        "admin" => elem(session_identifier_for(admin), 1),
+        "scope" => Example.Accounts.Scope
+      }
+
+      {:cont, result_socket} =
+        LiveSession.on_mount(
+          {:default, resources: [Example.Accounts.User]},
+          %{},
+          session,
+          build_socket()
+        )
+
+      assert result_socket.assigns.current_user.id == user.id
+      assert result_socket.assigns.current_user_scope.actor.id == user.id
+      refute Map.has_key?(result_socket.assigns, :current_admin)
+      refute Map.has_key?(result_socket.assigns, :current_admin_scope)
+    end
+
+    test "opts/1 hands the resources to the hook and the session generator only" do
+      opts = LiveSession.opts(resources: [Example.Accounts.User], on_mount: [Example.Hook])
+
+      assert opts[:on_mount] == [
+               {LiveSession, {:default, resources: [Example.Accounts.User]}},
+               Example.Hook
+             ]
+
+      assert {LiveSession, :generate_session, [nil, [], nil, nil, [Example.Accounts.User]]} =
+               opts[:session]
+
+      refute Keyword.has_key?(opts, :resources)
+    end
+
+    test "generate_session/6 copies the session keys of the listed resources only" do
+      conn =
+        Plug.Test.conn(:get, "/")
+        |> Plug.Test.init_test_session(%{"user" => "user-session", "admin" => "admin-session"})
+        |> Plug.Conn.assign(:current_user, %Example.Accounts.User{})
+        |> Plug.Conn.assign(:current_admin, %Example.Accounts.Admin{})
+
+      session =
+        LiveSession.generate_session(conn, :ash_authentication_phoenix, [], nil, nil, [
+          Example.Accounts.User
+        ])
+
+      assert session["user"] == "user-session"
+      refute Map.has_key?(session, "admin")
+    end
+  end
+
+  defp register_and_sign_in_user(email, resource \\ Example.Accounts.User) do
+    resource
     |> Ash.Changeset.for_create(:register_with_password, %{
       email: email,
       password: "secure-password",
@@ -297,7 +353,7 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
     })
     |> Ash.create!()
 
-    Example.Accounts.User
+    resource
     |> Ash.Query.for_read(:sign_in_with_password, %{
       email: email,
       password: "secure-password"
