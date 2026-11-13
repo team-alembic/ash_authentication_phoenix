@@ -480,4 +480,28 @@ defmodule AshAuthentication.Phoenix.WebAuthnComponentsTest do
       refute html =~ "greater than or equal to 2"
     end
   end
+
+  describe "the input placeholders" do
+    # The mock strategy requires no identity, so the registration form asks
+    # for a display name; the default overrides show the passkey name too.
+    test "read their defaults without a translator", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test?live_action=register")
+
+      assert html =~ ~r/id="user-webauthn-register-display-name"[^>]*placeholder="Jane Doe"/
+      assert html =~ ~r/id="user-webauthn-register-key-name"[^>]*placeholder="My passkey"/
+    end
+
+    test "go through gettext_fn like the labels beside them", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/webauthn_test?live_action=register&gettext=stub")
+
+      assert html =~
+               ~r/id="user-webauthn-register-display-name"[^>]*placeholder="Never gonna give you up!"/
+
+      assert html =~
+               ~r/id="user-webauthn-register-key-name"[^>]*placeholder="Never gonna give you up!"/
+
+      refute html =~ ~s(placeholder="Jane Doe")
+      refute html =~ ~s(placeholder="My passkey")
+    end
+  end
 end

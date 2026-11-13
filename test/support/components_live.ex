@@ -33,7 +33,9 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
 
   The `:variant` path segment picks the strategy options; an
   `authenticated_at` query parameter (ISO 8601) is passed through to the
-  component as the application-known authentication time.
+  component as the application-known authentication time. `overrides=panel`
+  renders with `AshAuthentication.Phoenix.Test.WebAuthnPanelOverride` first,
+  and `gettext=stub` with the test translator.
   """
   use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
   alias AshAuthentication.Info
@@ -85,7 +87,31 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
           at
       end
 
-    {:ok, assign(socket, strategy: strategy, authenticated_at: authenticated_at)}
+    overrides =
+      case params["overrides"] do
+        "panel" ->
+          [
+            AshAuthentication.Phoenix.Test.WebAuthnPanelOverride,
+            AshAuthentication.Phoenix.Overrides.Default
+          ]
+
+        _ ->
+          [AshAuthentication.Phoenix.Overrides.Default]
+      end
+
+    gettext_fn =
+      case params["gettext"] do
+        "stub" -> {AshAuthentication.Phoenix.Test.Gettext, :translate_test}
+        _ -> nil
+      end
+
+    {:ok,
+     assign(socket,
+       strategy: strategy,
+       authenticated_at: authenticated_at,
+       overrides: overrides,
+       gettext_fn: gettext_fn
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -97,6 +123,8 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnManageLive do
       strategy={@strategy}
       current_user={@current_user}
       authenticated_at={@authenticated_at}
+      overrides={@overrides}
+      gettext_fn={@gettext_fn}
     />
     """
   end

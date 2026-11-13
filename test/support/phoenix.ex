@@ -64,9 +64,9 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   A `variant` query parameter picks strategy options the fixture resources
   don't configure, so one route covers them without a resource each. The
   component's own props come from query parameters too: `live_action`
-  (`sign_in` or `register`), `register_path`, and `overrides=quiet` for
+  (`sign_in` or `register`), `register_path`, `overrides=quiet` for
   `AshAuthentication.Phoenix.Test.WebAuthnQuietOverride` ahead of the
-  defaults.
+  defaults, and `gettext=stub` for the test translator.
   """
   use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
   alias AshAuthentication.Phoenix.Components
@@ -81,12 +81,16 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
       |> assign(:action, action(params["live_action"]))
       |> assign(:register_path, params["register_path"])
       |> assign(:overrides, overrides(params["overrides"]))
+      |> assign(:gettext_fn, gettext_fn(params["gettext"]))
 
     {:ok, socket}
   end
 
   defp action("register"), do: :register
   defp action(_), do: :sign_in
+
+  defp gettext_fn("stub"), do: {AshAuthentication.Phoenix.Test.Gettext, :translate_test}
+  defp gettext_fn(_), do: nil
 
   defp overrides("quiet"),
     do: [
@@ -134,6 +138,7 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
       live_action={@action}
       register_path={@register_path}
       overrides={@overrides}
+      gettext_fn={@gettext_fn}
     />
     """
   end

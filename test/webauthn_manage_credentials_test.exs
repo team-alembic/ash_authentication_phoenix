@@ -7,7 +7,8 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
 
   use AshAuthentication.Phoenix.Test.ConnCase, async: false
 
-  alias AshAuthentication.Info
+  alias AshAuthentication.{Info, Strategy}
+  alias AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials
   alias AshAuthentication.Phoenix.Test.WebAuthnFixtures, as: Fixtures
   alias AshAuthentication.Strategy.WebAuthn
 
@@ -254,6 +255,161 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
 
       assert_redirect(view, "/webauthn-verify")
       assert [_only_the_original] = credentials_of(strategy, user)
+    end
+  end
+
+  # Signs in with `passkey` through the strategy, which stamps the
+  # credential's last-used time.
+  defp sign_in_with!(strategy, passkey) do
+    {:ok, challenge} = WebAuthn.Actions.authentication_challenge(strategy, [], nil)
+    encoded = Base.url_encode64(strategy.adapter.challenge_bytes(challenge), padding: false)
+    event = Fixtures.assertion_event(strategy, passkey, encoded)
+    {:ok, _user} = WebAuthn.Actions.sign_in(strategy, event, challenge: challenge)
+    :ok
+  end
+
+  # The strategy stores "Security Key" for a passkey added with no name, so
+  # a label is only ever missing once it has been cleared.
+  defp clear_label!(strategy, user) do
+    [credential] = credentials_of(strategy, user)
+    {:ok, _} = WebAuthn.Actions.update_credential_label(strategy, credential.id, nil, [])
+    :ok
+  end
+
+  defp timestamps_of(strategy, user) do
+    [credential] = credentials_of(strategy, user)
+
+    {Map.get(credential, WebAuthn.created_at_field(strategy)),
+     Map.get(credential, WebAuthn.last_used_at_field(strategy))}
+  end
+
+  describe "text and dates" do
+    test "a fresh credential shows when it was added, in the default format",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+      {added, nil} = timestamps_of(strategy, user)
+
+      {:ok, _view, html} = conn |> signed_in(user) |> live("/webauthn-manage/plain")
+
+      assert html =~ "Added: #{ManageCredentials.format_timestamp(added, :added)}"
+      assert html =~ "Security Key"
+      refute html =~ "Last used"
+      refute html =~ ~r/Added: [^<]*\|/
+    end
+
+    test "a credential renamed to nothing shows the fallback label",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+
+      {:ok, view, _html} = conn |> signed_in(user) |> live("/webauthn-manage/plain")
+      view |> element("button", "Rename") |> render_click()
+      [credential] = credentials_of(strategy, user)
+
+      html =
+        view
+        |> form("#credential-#{credential.id}-form", %{"label" => ""})
+        |> render_submit()
+
+      assert html =~ ~r/<strong class="font-semibold">\s*Security Key/
+    end
+
+    test "a used credential shows both timestamps with the separator between",
+         %{conn: conn, strategy: strategy} do
+      {user, passkey} = register_user!(strategy)
+      sign_in_with!(strategy, passkey)
+      {added, last_used} = timestamps_of(strategy, user)
+
+      {:ok, _view, html} = conn |> signed_in(user) |> live("/webauthn-manage/plain")
+
+      assert html =~ "Added: #{ManageCredentials.format_timestamp(added, :added)}"
+      assert html =~ ~r/Added: .*\|\s*Last used: /s
+      assert html =~ "Last used: #{ManageCredentials.format_timestamp(last_used, :last_used)}"
+    end
+
+    test "the texts, the fallback label and the formatter are overrides",
+         %{conn: conn, strategy: strategy} do
+      {user, passkey} = register_user!(strategy)
+      sign_in_with!(strategy, passkey)
+      clear_label!(strategy, user)
+      {added, last_used} = timestamps_of(strategy, user)
+
+      {:ok, _view, html} =
+        conn |> signed_in(user) |> live("/webauthn-manage/plain?overrides=panel")
+
+      assert html =~ "Registrerad: added@#{DateTime.to_iso8601(added)}"
+      assert html =~ "Senast använd: last_used@#{DateTime.to_iso8601(last_used)}"
+      assert html =~ ~r/Registrerad: .*·\s*Senast använd: /s
+      assert html =~ ~r/<strong class="panel-label">\s*Nyckel/
+      refute html =~ ~r/<strong[^>]*>\s*Security Key/
+      refute html =~ "Added:"
+    end
+
+    test "the fallback label is translated through gettext_fn",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+      clear_label!(strategy, user)
+
+      {:ok, _view, html} = conn |> signed_in(user) |> live("/webauthn-manage/plain?gettext=stub")
+
+      assert html =~ ~r/<strong class="font-semibold">\s*Never gonna give you up!/
+      refute html =~ "Security Key"
+    end
+  end
+
+  describe "styling" do
+    test "every part of a row, the rename form and the error carry their class",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+
+      {:ok, view, html} =
+        conn |> signed_in(user) |> live("/webauthn-manage/plain?overrides=panel")
+
+      assert html =~ ~s(<div class="panel-details">)
+      assert html =~ ~s(<strong class="panel-label">)
+      assert html =~ ~s(<div class="panel-actions">)
+
+      html = view |> element("button", "Rename") |> render_click()
+      assert html =~ ~s(class="panel-rename-form")
+      assert html =~ ~s(<button type="submit" class="panel-save">)
+      assert html =~ ~s(class="panel-cancel")
+
+      view |> element("button", "Cancel") |> render_click()
+      html = view |> element("button", "Delete") |> render_click()
+      assert html =~ ~s(<div role="alert" class="panel-error">)
+      assert html =~ "Cannot delete your last security key"
+    end
+
+    test "the empty state carries its class", %{conn: conn} do
+      # A user with a password and no passkey yet.
+      password = Info.strategy!(Example.Accounts.User, :password)
+      email = "no-passkey-#{System.unique_integer([:positive])}@example.com"
+
+      {:ok, user} =
+        Strategy.action(
+          password,
+          :register,
+          %{
+            "email" => email,
+            "password" => "so-secure!",
+            "password_confirmation" => "so-secure!"
+          },
+          []
+        )
+
+      {:ok, _view, html} =
+        conn |> signed_in(user) |> live("/webauthn-manage/plain?overrides=panel")
+
+      assert html =~ ~s(<p class="panel-empty">)
+      assert html =~ "No security keys registered."
+    end
+
+    test "the defaults style the error as before, with a role", %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+
+      {:ok, view, _html} = conn |> signed_in(user) |> live("/webauthn-manage/plain")
+      html = view |> element("button", "Delete") |> render_click()
+
+      assert html =~ ~s(<div role="alert" class="text-red-600 text-sm mb-4">)
     end
   end
 end
