@@ -10,6 +10,9 @@ defmodule Example.Accounts.AnonUser do
     extensions: [AshAuthentication],
     domain: Example.Accounts
 
+  alias Ash.Error.Changes.InvalidChanges
+  alias Ash.Error.Query.InvalidArgument
+
   actions do
     defaults([:read, :create, :update])
   end
@@ -18,6 +21,39 @@ defmodule Example.Accounts.AnonUser do
     uuid_primary_key :id
     create_timestamp :created_at
     update_timestamp :updated_at
+  end
+
+  # A request context saying `should_fail` refuses the register and sign-in
+  # actions, as `Example.Accounts.User` refuses a password sign-in. That is
+  # how the suite sees the request's context reach the strategy's actions,
+  # which is what an invitation-only application relies on.
+  changes do
+    change(
+      fn changeset, _ ->
+        if changeset.action.name == :register_with_webauthn && changeset.context[:should_fail] do
+          Ash.Changeset.add_error(
+            changeset,
+            InvalidChanges.exception(message: "I cant let you do that dave.")
+          )
+        else
+          changeset
+        end
+      end,
+      on: [:create]
+    )
+  end
+
+  preparations do
+    prepare fn query, _ ->
+      if query.action.name == :sign_in_with_webauthn && query.context[:should_fail] do
+        Ash.Query.add_error(
+          query,
+          InvalidArgument.exception(field: :raw_id, message: "I cant let you do that dave.")
+        )
+      else
+        query
+      end
+    end
   end
 
   authentication do

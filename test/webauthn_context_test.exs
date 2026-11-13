@@ -14,6 +14,7 @@ defmodule AshAuthentication.Phoenix.WebAuthnContextTest do
   """
 
   use AshAuthentication.Phoenix.Test.ConnCase, async: false
+  import ExUnit.CaptureLog
 
   alias AshAuthentication.Info
   alias AshAuthentication.Phoenix.Test.WebAuthnFixtures, as: Fixtures
@@ -114,6 +115,66 @@ defmodule AshAuthentication.Phoenix.WebAuthnContextTest do
 
       assert html =~ ~r/name="token" value="ey/
       refute html =~ "Registration failed"
+    end
+  end
+
+  # The strategy's actions see the context too: the test resource refuses
+  # to register or sign in when the request context says `should_fail`.
+  describe "the actions" do
+    test "the register action sees the request's context", %{conn: conn, strategy: strategy} do
+      with_request_context(%{should_fail: true})
+
+      {:ok, view, _html} = conn |> get("/register") |> live()
+
+      view
+      |> form("#anon-user-webauthn-register-form", %{"display_name" => "Jane Doe"})
+      |> render_submit()
+
+      assert_push_event(view, "registration-challenge", %{challenge: challenge})
+      {event, _passkey} = Fixtures.attestation_event(strategy, challenge)
+
+      # The form logs every refused registration; this one is expected.
+      log =
+        capture_log(fn ->
+          html =
+            view
+            |> element("#anon-user-webauthn-register")
+            |> render_hook("registration-attestation", event)
+
+          send(self(), {:html, html})
+        end)
+
+      assert_received {:html, html}
+      assert log =~ "I cant let you do that dave"
+      assert html =~ "Registration failed"
+      refute html =~ ~r/name="token" value="ey/
+    end
+
+    test "the sign-in action sees the request's context", %{conn: conn, strategy: strategy} do
+      {_user, passkey} = register_user!(strategy)
+      with_request_context(%{should_fail: true})
+
+      {:ok, view, _html} = conn |> get("/sign-in") |> live()
+      view |> form("#anon-user-webauthn-sign-in-form") |> render_submit()
+      assert_push_event(view, "authentication-challenge", %{challenge: challenge})
+
+      log =
+        capture_log(fn ->
+          html =
+            view
+            |> element("#anon-user-webauthn-sign-in")
+            |> render_hook(
+              "authentication-assertion",
+              Fixtures.assertion_event(strategy, passkey, challenge)
+            )
+
+          send(self(), {:html, html})
+        end)
+
+      assert_received {:html, html}
+      assert log =~ "I cant let you do that dave"
+      assert html =~ "Authentication failed"
+      refute html =~ ~r/name="token" value="ey/
     end
   end
 
