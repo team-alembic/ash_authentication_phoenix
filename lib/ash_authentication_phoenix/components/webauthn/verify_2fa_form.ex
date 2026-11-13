@@ -108,7 +108,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
-      |> assign_new(:context, fn -> %{} end)
+      # The request's Ash context, handed to every strategy call below.
+      |> assign(:context, socket.assigns[:context] || %{})
       |> assign_new(:auth_routes_prefix, fn -> nil end)
       |> assign_new(:token, fn -> nil end)
       |> assign_new(:mode, fn -> :error end)
@@ -256,6 +257,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     strategy = socket.assigns.strategy
     actor = resolve_actor(socket)
     tenant = socket.assigns.current_tenant
+    context = socket.assigns.context
 
     if actor do
       credentials = load_credentials(strategy, actor, tenant)
@@ -273,7 +275,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
         end)
 
       {:ok, challenge} =
-        WebAuthn.Actions.authentication_challenge(strategy, allow_credentials, tenant)
+        WebAuthn.Actions.authentication_challenge(strategy, allow_credentials, tenant,
+          context: context
+        )
 
       # `hints` names the button that submitted the form (the secondary one
       # asks for `hybrid` or `client-device`); the strategy decides whether
@@ -281,7 +285,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
       options =
         strategy
         |> PhoenixWebAuthnLib.authentication_options(challenge, tenant, credentials,
-          hints: params["hints"]
+          hints: params["hints"],
+          context: context
         )
         |> PhoenixWebAuthnLib.target(socket.assigns.id)
 
@@ -370,7 +375,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Verify2faForm do
     case WebAuthn.Actions.verify(strategy, verify_params,
            actor: actor,
            challenge: challenge,
-           tenant: socket.assigns.current_tenant
+           tenant: socket.assigns.current_tenant,
+           context: socket.assigns.context
          ) do
       {:ok, user} ->
         {:noreply,

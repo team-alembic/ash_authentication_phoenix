@@ -129,7 +129,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
       |> assign_new(:overrides, fn -> [AshAuthentication.Phoenix.Overrides.Default] end)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
-      |> assign_new(:context, fn -> %{} end)
+      # The request's Ash context, handed to every strategy call below so a
+      # Secret or the register action sees what the application put there.
+      |> assign(:context, socket.assigns[:context] || %{})
       |> assign_new(:auth_routes_prefix, fn -> nil end)
       |> assign_new(:custom_fields, fn ->
         AshAuthentication.Strategy.CustomFields.register_fields(strategy)
@@ -146,7 +148,6 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
 
     context =
       assigns.context
-      |> Kernel.||(%{})
       |> Map.put(:token_type, :sign_in)
       |> Map.put(:strategy, strategy)
       |> Map.update(
@@ -412,7 +413,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
            register_params,
            challenge: challenge,
            tenant: socket.assigns.current_tenant,
-           user_handle: socket.assigns[:user_handle]
+           user_handle: socket.assigns[:user_handle],
+           context: socket.assigns.context
          ) do
       {:ok, user} ->
         {:noreply,
@@ -450,11 +452,14 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
   defp start_registration_ceremony(socket, requested_hints) do
     strategy = socket.assigns.strategy
     tenant = socket.assigns.current_tenant
+    context = socket.assigns.context
 
     # The origin the ceremony is accepted from is the strategy's own policy
     # (its `origin` allowlist, or any `https` origin on its `rp_id`), so the
-    # request's host is not consulted.
-    {:ok, challenge} = WebAuthnStrategy.Actions.registration_challenge(strategy, tenant)
+    # request's host is not consulted; its Ash context is what a Secret
+    # resolving those gets to see.
+    {:ok, challenge} =
+      WebAuthnStrategy.Actions.registration_challenge(strategy, tenant, context: context)
 
     # The server mints the user handle (persisted on the credential after
     # the ceremony); the client must use it verbatim. In passkey-first mode
@@ -472,7 +477,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.RegistrationForm do
     options =
       strategy
       |> PhoenixWebAuthn.registration_options(challenge, tenant, user_descriptor, [],
-        hints: requested_hints
+        hints: requested_hints,
+        context: context
       )
       |> PhoenixWebAuthn.target(socket.assigns.id)
 

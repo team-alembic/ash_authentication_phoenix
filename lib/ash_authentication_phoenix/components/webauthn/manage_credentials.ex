@@ -91,6 +91,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       metadata does. Optional.
     * `continue_path` - When set, a "Continue" link to this path is shown
       once at least one credential is registered. Optional.
+    * `context` - The request's Ash context (`Ash.PlugHelpers.get_context/1`),
+      handed to every strategy call this component makes. Optional.
     * `overrides` - A list of override modules.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
@@ -131,6 +133,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       |> assign_new(:current_tenant, fn -> nil end)
       |> assign_new(:continue_path, fn -> nil end)
       |> assign_new(:authenticated_at, fn -> nil end)
+      |> assign(:context, socket.assigns[:context] || %{})
 
     # `send_update/2` may carry only a subset of assigns, so the user is
     # looked for on the merged socket, not on this update alone.
@@ -302,7 +305,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
                strategy,
                primary_key_value(credential, socket.assigns.fields),
                label,
-               tenant: socket.assigns.current_tenant
+               tenant: socket.assigns.current_tenant,
+               context: socket.assigns.context
              ) do
           {:ok, _} ->
             socket =
@@ -331,7 +335,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
                strategy,
                user,
                primary_key_value(credential, socket.assigns.fields),
-               tenant: socket.assigns.current_tenant
+               tenant: socket.assigns.current_tenant,
+               context: socket.assigns.context
              ) do
           :ok ->
             socket = socket |> assign(error_message: nil) |> load_credentials()
@@ -411,7 +416,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
         challenge: challenge,
         user: user,
         tenant: tenant,
-        user_handle: socket.assigns[:add_user_handle]
+        user_handle: socket.assigns[:add_user_handle],
+        context: socket.assigns.context
       ] ++ authentication_opts(socket)
 
     case WebAuthn.Actions.add_credential(strategy, add_params, opts) do
@@ -462,10 +468,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     user = socket.assigns.current_user
     credentials = socket.assigns.credentials
     key_name = Map.get(params, "key_name", socket.assigns.key_name_value)
+    context = socket.assigns.context
 
     # The origin the ceremony is accepted from is the strategy's own policy,
-    # never the request's host (see `AshAuthentication.Strategy.WebAuthn.Origin`).
-    {:ok, challenge} = WebAuthn.Actions.registration_challenge(strategy, tenant)
+    # never the request's host (see `AshAuthentication.Strategy.WebAuthn.Origin`);
+    # the request's Ash context is what a Secret resolving it gets to see.
+    {:ok, challenge} = WebAuthn.Actions.registration_challenge(strategy, tenant, context: context)
 
     # For an existing user the handle must be stable so all of their
     # passkeys share it — reuse the one stored with an existing credential
@@ -489,7 +497,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
         tenant,
         user_descriptor,
         exclude_ids,
-        hints: params["hints"]
+        hints: params["hints"],
+        context: context
       )
       |> PhoenixWebAuthn.target("#{socket.assigns.id}-add-key")
 
@@ -598,7 +607,8 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     user = socket.assigns.current_user
 
     case WebAuthn.Actions.list_credentials(strategy, user,
-           tenant: socket.assigns[:current_tenant]
+           tenant: socket.assigns[:current_tenant],
+           context: socket.assigns.context
          ) do
       {:ok, credentials} -> credentials
       {:error, _} -> []

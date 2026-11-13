@@ -277,6 +277,10 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
 
     * `:hints` — hints the client requested for this one ceremony, resolved
       against the strategy with `resolve_hints/2`.
+    * `:context` — the Ash context the request carries, which an
+      `AshAuthentication.Secret` resolving `rp_id` or `rp_name` receives
+      (with the tenant added), as it does from the strategy's own
+      challenge calls. `nil` counts as none.
   """
   @spec registration_options(struct, term, any, map, [binary], keyword) :: map
   def registration_options(
@@ -287,11 +291,13 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
         exclude_credential_ids,
         opts \\ []
       ) do
+    context = context(opts)
+
     %{
       challenge: Base.url_encode64(strategy.adapter.challenge_bytes(challenge), padding: false),
       rp: %{
-        id: Helpers.resolve_rp_id(strategy, tenant),
-        name: Helpers.resolve_rp_name(strategy, tenant)
+        id: Helpers.resolve_rp_id(strategy, tenant, context),
+        name: Helpers.resolve_rp_name(strategy, tenant, context)
       },
       user: user_descriptor,
       # The algorithms the strategy's adapter can verify, in its order of
@@ -324,7 +330,7 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
   def authentication_options(strategy, challenge, tenant, credentials, opts \\ []) do
     %{
       challenge: Base.url_encode64(strategy.adapter.challenge_bytes(challenge), padding: false),
-      rpId: Helpers.resolve_rp_id(strategy, tenant),
+      rpId: Helpers.resolve_rp_id(strategy, tenant, context(opts)),
       userVerification: strategy.user_verification,
       timeout: strategy.timeout,
       allowCredentials: allow_credentials_entries(strategy, credentials)
@@ -368,6 +374,10 @@ defmodule AshAuthentication.Phoenix.WebAuthn do
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
+
+  # The Secret helpers want a map; a component whose host passed no context
+  # has `nil` or `%{}`, which both mean the same thing here.
+  defp context(opts), do: Keyword.get(opts, :context) || %{}
 
   # Which kinds of authenticator the browser should offer, in order of
   # preference: the client's request for this ceremony when the strategy

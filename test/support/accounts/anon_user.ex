@@ -27,9 +27,11 @@ defmodule Example.Accounts.AnonUser do
       webauthn :webauthn do
         credential_resource Example.Accounts.AnonCredential
         require_identity? false
-        # No `origin`: any `http://localhost[:port]` is accepted under this
-        # `rp_id`, so neither the dev server nor the tests need one.
-        rp_id "localhost"
+        # Resolves to "localhost" through a Secret, which lets the tests see
+        # the context each ceremony hands the strategy. No `origin`: any
+        # `http://localhost[:port]` is accepted under this `rp_id`, so neither
+        # the dev server nor the tests need one.
+        rp_id Example.Accounts.WebAuthnRelyingParty
         rp_name "AshAuthenticationPhoenix Dev (passkey-only)"
         # A machine with no authenticator of its own can still enrol and use a
         # passkey held on a phone, which is the point of passkey-only mode.

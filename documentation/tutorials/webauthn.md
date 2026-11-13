@@ -255,6 +255,15 @@ What is Phoenix's to get right:
   to the public host, or list the public origins in `check_origin`.
   Otherwise the page loads but the LiveView never connects, and no
   ceremony starts.
+- **The request's Ash context does travel.** What a plug puts on the
+  connection with `Ash.PlugHelpers.set_context/2` is carried into the
+  sign-in and registration pages by `sign_in_route` and handed by the forms
+  to every strategy call they make: a `Secret` resolving `rp_id`, `rp_name`
+  or `origin` receives it (with the tenant under `:tenant`), and so do the
+  register, sign-in and verify actions, the same way the Password forms
+  pass it. An invitation-only application can read the invitation from
+  `changeset.context` in a `change` on `register_with_webauthn`, exactly as
+  it would for a password registration.
 
 **`rp_id` must be a hostname** — no scheme, no port. WebAuthn rejects
 `"localhost:4000"` or `"https://example.com"` with a `SecurityError`
