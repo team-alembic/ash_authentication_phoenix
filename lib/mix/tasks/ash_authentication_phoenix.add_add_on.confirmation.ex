@@ -55,7 +55,25 @@ if Code.ensure_loaded?(Igniter) do
       options = parse_options(igniter)
       sender = Module.concat(options[:user], Senders.SendNewUserConfirmationEmail)
 
-      upgrade_sender(igniter, sender, options)
+      igniter
+      |> upgrade_sender(sender, options)
+      |> add_routes(options)
+    end
+
+    # `confirm_route`, named after the add-on on the resource.
+    defp add_routes(igniter, options) do
+      {igniter, router, web_module} =
+        AshAuthentication.Phoenix.Igniter.select_router_and_web_module(
+          igniter,
+          "Which Phoenix router defines the authentication routes?"
+        )
+
+      AshAuthentication.Phoenix.Igniter.ensure_strategy_routes(
+        igniter,
+        options[:user],
+        router,
+        web_module
+      )
     end
 
     defp parse_options(igniter) do

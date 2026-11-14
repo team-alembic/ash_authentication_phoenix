@@ -73,19 +73,46 @@ defmodule MyApp.Accounts.User do
         credential_resource MyApp.Accounts.WebAuthnCredential
         rp_id MyApp.Secrets
         rp_name MyApp.Secrets
+        # Optional allowlist; unset, any origin on the rp_id is accepted.
         origin MyApp.Secrets
         identity_field :email
 
-        # 2FA mode: the strategy doesn't register or sign users in directly,
-        # it only verifies an assertion against an already-authenticated user.
+        # 2FA mode: the strategy neither registers nor signs users in, it
+        # only verifies an assertion for an already-authenticated user.
+        # Both flags matter — see below.
         registration_enabled? false
         sign_in_enabled?      false
         verify_enabled?       true
+
+        # Enrolling a passkey is a lasting way in. Require a recent sign-in
+        # or verification first (see "Setup page").
+        add_credential_max_authentication_age {5, :minutes}
       end
     end
   end
 end
 ```
+
+> ### Both flags matter {: .warning}
+>
+> `sign_in_enabled? false` on its own is not a second-factor
+> configuration. Registration is a sign-in in its own right: a successful
+> `register` creates a user *and* returns a session token, so leaving
+> `registration_enabled?` at its default would let anyone create a
+> passwordless account through the public registration endpoints and be
+> signed in without the primary factor. With both off the strategy exposes
+> `verify` and `add_credential`, which require an authenticated actor, plus
+> the `sign_in_with_token` exchange that turns a verified token into a
+> session (`AshAuthentication.Strategy.WebAuthn.sign_in_with_token_enabled?/1`
+> reports it). `mix ash_authentication.add_strategy.webauthn --mode 2fa`
+> generates exactly this.
+>
+> Because the second-factor verify challenge lists the authenticated user's
+> own credentials, both discoverable and non-discoverable credentials work
+> here, and `resident_key :preferred` is a reasonable choice to spare the
+> limited storage on hardware keys. That is only true for a strategy with
+> `sign_in_enabled? false`; see the
+> [primary-mode guide](webauthn.md#sign-in-uses-discoverable-credentials).
 
 ## Installation
 
@@ -175,6 +202,15 @@ Options for both macros (matching the TOTP versions):
 - `live_view` — supply a custom LiveView module.
 - `auth_routes_prefix` — **required**, makes the form post URLs work.
 - `overrides` — list of override modules for UI customisation.
+
+Both pages follow the strategy's `hints`, so a second factor can live on
+the user's phone: with `:hybrid` first the browser opens straight on the
+QR code. With `allow_hint_override? true` the verify page and the
+add-a-passkey form also show one secondary button for the other kind of
+authenticator — "Use a phone or tablet", or "Use a passkey on this device"
+when `:hybrid` already leads. See "Cross-device sign-in" in the
+[WebAuthn guide](webauthn.md) for the options and the `--cross-device`
+installer flag.
 
 ## How verification is recorded — the `webauthn_verified_at` claim
 
@@ -405,6 +441,26 @@ end
 Pass `continue_path={"/some/path"}` to the live component to surface the
 "Continue" affordance in your own setup screens too.
 
+### Verify, then enrol
+
+Set `add_credential_max_authentication_age` on the strategy; the example
+above uses `{5, :minutes}`. `ManageCredentials` then checks, *before*
+starting the browser ceremony, that the user signed in or completed a
+second-factor verification within that window, and the strategy checks
+again when the credential is stored. Straight after the primary sign-in
+that is always true, so the setup flow above is unaffected. A user who
+comes back to the setup page from an older session is sent to
+`/webauthn-verify` first when they already hold a passkey (verify, then
+enrol), or to `/sign-in` when they hold none; the destination is the
+component's `reauthentication_path` override.
+
+What counts as authenticating is the actor's metadata — the sign-in
+token's issue time, `webauthn_verified_at`, `totp_verified_at` — which
+`AshAuthentication.Phoenix.LiveSession` restores from the session. An
+application with its own re-authentication step can pass
+`authenticated_at` to the component instead. Without the option, any
+authenticated session, however old, can enrol a passkey of its own.
+
 ## Step-up authentication
 
 The same verify page handles "I'm signed in but I need to re-prove this is
@@ -433,10 +489,16 @@ defmodule MyAppWeb.AdminLive do
 end
 ```
 
-`RequireWebAuthn` writes the original destination into `:return_to` for
-you when it does the redirect; for hand-rolled redirects like the example
-above you'll need to thread that yourself if you want to land back on the
-original page. (We're tracking a nicer step-up affordance —
+Neither `RequireWebAuthn` (the plug or the `on_mount` hook) nor the verify
+page records where the user came from: the plug and hook only redirect,
+and after the token exchange the user lands wherever your controller's
+`success/4` sends them. The generated controller reads `:return_to` from
+the session, so a redirect that should come back to its origin has to
+write that key first, as the generated primary sign-in clause does. A
+LiveView cannot write the session, so the example above would have to
+route through a controller action (or carry the destination some other
+way) to land back where it started. (We're tracking a nicer step-up
+affordance —
 `AshAuthentication.Phoenix.WebAuthnHelpers.step_up/2` — alongside the
 multi-factor chooser in
 [#740](https://github.com/team-alembic/ash_authentication_phoenix/issues/740).)
@@ -506,17 +568,22 @@ touch their passkey again, even within an otherwise-valid session.
 
 ### Replay
 
-The verify endpoint validates a Wax challenge that was issued by the same
-server within the last 60 seconds (configurable via
-`AshAuthentication.Strategy.WebAuthn`'s `:timeout` option). Replaying an old
-assertion against a stale challenge is rejected.
+An assertion only verifies against the challenge the server issued for
+it. The challenge is an opaque term of the strategy's ceremony adapter,
+held server-side (in the LiveView's state here; in the session for the
+Plug endpoints) and good for one answer within the strategy's `timeout`
+(60 seconds by default). Replaying an old assertion, or one made for
+another challenge, is rejected.
 
 ### Credential-to-user binding
 
-The verify action filters credential lookups by `user_id == actor.id`, so a
-ceremony presented with a credential belonging to a *different* user is
-rejected even if the signature would otherwise verify. This is enforced
-server-side and isn't user-configurable.
+The verify action only considers credentials that belong to the actor,
+through the credential resource's `belongs_to` to the user, so a ceremony
+presented with a credential belonging to a *different* user is rejected
+even if the signature would otherwise verify. The assertion's
+`userHandle`, when the authenticator returns one, must also match the
+handle stored on the credential. Both checks are server-side and aren't
+user-configurable.
 
 ## Next steps
 

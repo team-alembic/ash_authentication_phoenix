@@ -4,8 +4,13 @@
 
 defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   use AshAuthentication.Phoenix.Overrides.Overridable,
-    identity_input_label: "Label for the identity (email) input field.",
+    identity_input_label:
+      "Label for the identity input. Defaults to the humanized field name (e.g. `:email` → \"Email\").",
     identity_input_placeholder: "Placeholder for the identity input field.",
+    key_name_label: "Label for the optional passkey name field.",
+    key_name_placeholder: "Placeholder for the passkey name field.",
+    display_name_label: "Label for the display name field (passkey-first mode).",
+    display_name_placeholder: "Placeholder for the display name field.",
     field_class: "CSS class for the field wrapper `div`.",
     label_class: "CSS class for `label` elements.",
     input_class: "CSS class for `input` elements.",
@@ -19,7 +24,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
     sign_in_button_text: "Text for the sign in button.",
     sign_in_button_icon:
       "SVG icon for the sign in button (or nil to hide). Must be trusted static SVG — rendered with Phoenix.HTML.raw().",
-    disable_button_text: "Text shown on the button while submitting."
+    disable_button_text: "Text shown on the button while submitting.",
+    cross_device_button_text:
+      "Text for the secondary button that asks for a passkey on a phone or tablet (`hints=hybrid`). Shown when the strategy allows the hint override and does not lead with `:hybrid` itself.",
+    this_device_button_text:
+      "Text for the secondary button that asks for a passkey on this device (`hints=client-device`). Shown when the strategy allows the hint override and leads with `:hybrid`.",
+    cross_device_button_class: "CSS class for the secondary button, whichever of the two it is."
 
   @moduledoc """
   Function components for WebAuthn form inputs.
@@ -31,23 +41,132 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
   """
 
   use AshAuthentication.Phoenix.Web, :component
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
+  alias AshPhoenix.Form
   alias Phoenix.LiveView.Rendered
+  import Phoenix.HTML.Form, only: [input_value: 2]
 
-  @doc "Renders the identity (email/username) input field."
+  @doc """
+  Renders the identity (email/username) input field.
+
+  When a `form` prop (an `AshPhoenix.Form`) is given, the input is bound to
+  the form's identity field and validation errors for it are rendered below
+  the input. Otherwise a bare input named after the identity field is
+  rendered (with an optional `value` prop).
+  """
   @spec identity_field(map) :: Rendered.t()
   def identity_field(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:form, fn -> nil end)
+      |> assign_new(:value, fn ->
+        if assigns[:form], do: input_value(assigns.form, assigns.identity_field), else: ""
+      end)
+
+    assigns =
+      assigns
+      |> assign(:input_id, assigns[:id] || Phoenix.Naming.humanize(assigns.identity_field))
+      |> assign(:input_name, input_name_for(assigns.form, assigns.identity_field))
+      |> assign(:errors, field_errors(assigns.form, assigns.identity_field))
+
+    assigns =
+      assign(assigns, :input_class, input_class_for(assigns.overrides, assigns.errors))
+
     ~H"""
     <div class={override_for(@overrides, :field_class)}>
-      <label class={override_for(@overrides, :label_class)}>
-        {_gettext(override_for(@overrides, :identity_input_label, "Email"))}
+      <label for={@input_id} class={override_for(@overrides, :label_class)}>
+        {override_for(@overrides, :identity_input_label) ||
+          Phoenix.Naming.humanize(@identity_field)}
       </label>
       <input
         type="text"
-        name={to_string(@identity_field)}
+        id={@input_id}
+        name={@input_name}
         value={@value}
-        placeholder={override_for(@overrides, :identity_input_placeholder, "you@example.com")}
-        class={override_for(@overrides, :input_class)}
+        placeholder={override_for(@overrides, :identity_input_placeholder)}
+        class={@input_class}
         autocomplete="username webauthn"
+        phx-debounce="300"
+      />
+      <%= if Enum.any?(@errors) do %>
+        <ul class={override_for(@overrides, :error_ul)}>
+          <li :for={error <- @errors} class={override_for(@overrides, :error_li)}>
+            {_gettext(error)}
+          </li>
+        </ul>
+      <% end %>
+    </div>
+    """
+  end
+
+  defp input_name_for(nil, field), do: to_string(field)
+  defp input_name_for(form, field), do: Phoenix.HTML.Form.input_name(form, field)
+
+  defp field_errors(nil, _field), do: []
+
+  defp field_errors(form, field) do
+    form
+    |> Form.errors()
+    |> Keyword.get_values(field)
+  end
+
+  defp input_class_for(overrides, []), do: override_for(overrides, :input_class)
+
+  defp input_class_for(overrides, _errors) do
+    override_for(overrides, :input_class_with_error) || override_for(overrides, :input_class)
+  end
+
+  @doc "Renders the optional passkey name input."
+  @spec key_name_field(map) :: Rendered.t()
+  def key_name_field(assigns) do
+    assigns = assign(assigns, :input_id, assigns[:id] || "key_name")
+
+    ~H"""
+    <div class={override_for(@overrides, :field_class)}>
+      <label for={@input_id} class={override_for(@overrides, :label_class)}>
+        {_gettext(override_for(@overrides, :key_name_label, "Passkey name"))}
+      </label>
+      <input
+        type="text"
+        id={@input_id}
+        name="key_name"
+        value={@value}
+        placeholder={_gettext(override_for(@overrides, :key_name_placeholder, "My passkey"))}
+        class={override_for(@overrides, :input_class)}
+        autocomplete="off"
+        phx-debounce="300"
+      />
+    </div>
+    """
+  end
+
+  @doc """
+  Renders the display name input (passkey-first mode).
+
+  With no identity field on the registration form, this value is the only
+  way to label the account inside the passkey — it becomes the
+  `user.displayName` shown in the OS passkey picker. Distinct from the
+  passkey name (`key_name_field/1`), which names the credential/device
+  server-side.
+  """
+  @spec display_name_field(map) :: Rendered.t()
+  def display_name_field(assigns) do
+    assigns = assign(assigns, :input_id, assigns[:id] || "display_name")
+
+    ~H"""
+    <div class={override_for(@overrides, :field_class)}>
+      <label for={@input_id} class={override_for(@overrides, :label_class)}>
+        {_gettext(override_for(@overrides, :display_name_label, "Your name"))}
+      </label>
+      <input
+        type="text"
+        id={@input_id}
+        name="display_name"
+        value={@value}
+        placeholder={_gettext(override_for(@overrides, :display_name_placeholder, "Jane Doe"))}
+        class={override_for(@overrides, :input_class)}
+        autocomplete="name"
+        phx-debounce="300"
       />
     </div>
     """
@@ -80,6 +199,39 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.Input do
     </button>
     """
   end
+
+  @doc """
+  Renders the secondary ceremony button: "Use a phone or tablet" for
+  `hint={:hybrid}`, "Use a passkey on this device" for `hint={:client_device}`.
+
+  A second submit button for the enclosing ceremony form. It submits with
+  `hints=<hint>`, which the form passes on when it requests the challenge,
+  so a browser that honours `hints` opens where the button says instead of
+  where the strategy's own hints lead. The forms render it for the one hint
+  `AshAuthentication.Phoenix.WebAuthn.secondary_hint/1` picks, never two.
+  """
+  @spec hint_button(map) :: Rendered.t()
+  def hint_button(assigns) do
+    assigns = assign(assigns, :text, hint_button_text(assigns.overrides, assigns.hint))
+
+    ~H"""
+    <button
+      type="submit"
+      name="hints"
+      value={PhoenixWebAuthn.hint_param(@hint)}
+      disabled={@disabled}
+      class={override_for(@overrides, :cross_device_button_class)}
+    >
+      {_gettext(@text)}
+    </button>
+    """
+  end
+
+  defp hint_button_text(overrides, :hybrid),
+    do: override_for(overrides, :cross_device_button_text, "Use a phone or tablet")
+
+  defp hint_button_text(overrides, :client_device),
+    do: override_for(overrides, :this_device_button_text, "Use a passkey on this device")
 
   @doc "Renders an error message."
   @spec error(map) :: Rendered.t()

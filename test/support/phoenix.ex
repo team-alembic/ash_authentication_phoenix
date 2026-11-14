@@ -58,6 +58,99 @@ defmodule AshAuthentication.Phoenix.Test.HomeLive do
 end
 
 defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
+  @moduledoc """
+  Renders the top-level WebAuthn component against a mock strategy.
+
+  A `variant` query parameter picks strategy options the fixture resources
+  don't configure, so one route covers them without a resource each. The
+  component's own props come from query parameters too: `live_action`
+  (`sign_in` or `register`), `register_path`, `overrides=quiet` for
+  `AshAuthentication.Phoenix.Test.WebAuthnQuietOverride` ahead of the
+  defaults, and `gettext=stub` for the test translator.
+  """
+  use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
+  alias AshAuthentication.Phoenix.Components
+  alias AshAuthentication.Phoenix.Test.WebAuthnHelpers
+
+  @impl true
+  def mount(params, session, socket) do
+    socket =
+      socket
+      |> assign(:auth_routes_prefix, session["auth_routes_prefix"] || "/auth")
+      |> assign(:strategy, WebAuthnHelpers.mock_webauthn_strategy(variant(params["variant"])))
+      |> assign(:action, action(params["live_action"]))
+      |> assign(:register_path, params["register_path"])
+      |> assign(:overrides, overrides(params["overrides"]))
+      |> assign(:gettext_fn, gettext_fn(params["gettext"]))
+
+    {:ok, socket}
+  end
+
+  defp action("register"), do: :register
+  defp action(_), do: :sign_in
+
+  defp gettext_fn("stub"), do: {AshAuthentication.Phoenix.Test.Gettext, :translate_test}
+  defp gettext_fn(_), do: nil
+
+  defp overrides("quiet"),
+    do: [
+      AshAuthentication.Phoenix.Test.WebAuthnQuietOverride,
+      AshAuthentication.Phoenix.Overrides.Default
+    ]
+
+  defp overrides(_), do: [AshAuthentication.Phoenix.Overrides.Default]
+
+  # The strategy offers cross-device passkeys itself; the client can't
+  # change the hints.
+  defp variant("hybrid"), do: %{hints: [:hybrid, :security_key], timeout: 300_000}
+  # No hints configured, but the client may ask for some.
+  defp variant("override"), do: %{allow_hint_override?: true}
+  # The phone is offered, but the browser leads with a security key.
+  defp variant("security-key-first"),
+    do: %{hints: [:security_key, :hybrid], timeout: 300_000, allow_hint_override?: true}
+
+  # Built-in authenticators only: no phone can answer, whatever the client
+  # asks for. (The strategy refuses this alongside `:hybrid` at compile
+  # time; the mock bypasses that.)
+  defp variant("platform"),
+    do: %{hints: [:hybrid], authenticator_attachment: :platform, allow_hint_override?: true}
+
+  # A ceremony that times out within a test.
+  defp variant("quick"), do: %{timeout: 100}
+  # Sign-in off, verification on: the token exchange stays, so registration
+  # can still complete.
+  defp variant("no-sign-in"), do: %{sign_in_enabled?: false}
+  # Neither sign-in nor verification: no token exchange at all.
+  defp variant("no-exchange"), do: %{sign_in_enabled?: false, verify_enabled?: false}
+  # What `--mode 2fa` writes.
+  defp variant("second-factor"), do: %{sign_in_enabled?: false, registration_enabled?: false}
+  defp variant("no-register"), do: %{registration_enabled?: false}
+  defp variant(_), do: %{}
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <.live_component
+      module={Components.WebAuthn}
+      id="webauthn-test"
+      strategy={@strategy}
+      auth_routes_prefix={@auth_routes_prefix}
+      live_action={@action}
+      register_path={@register_path}
+      overrides={@overrides}
+      gettext_fn={@gettext_fn}
+    />
+    """
+  end
+end
+
+defmodule AshAuthentication.Phoenix.Test.OnMountHook do
+  @moduledoc false
+  @doc false
+  def on_mount(:default, _params, _session, socket), do: {:cont, socket}
+end
+
+defmodule AshAuthentication.Phoenix.Test.WebAuthnLinkComponentsLive do
   @moduledoc false
   use Phoenix.LiveView, layout: {AshAuthentication.Phoenix.Test.HomeLive, :live}
   alias AshAuthentication.Phoenix.Components
@@ -74,14 +167,13 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
 
   @impl true
   def render(assigns) do
-    # Render the top-level WebAuthn component with a mock strategy
-    # Note: This requires the Strategy.WebAuthn struct to be available
     ~H"""
     <.live_component
       module={Components.WebAuthn}
-      id="webauthn-test"
+      id="webauthn-link-test"
       strategy={webauthn_strategy()}
       auth_routes_prefix={@auth_routes_prefix}
+      webauthn_path="/webauthn"
     />
     """
   end
@@ -89,12 +181,6 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnComponentsLive do
   defp webauthn_strategy do
     WebAuthnHelpers.mock_webauthn_strategy()
   end
-end
-
-defmodule AshAuthentication.Phoenix.Test.OnMountHook do
-  @moduledoc false
-  @doc false
-  def on_mount(:default, _params, _session, socket), do: {:cont, socket}
 end
 
 defmodule AshAuthentication.Phoenix.Test.Router do
@@ -180,6 +266,59 @@ defmodule AshAuthentication.Phoenix.Test.Router do
                   live_view: AshAuthentication.Phoenix.Test.WebAuthnComponentsLive,
                   as: :webauthn_test
 
+    # WebAuthn link mode: sign_in_route with webauthn_path set
+    sign_in_route path: "/sign-in-webauthn",
+                  auth_routes_prefix: "/auth",
+                  webauthn_path: "/webauthn",
+                  as: :sign_in_webauthn
+
+    # WebAuthn link mode with per-resource paths
+    sign_in_route path: "/sign-in-webauthn-multi",
+                  auth_routes_prefix: "/auth",
+                  webauthn_path: [user: "/webauthn", anon_user: "/webauthn-passkey-first"],
+                  as: :sign_in_webauthn_multi
+
+    # WebAuthn link mode: component with webauthn_path hardcoded
+    sign_in_route path: "/webauthn_link_test",
+                  auth_routes_prefix: "/auth",
+                  live_view: AshAuthentication.Phoenix.Test.WebAuthnLinkComponentsLive,
+                  as: :webauthn_link_test
+
+    # Dedicated WebAuthn page via webauthn_route
+    webauthn_route(Example.Accounts.User, :webauthn,
+      path: "/webauthn",
+      auth_routes_prefix: "/auth",
+      as: :webauthn_live
+    )
+
+    # Passkey-first WebAuthn page (require_identity? false)
+    webauthn_route(Example.Accounts.AnonUser, :webauthn,
+      path: "/webauthn-passkey-first",
+      auth_routes_prefix: "/auth",
+      as: :webauthn_passkey_first
+    )
+
+    # Second-factor verify page (token and step-up flows) and the setup page
+    # that wraps ManageCredentials, at their default paths.
+    webauthn_2fa_route(Example.Accounts.User, :webauthn, auth_routes_prefix: "/auth")
+    webauthn_setup_route(Example.Accounts.User, :webauthn, auth_routes_prefix: "/auth")
+
+    # The same two pages for a resource configured as `--mode 2fa` writes it
+    # (password primary, WebAuthn verify-only), whose subject is `member`.
+    auth_routes AuthController, Example.Accounts.Member, path: "/member-auth"
+
+    webauthn_2fa_route(Example.Accounts.Member, :webauthn,
+      path: "/member/webauthn-verify",
+      auth_routes_prefix: "/member-auth",
+      as: :member_webauthn
+    )
+
+    webauthn_setup_route(Example.Accounts.Member, :webauthn,
+      path: "/member/webauthn-setup",
+      auth_routes_prefix: "/member-auth",
+      as: :member_webauthn
+    )
+
     # Gettext routes
     sign_in_route path: "/anmeldung",
                   auth_routes_prefix: "/auth",
@@ -239,6 +378,11 @@ defmodule AshAuthentication.Phoenix.Test.Router do
 
     ash_authentication_live_session :test_session do
       live("/", HomeLive, :index)
+
+      # ManageCredentials and Verify2faForm against variants of the User
+      # WebAuthn strategy.
+      live("/webauthn-manage/:variant", WebAuthnManageLive, :index)
+      live("/webauthn-verify-variant/:variant", WebAuthnVerifyVariantLive, :index)
     end
   end
 
