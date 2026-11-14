@@ -11,6 +11,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v3.0.0-rc.12](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.11...v3.0.0-rc.12) (2026-11-14)
+
+
+
+
+### Bug Fixes:
+
+* disconnect LiveViews on sign-out whichever key the live socket id template reads (#788) by Zach Daniel [(#788)](https://github.com/team-alembic/ash_authentication_phoenix/pull/788)
+
+* ensure ash_authentication is properly installed at installation by [@zachdaniel](https://github.com/zachdaniel)
+
+* remove typo in german auth.po (#779) by MarcThu [(#779)](https://github.com/team-alembic/ash_authentication_phoenix/pull/779)
+
 ## [v3.0.0-rc.11](https://github.com/team-alembic/ash_authentication_phoenix/compare/v3.0.0-rc.10...v3.0.0-rc.11) (2026-09-17)
 ### Breaking Changes:
 
