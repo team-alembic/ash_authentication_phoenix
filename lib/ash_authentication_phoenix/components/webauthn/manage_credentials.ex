@@ -394,6 +394,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
         case WebAuthn.Actions.update_credential_label(
                strategy,
+               socket.assigns.current_user,
                primary_key_value(credential, socket.assigns.fields),
                label,
                tenant: socket.assigns.current_tenant,
@@ -731,7 +732,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
     do: credential |> primary_key_value(fields) |> to_string()
 
   # Whatever the credential resource's primary key is, as
-  # `Actions.update_credential_label/4` and `delete_credential/4` take it.
+  # `Actions.update_credential_label/5` and `delete_credential/4` take it.
   defp primary_key_value(credential, %{primary_key: [field]}), do: Map.get(credential, field)
 
   defp primary_key_value(_credential, %{primary_key: fields}) do
