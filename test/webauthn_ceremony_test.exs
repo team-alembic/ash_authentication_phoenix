@@ -93,6 +93,60 @@ defmodule AshAuthentication.Phoenix.WebAuthnCeremonyTest do
       refute html =~ ~r/name="token" value="ey/
     end
 
+    test "a submitted identity matches its owner in any case",
+         %{conn: conn, strategy: strategy} do
+      n = System.unique_integer([:positive])
+
+      {{:ok, _user}, passkey} =
+        Fixtures.register(strategy, %{
+          "email" => "Mixed.Case-#{n}@example.com",
+          "name" => "Someone"
+        })
+
+      {:ok, view, _html} = live(conn, "/webauthn-with-identity")
+
+      view
+      |> form("#user-webauthn-sign-in-form", %{"email" => "mixed.case-#{n}@EXAMPLE.com"})
+      |> render_change()
+
+      challenge = start_sign_in(view)
+
+      html =
+        assert_assertion(
+          view,
+          "#user-webauthn-sign-in",
+          Fixtures.assertion_event(strategy, passkey, challenge)
+        )
+
+      assert html =~ ~r/name="token" value="ey/
+      refute html =~ "Authentication failed"
+    end
+
+    test "a submitted identity belonging to another account is refused",
+         %{conn: conn, strategy: strategy} do
+      {_user, passkey} = register_user!(strategy)
+      {other_user, _other_passkey} = register_user!(strategy)
+
+      {:ok, view, _html} = live(conn, "/webauthn-with-identity")
+
+      view
+      |> form("#user-webauthn-sign-in-form", %{"email" => to_string(other_user.email)})
+      |> render_change()
+
+      challenge = start_sign_in(view)
+      event = Fixtures.assertion_event(strategy, passkey, challenge)
+
+      # The form logs every refused sign-in; this one is expected.
+      capture_log(fn ->
+        html = assert_assertion(view, "#user-webauthn-sign-in", event)
+        send(self(), {:html, html})
+      end)
+
+      assert_received {:html, html}
+      assert html =~ "Authentication failed"
+      refute html =~ ~r/name="token" value="ey/
+    end
+
     test "the sign-in challenge lists no credentials", %{conn: conn, strategy: strategy} do
       {_user, _passkey} = register_user!(strategy)
 

@@ -291,6 +291,17 @@ defmodule AshAuthentication.Phoenix.Test.Router do
       as: :webauthn_live
     )
 
+    # The same page with the optional identity input shown.
+    webauthn_route(Example.Accounts.User, :webauthn,
+      path: "/webauthn-with-identity",
+      auth_routes_prefix: "/auth",
+      overrides: [
+        AshAuthentication.Phoenix.Test.WebAuthnIdentityOverride,
+        AshAuthentication.Phoenix.Overrides.Default
+      ],
+      as: :webauthn_with_identity
+    )
+
     # Passkey-first WebAuthn page (require_identity? false)
     webauthn_route(Example.Accounts.AnonUser, :webauthn,
       path: "/webauthn-passkey-first",
