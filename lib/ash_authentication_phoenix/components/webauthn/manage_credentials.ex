@@ -408,6 +408,9 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
 
             {:noreply, socket}
 
+          {:error, %AuthenticationFailed{caused_by: %{reason: :not_found}}} ->
+            {:noreply, credential_gone(socket)}
+
           {:error, _} ->
             {:noreply, assign(socket, error_message: "Failed to rename credential.")}
         end
@@ -434,7 +437,7 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
             socket = socket |> assign(error_message: nil) |> load_credentials()
             {:noreply, socket}
 
-          {:error, _} ->
+          {:error, %AuthenticationFailed{caused_by: %{reason: :last_credential}}} ->
             warning =
               override_for(
                 socket.assigns.overrides,
@@ -443,6 +446,12 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
               )
 
             {:noreply, assign(socket, error_message: warning)}
+
+          {:error, %AuthenticationFailed{caused_by: %{reason: :not_found}}} ->
+            {:noreply, credential_gone(socket)}
+
+          {:error, _} ->
+            {:noreply, assign(socket, error_message: "Failed to delete credential.")}
         end
     end
   end
@@ -725,6 +734,16 @@ defmodule AshAuthentication.Phoenix.Components.WebAuthn.ManageCredentials do
       label when label in [nil, ""] -> nil
       label -> label
     end
+  end
+
+  # The listed credential is no longer the user's to change: removed in
+  # another tab or session since this panel loaded. Say so, and list what
+  # is actually there.
+  defp credential_gone(socket) do
+    socket
+    |> assign(editing_id: nil, editing_label: "")
+    |> load_credentials()
+    |> assign(error_message: "Credential not found.")
   end
 
   # The primary key as the string the rendered buttons and forms carry.

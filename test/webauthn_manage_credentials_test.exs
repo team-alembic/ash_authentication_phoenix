@@ -58,6 +58,20 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
     credentials
   end
 
+  # Signs `user` in on the setup page and adds a second passkey through it,
+  # returning the view and both credentials in creation order.
+  defp with_second_credential(conn, user, strategy) do
+    {:ok, view, _html} = conn |> signed_in(user) |> live("/webauthn-setup")
+    start_add(view, "webauthn_setup")
+    assert_push_event(view, "registration-challenge", %{challenge: challenge})
+    complete_add(view, "webauthn_setup", strategy, challenge)
+
+    {view, Enum.sort_by(credentials_of(strategy, user), & &1.inserted_at, DateTime)}
+  end
+
+  defp delete_button(view, credential),
+    do: element(view, ~s(button[phx-click="delete-credential"][phx-value-id="#{credential.id}"]))
+
   describe "listing and editing" do
     test "lists the user's credentials and offers to add another",
          %{conn: conn, strategy: strategy} do
@@ -96,6 +110,54 @@ defmodule AshAuthentication.Phoenix.WebAuthnManageCredentialsTest do
 
       assert html =~ "Cannot delete your last security key"
       assert html =~ "Rename"
+    end
+
+    test "deletes a credential the user has another of", %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+      {view, [first, second]} = with_second_credential(conn, user, strategy)
+
+      html = view |> delete_button(first) |> render_click()
+
+      refute html =~ "Cannot delete"
+      assert [remaining] = credentials_of(strategy, user)
+      assert remaining.id == second.id
+      refute html =~ "credential-#{first.id}"
+    end
+
+    test "a credential deleted elsewhere is reported as gone, not as the last one",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+      {view, [first, _second]} = with_second_credential(conn, user, strategy)
+
+      # Another tab removes it while this panel still lists it.
+      :ok = WebAuthn.Actions.delete_credential(strategy, user, first.id, [])
+
+      html = view |> delete_button(first) |> render_click()
+
+      assert html =~ "Credential not found"
+      refute html =~ "Cannot delete your last security key"
+      refute html =~ "credential-#{first.id}"
+    end
+
+    test "a credential deleted elsewhere is reported as gone when renamed",
+         %{conn: conn, strategy: strategy} do
+      {user, _passkey} = register_user!(strategy)
+      {view, [first, _second]} = with_second_credential(conn, user, strategy)
+
+      view
+      |> element(~s(button[phx-click="edit-label"][phx-value-id="#{first.id}"]))
+      |> render_click()
+
+      :ok = WebAuthn.Actions.delete_credential(strategy, user, first.id, [])
+
+      html =
+        view
+        |> form("#credential-#{first.id}-form", %{"label" => "Work laptop"})
+        |> render_submit()
+
+      assert html =~ "Credential not found"
+      refute html =~ "Failed to rename"
+      refute html =~ "credential-#{first.id}"
     end
   end
 
