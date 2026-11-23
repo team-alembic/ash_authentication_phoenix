@@ -23,15 +23,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   import Phoenix.Component, only: [assign: 3, assign_new: 3]
   import AshAuthentication.Phoenix.Components.Helpers
-
-  alias AshAuthentication.{
-    Info,
-    Jwt,
-    Phoenix.LiveSession,
-    Strategy.WebAuthn,
-    TokenResource.Actions
-  }
-
+  alias AshAuthentication.{Info, Jwt, Phoenix.LiveSession, TokenResource.Actions}
   alias Phoenix.LiveView.Socket
 
   @doc """
@@ -351,34 +343,15 @@ defmodule AshAuthentication.Phoenix.LiveSession do
 
   defp assign_user(socket, current_subject_name, subject, resource, subject_name, session, opts) do
     assign_new(socket, current_subject_name, fn ->
-      with {:ok, user} <- AshAuthentication.subject_to_user(subject, resource, opts),
-           true <-
-             WebAuthn.token_credential_present?(user, session_token(session, subject_name), opts) do
-        restore_metadata(user, subject_name, session)
-      else
+      case AshAuthentication.subject_to_user(
+             subject,
+             resource,
+             opts
+           ) do
+        {:ok, user} -> restore_metadata(user, subject_name, session)
         _ -> nil
       end
     end)
-  end
-
-  # The token a session was signed in with: under `<subject>_token` when the
-  # resource requires token presence, otherwise in the metadata
-  # `store_in_session/2` keeps. A passkey's tokens name it in a claim, and
-  # `WebAuthn.token_credential_present?/3` refuses one whose passkey has
-  # since been deleted, as the Plug helpers do for every request. Without
-  # `store_all_tokens?` the delete can't revoke such a token, so this is the
-  # only thing that ends its sessions before it expires.
-  defp session_token(session, subject_name) do
-    case session["#{subject_name}_token"] do
-      token when is_binary(token) ->
-        token
-
-      _ ->
-        case session["#{subject_name}_metadata"] do
-          %{token: token} when is_binary(token) -> token
-          _ -> nil
-        end
-    end
   end
 
   # `AshAuthentication.Plug.Helpers.store_in_session/2` keeps the user's

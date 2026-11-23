@@ -16,7 +16,5 @@ defmodule Example.Accounts do
     resource Example.Accounts.AnonCredential
     resource Example.Accounts.Member
     resource Example.Accounts.MemberCredential
-    resource Example.Accounts.UnstoredUser
-    resource Example.Accounts.UnstoredCredential
   end
 end

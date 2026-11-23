@@ -7,8 +7,7 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
 
   use ExUnit.Case, async: false
   alias Ash.Scope.ToOpts
-  alias AshAuthentication.{Jwt, Phoenix.LiveSession, Strategy.WebAuthn, TokenResource.Actions}
-  alias AshAuthentication.Phoenix.Test.WebAuthnFixtures, as: Fixtures
+  alias AshAuthentication.{Jwt, Phoenix.LiveSession, TokenResource.Actions}
 
   describe "on_mount with multiple authenticated resources" do
     test "loads first resource when only user credentials present" do
@@ -320,69 +319,6 @@ defmodule AshAuthentication.Phoenix.LiveSessionTest do
 
       assert result_socket.assigns.current_user.id == user.id
     end
-  end
-
-  describe "on_mount with a session a since-deleted passkey started" do
-    test "without stored tokens, the passkey's absence signs the session out" do
-      {strategy, user, passkey, _other, session, assign} =
-        passkey_session(Example.Accounts.UnstoredUser)
-
-      {:cont, before_delete} = LiveSession.on_mount(:default, %{}, session, build_socket())
-      assert before_delete.assigns[assign].id == user.id
-
-      :ok = delete_passkey(strategy, user, passkey)
-
-      {:cont, after_delete} = LiveSession.on_mount(:default, %{}, session, build_socket())
-      assert after_delete.assigns[assign] == nil
-    end
-
-    test "with stored tokens, the delete revokes the session" do
-      {strategy, user, passkey, _other, session, assign} =
-        passkey_session(Example.Accounts.AnonUser)
-
-      {:cont, before_delete} = LiveSession.on_mount(:default, %{}, session, build_socket())
-      assert before_delete.assigns[assign].id == user.id
-
-      :ok = delete_passkey(strategy, user, passkey)
-
-      {:cont, after_delete} = LiveSession.on_mount(:default, %{}, session, build_socket())
-      assert after_delete.assigns[assign] == nil
-    end
-
-    test "deleting another of the user's passkeys leaves the session signed in" do
-      {strategy, user, _passkey, other, session, assign} =
-        passkey_session(Example.Accounts.UnstoredUser)
-
-      :ok = delete_passkey(strategy, user, other)
-
-      {:cont, result_socket} = LiveSession.on_mount(:default, %{}, session, build_socket())
-      assert result_socket.assigns[assign].id == user.id
-    end
-  end
-
-  # A user of `resource` registered with one passkey, whose token the session
-  # holds as `store_in_session/2` writes it, and given a second passkey so
-  # either may be deleted.
-  defp passkey_session(resource) do
-    strategy = AshAuthentication.Info.strategy!(resource, :webauthn)
-    {{:ok, user}, passkey} = Fixtures.register(strategy, %{})
-    {{:ok, _}, other} = Fixtures.add_passkey(strategy, user)
-    {_jti, session_value} = session_identifier_for(user)
-    subject_name = to_string(AshAuthentication.Info.authentication_subject_name!(resource))
-
-    session = %{
-      subject_name => session_value,
-      "#{subject_name}_metadata" => %{token: user.__metadata__.token}
-    }
-
-    {strategy, user, passkey, other, session, String.to_existing_atom("current_#{subject_name}")}
-  end
-
-  defp delete_passkey(strategy, user, passkey) do
-    {:ok, credentials} = WebAuthn.Actions.list_credentials(strategy, user, [])
-    field = WebAuthn.credential_id_field(strategy)
-    credential = Enum.find(credentials, &(Map.fetch!(&1, field) == passkey.credential_id))
-    WebAuthn.Actions.delete_credential(strategy, user, credential.id, [])
   end
 
   defp register_and_sign_in_user(email) do

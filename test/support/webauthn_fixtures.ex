@@ -81,27 +81,6 @@ defmodule AshAuthentication.Phoenix.Test.WebAuthnFixtures do
   end
 
   @doc """
-  Add a freshly minted passkey to `user` through the strategy, as the
-  credential manager's add ceremony does. Returns the action's result and
-  the passkey.
-  """
-  @spec add_passkey(struct, struct, keyword) :: {{:ok, struct} | {:error, any}, passkey}
-  def add_passkey(strategy, user, opts \\ []) do
-    tenant = opts[:tenant]
-    {:ok, challenge} = Actions.registration_challenge(strategy, tenant)
-    passkey = new_passkey(strategy, challenge, tenant)
-
-    result =
-      Actions.add_credential(strategy, registration_params(passkey),
-        challenge: challenge,
-        user: user,
-        tenant: tenant
-      )
-
-    {result, passkey}
-  end
-
-  @doc """
   A new passkey answering `challenge` (the strategy's challenge term) for
   `strategy`'s relying party.
   """
