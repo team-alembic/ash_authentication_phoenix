@@ -124,7 +124,7 @@ if Code.ensure_loaded?(Igniter) do
       ])
       |> maybe_compose_aa_install(install?, argv)
       |> warn_on_missing_modules(options, argv, install?)
-      |> compose_phoenix_strategy_tasks(options)
+      |> compose_phoenix_strategy_tasks(options, install?)
       |> configure_token_resource_notifier(options, web_module)
     end
 
@@ -203,14 +203,32 @@ if Code.ensure_loaded?(Igniter) do
 
     defp maybe_compose_aa_install(igniter, false = _install?, _argv), do: igniter
 
-    defp compose_phoenix_strategy_tasks(igniter, options) do
+    defp compose_phoenix_strategy_tasks(igniter, options, install?) do
       strategies = List.wrap(options[:auth_strategy])
       argv = igniter.args.argv_flags
 
       Enum.reduce(strategies, igniter, fn strategy, igniter ->
         case Map.fetch(@phoenix_strategy_tasks, to_string(strategy)) do
-          {:ok, task} -> Igniter.compose_task(igniter, task, argv)
-          :error -> igniter
+          {:ok, phoenix_task} ->
+            if install? do
+              Igniter.compose_task(igniter, phoenix_task, argv)
+            else
+              strategy_argv = [
+                "--accounts",
+                inspect(options[:accounts]),
+                "--user",
+                inspect(options[:user])
+              ]
+
+              Igniter.compose_task(
+                igniter,
+                "ash_authentication_phoenix.add_strategy",
+                [to_string(strategy) | strategy_argv]
+              )
+            end
+
+          :error ->
+            igniter
         end
       end)
     end
