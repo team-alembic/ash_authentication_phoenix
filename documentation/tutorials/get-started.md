@@ -558,3 +558,32 @@ end
 ```
 
 Your new reset password functionality is active. Visit [`localhost:4000/sign-in`](http://localhost:4000/sign-in) with your browser and click on the `Forgot your password?` link to trigger the reset password workflow.
+
+## Email Confirmation
+
+To ask new users to confirm their email address, add the confirmation add-on. If you installed the password strategy with Igniter, this is already set up. Otherwise run:
+
+```bash
+mix ash_authentication.add_add_on confirmation
+mix ash_authentication_phoenix.add_add_on.confirmation
+mix ash.codegen add_confirmation
+```
+
+The first task adds a `confirmation :confirm_new_user` add-on and a sender to your user resource. The second updates the sender to use Swoosh and verified routes, if it finds a Swoosh mailer.
+
+The confirmation email links to a page served by `confirm_route`. The installer adds it to your router when you first install AshAuthenticationPhoenix; if your router doesn't have it, add it next to your `auth_routes`:
+
+**lib/example_web/router.ex**
+
+```elixir
+scope "/", ExampleWeb do
+  # [...]
+  auth_routes AuthController, Example.Accounts.User, path: "/auth"
+
+  confirm_route Example.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth"
+end
+```
+
+The second argument is the name of the confirmation add-on, and `auth_routes_prefix` must match the `path` given to `auth_routes`.
+
+See the [confirmation tutorial](https://hexdocs.pm/ash_authentication/confirmation.html) in AshAuthentication for how confirmation works and how to set it up by hand.
