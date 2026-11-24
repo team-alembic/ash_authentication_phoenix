@@ -143,6 +143,7 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
+    # sobelow_skip ["DOS.ModuleConcat"]
     defp create_interstitial_renderer(igniter, web_module) do
       module = Module.concat(web_module, AuthInterstitialHTML)
 
@@ -173,6 +174,7 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
+    # sobelow_skip ["DOS.ModuleConcat"]
     defp create_interstitial_template(igniter, web_module) do
       module = Module.concat(web_module, AuthInterstitialHTML)
 
@@ -185,6 +187,7 @@ if Code.ensure_loaded?(Igniter) do
       Igniter.create_new_file(igniter, template_path, interstitial_template(), on_exists: :skip)
     end
 
+    # sobelow_skip ["DOS.ModuleConcat"]
     defp configure_interstitial_renderer(igniter, web_module) do
       module = Module.concat(web_module, AuthInterstitialHTML)
 
