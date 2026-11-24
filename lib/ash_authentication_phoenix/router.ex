@@ -1393,15 +1393,37 @@ defmodule AshAuthentication.Phoenix.Router do
   Generates a generic, white-label confirmation page using LiveView and the components in
   `AshAuthentication.Phoenix.Components`.
 
-  This is used when `require_interaction?` is set to `true` on a confirmation strategy.
+  This is used when `require_interaction?` is set to `true` on a confirmation add-on.
+
+  Takes the user resource and the name of the confirmation add-on. For example,
+  for this add-on:
+
+  ```elixir
+  add_ons do
+    confirmation :confirm_new_user do
+      # ...
+    end
+  end
+  ```
+
+  add this route next to your `auth_routes`:
+
+  ```elixir
+  auth_routes AuthController, MyApp.Accounts.User, path: "/auth"
+
+  confirm_route MyApp.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth"
+  ```
 
   Available options are:
 
   * `path` the path under which to mount the live-view. Defaults to
-  * `auth_routes_prefix` if set, this will be used instead of route helpers when determining routes.
-    Allows disabling `helpers: true`.
+    "/<add-on name>", e.g. `"/confirm_new_user"`. The link in your confirmation
+    email must point at this path.
+  * `auth_routes_prefix` the path your `auth_routes` are mounted at. The
+    confirmation form submits to it. Set this to the same `path` you gave
+    `auth_routes`. Without it, the form falls back to router helpers, which
+    only work with the deprecated `auth_routes_for/2`.
     If a tuple `{:unscoped, path}` is provided, the path prefix will not inherit the current route scope.
-    "/<strategy>".
   * `token_as_route_param?` whether to use the token as a route parameter. i.e `<path>/:token`. Defaults to `true`.
   * `live_view` the name of the live view to render. Defaults to
     `AshAuthentication.Phoenix.ConfirmLive`.
@@ -1418,9 +1440,11 @@ defmodule AshAuthentication.Phoenix.Router do
   """
   @spec confirm_route(
           resource :: Ash.Resource.t(),
-          strategy :: atom(),
+          add_on :: atom(),
           opts :: [
             {:path, String.t()}
+            | {:auth_routes_prefix, String.t() | {:unscoped, String.t()}}
+            | {:token_as_route_param?, boolean}
             | {:live_view, module}
             | {:as, atom}
             | {:overrides, [module]}
@@ -1431,9 +1455,9 @@ defmodule AshAuthentication.Phoenix.Router do
             | {atom, any}
           ]
         ) :: Macro.t()
-  defmacro confirm_route(resource, strategy, opts \\ []) do
+  defmacro confirm_route(resource, add_on, opts \\ []) do
     opts = expand_opts_aliases(opts, __CALLER__)
-    {path, opts} = Keyword.pop(opts, :path, "/#{strategy}")
+    {path, opts} = Keyword.pop(opts, :path, "/#{add_on}")
     {live_view, opts} = Keyword.pop(opts, :live_view, AshAuthentication.Phoenix.ConfirmLive)
     {as, opts} = Keyword.pop(opts, :as, :auth)
     {otp_app, opts} = Keyword.pop(opts, :otp_app)
@@ -1485,7 +1509,7 @@ defmodule AshAuthentication.Phoenix.Router do
                  "overrides" => unquote(overrides),
                  "gettext_fn" => unquote(gettext_fn),
                  "resource" => unquote(resource),
-                 "strategy" => unquote(strategy),
+                 "strategy" => unquote(add_on),
                  "otp_app" => unquote(otp_app)
                }
              ]},
