@@ -65,6 +65,7 @@ defmodule AshAuthentication.Phoenix.Components.Helpers do
   there we can generate the name of the route helpers module.
   """
   @spec route_helpers(Socket.t()) :: module
+  # sobelow_skip ["DOS.ModuleConcat"]
   def route_helpers(socket) do
     Module.concat(socket.router, Helpers)
   end

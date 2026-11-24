@@ -274,6 +274,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   defp component_for_strategy(%{strategy_module: Strategy.Apple}), do: Components.Apple
 
+  # sobelow_skip ["DOS.ModuleConcat"]
   defp component_for_strategy(strategy) do
     strategy.__struct__
     |> Module.split()
