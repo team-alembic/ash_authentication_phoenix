@@ -9,6 +9,8 @@ defmodule AshAuthentication.Phoenix.SignInTest do
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
 
+  require Ash.Query
+
   @endpoint AshAuthentication.Phoenix.Test.Endpoint
 
   @jwt ~r/[\w-]{16,}\.[\w-]{16,}\.[\w-]{16,}/
@@ -28,6 +30,59 @@ defmodule AshAuthentication.Phoenix.SignInTest do
              "Sign in"
            )
            |> render()
+  end
+
+  test "register form renders inputs for register_action_accept fields", %{conn: conn} do
+    conn = get(conn, "/register")
+    assert {:ok, _view, html} = live(conn)
+
+    assert html =~ ~s(name="user[name]")
+  end
+
+  test "register form validates register_action_accept fields with the action's rules",
+       %{conn: conn} do
+    conn = get(conn, "/register")
+    assert {:ok, view, _html} = live(conn)
+
+    html =
+      view
+      |> form("#user-password-register-with-password", %{
+        "user" => %{
+          "email" => "custom-fields@example.com",
+          "password" => "so-secure!",
+          "password_confirmation" => "so-secure!",
+          # violates the :name attribute's `min_length: 2` constraint
+          "name" => "x"
+        }
+      })
+      |> render_submit()
+
+    assert html =~ "greater than or equal to 2"
+  end
+
+  test "register form persists register_action_accept fields", %{conn: conn} do
+    conn = get(conn, "/register")
+    assert {:ok, view, _html} = live(conn)
+
+    view
+    |> form("#user-password-register-with-password", %{
+      "user" => %{
+        "email" => "named-registrant@example.com",
+        "password" => "so-secure!",
+        "password_confirmation" => "so-secure!",
+        "name" => "Named Registrant"
+      }
+    })
+    |> render_submit()
+
+    assert_received {_ref, {:redirect, _topic, %{to: _new_to}}}
+
+    user =
+      Example.Accounts.User
+      |> Ash.Query.filter(email == "named-registrant@example.com")
+      |> Ash.read_one!(authorize?: false)
+
+    assert user.name == "Named Registrant"
   end
 
   test "sign_in routes allow a user to sign in", %{conn: conn} do

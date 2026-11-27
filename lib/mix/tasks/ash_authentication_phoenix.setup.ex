@@ -21,9 +21,16 @@ if Code.ensure_loaded?(Igniter) do
     * An `AuthController` for handling authentication callbacks
     * A `LiveUserAuth` module for LiveView authentication
     * An `AuthOverrides` module for customising authentication UI
-    * Authentication routes (`auth_routes`, `sign_in_route`, `sign_out_route`)
+    * Authentication routes (`auth_routes`, `sign_in_route`, `sign_out_route`),
+      plus the routes for the strategies the user resource already declares:
+      `reset_route` for a password strategy, `confirm_route` for a confirmation
+      add-on and `magic_sign_in_route` for a magic link strategy. A strategy
+      added later brings its routes along through its own Phoenix task.
     * Pipeline plugs for session and bearer token loading
     * Tailwind CSS configuration for authentication components
+
+    The flash messages in the generated `AuthController` go through `gettext/1`
+    when the application has a Gettext backend (`<WebModule>.Gettext`).
 
     The generated modules are namespaced under the web module that the selected
     router belongs to — read from the router's `use <WebModule>, :router` — so
@@ -88,7 +95,7 @@ if Code.ensure_loaded?(Igniter) do
         |> create_live_user_auth(web_module)
         |> create_scope_module(scope_module)
         |> AshAuthentication.Phoenix.Igniter.generate_oauth_interstitial(web_module)
-        |> add_auth_routes(overrides, options, router, web_module, scope_module)
+        |> add_auth_routes(options, router, web_module, scope_module)
         |> add_live_session_scopes(web_module, router, scope_module)
       else
         Igniter.add_warning(igniter, """
@@ -136,16 +143,13 @@ if Code.ensure_loaded?(Igniter) do
       end
     end
 
-    defp add_auth_routes(igniter, overrides, options, router, web_module, scope_module) do
+    # The routes every setup needs, then those for the strategies the user
+    # resource declares — a passkey-only resource gets no password reset page.
+    defp add_auth_routes(igniter, options, router, web_module, scope_module) do
       with {_, _source, zipper} <- Igniter.Project.Module.find_module!(igniter, router),
            {:ok, zipper} <- Igniter.Code.Common.move_to_do_block(zipper),
            :error <- Igniter.Code.Module.move_to_use(zipper, AshAuthentication.Phoenix.Router) do
-        override_module =
-          if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
-            AshAuthentication.Phoenix.Overrides.DaisyUI
-          else
-            AshAuthentication.Phoenix.Overrides.Default
-          end
+        overrides = AshAuthentication.Phoenix.Igniter.overrides_option(igniter, web_module)
 
         igniter
         |> use_authentication_phoenix_router(router)
@@ -164,31 +168,20 @@ if Code.ensure_loaded?(Igniter) do
           "/",
           """
           auth_routes AuthController, #{inspect(options[:user])}, path: "/auth"
-          sign_out_route AuthController, "/sign-out",
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
+          sign_out_route AuthController, "/sign-out", #{overrides}
 
-          # Remove these if you'd like to use your own authentication views
-          sign_in_route register_path: "/register", reset_path: "/reset", auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
-
-          # Remove this if you do not want to use the reset password feature
-          reset_route auth_routes_prefix: "/auth", overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
-
-          # Remove this if you do not use the confirmation strategy
-          confirm_route #{inspect(options[:user])},
-            :confirm_new_user,
-            auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
-
-          # Remove this if you do not use the magic link strategy.
-          magic_sign_in_route #{inspect(options[:user])},
-            :magic_link,
-            auth_routes_prefix: "/auth",
-            overrides: [#{inspect(overrides)}, #{inspect(override_module)}]
+          # Remove this if you'd like to use your own authentication views
+          sign_in_route auth_routes_prefix: "/auth", on_mount: [{#{inspect(web_module)}.LiveUserAuth, :live_no_user}],
+            #{overrides}
           """,
           with_pipelines: [:browser],
           arg2: web_module,
           router: router
+        )
+        |> AshAuthentication.Phoenix.Igniter.ensure_strategy_routes(
+          options[:user],
+          router,
+          web_module
         )
       else
         _ ->
@@ -360,7 +353,15 @@ if Code.ensure_loaded?(Igniter) do
       )
     end
 
+    # The flash messages go through `gettext/1` when the app has a Gettext
+    # backend — `use <Web>, :controller` brings it into scope in a `mix phx.new`
+    # app — and stay plain strings otherwise.
     defp create_auth_controller(igniter, otp_app, web_module) do
+      {gettext?, igniter} =
+        Igniter.Project.Module.module_exists(igniter, Module.concat(web_module, Gettext))
+
+      t = fn message -> flash_message(message, gettext?) end
+
       Igniter.Project.Module.create_module(
         igniter,
         Module.concat(web_module, AuthController),
@@ -373,9 +374,9 @@ if Code.ensure_loaded?(Igniter) do
 
           message =
             case activity do
-              {:confirm_new_user, :confirm} -> "Your email address has now been confirmed"
-              {:password, :reset} -> "Your password has successfully been reset"
-              _ -> "You are now signed in"
+              {:confirm_new_user, :confirm} -> #{t.("Your email address has now been confirmed")}
+              {:password, :reset} -> #{t.("Your password has successfully been reset")}
+              _ -> #{t.("You are now signed in")}
             end
 
           conn
@@ -397,28 +398,28 @@ if Code.ensure_loaded?(Igniter) do
                   errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
                 }
               }} ->
-                \"\"\"
-                You have already signed in another way, but have not confirmed your account.
-                You can confirm your account using the link we sent to you, or by resetting your password.
-                \"\"\"
+                #{t.(~S'''
+        You have already signed in another way, but have not confirmed your account.
+        You can confirm your account using the link we sent to you, or by resetting your password.
+        ''')}
 
               {_,
               %AshAuthentication.Errors.AuthenticationFailed{
                 caused_by: %AshAuthentication.Errors.ConfirmationRequired{}
               }} ->
-                \"\"\"
-                An account with this email already exists. We've sent a link to that
-                address - confirm it to finish linking this provider to your account.
-                \"\"\"
+                #{t.(~S'''
+        An account with this email already exists. We've sent a link to that
+        address - confirm it to finish linking this provider to your account.
+        ''')}
 
               {{:password, _}, _} ->
-                "Incorrect email or password"
+                #{t.("Incorrect email or password")}
 
               {{:magic_link, _}, _} ->
-                "Invalid or expired sign-in link"
+                #{t.("Invalid or expired sign-in link")}
 
               _ ->
-                "Authentication failed"
+                #{t.("Authentication failed")}
             end
 
           conn
@@ -431,11 +432,27 @@ if Code.ensure_loaded?(Igniter) do
 
           conn
           |> clear_session(:#{otp_app})
-          |> put_flash(:info, "You are now signed out")
+          |> put_flash(:info, #{t.("You are now signed out")})
           |> redirect(to: return_to)
         end
         """
       )
+    end
+
+    # A one-line message as a string literal; a multi-line one as a heredoc,
+    # indented to where it lands in the template above.
+    defp flash_message(message, gettext?) do
+      literal =
+        if String.contains?(message, "\n") do
+          body =
+            message |> String.split("\n", trim: true) |> Enum.map_join("\n", &("        " <> &1))
+
+          "\"\"\"\n#{body}\n        \"\"\""
+        else
+          inspect(message)
+        end
+
+      if gettext?, do: "gettext(#{literal})", else: literal
     end
 
     defp use_authentication_phoenix_router(igniter, router) do

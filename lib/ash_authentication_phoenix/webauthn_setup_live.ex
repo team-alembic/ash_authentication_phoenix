@@ -16,19 +16,24 @@ defmodule AshAuthentication.Phoenix.WebAuthnSetupLive do
 
   Mounted by the `webauthn_setup_route/3` router macro (default path
   `/webauthn-setup`). Pair with `Plug.RequireAuthenticated` (or your
-  equivalent) so only signed-in users hit it.
+  equivalent) so only signed-in users hit it. The signed-in subject is the
+  one `AshAuthentication.Phoenix.LiveSession` assigned for the strategy's
+  resource, under `current_<subject_name>`.
 
   #{AshAuthentication.Phoenix.Overrides.Overridable.generate_docs()}
   """
 
   use AshAuthentication.Phoenix.Web, :live_view
   alias AshAuthentication.Phoenix.Components
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias Phoenix.LiveView.{Rendered, Socket}
 
   @impl true
   def mount(_params, session, socket) do
     overrides =
       Map.get(session, "overrides", [AshAuthentication.Phoenix.Overrides.Default])
+
+    resource = session["resource"]
 
     socket =
       socket
@@ -39,7 +44,8 @@ defmodule AshAuthentication.Phoenix.WebAuthnSetupLive do
       |> assign(:auth_routes_prefix, session["auth_routes_prefix"])
       |> assign(:gettext_fn, session["gettext_fn"])
       |> assign(:strategy, session["strategy"])
-      |> assign(:resource, session["resource"])
+      |> assign(:resource, resource)
+      |> assign(:actor, PhoenixWebAuthn.current_subject(socket, resource))
       |> assign(:continue_path, Map.get(session, "return_to") || "/")
 
     {:ok, socket}
@@ -50,12 +56,13 @@ defmodule AshAuthentication.Phoenix.WebAuthnSetupLive do
   def render(assigns) do
     ~H"""
     <div class={override_for(@overrides, :root_class)}>
-      <%= if @current_user && @strategy do %>
+      <%= if @actor && @strategy do %>
         <.live_component
           module={Components.WebAuthn.ManageCredentials}
           id={override_for(@overrides, :webauthn_setup_id, "webauthn_setup")}
           strategy={@strategy}
-          current_user={@current_user}
+          current_user={@actor}
+          current_tenant={@current_tenant}
           overrides={@overrides}
           gettext_fn={@gettext_fn}
           continue_path={@continue_path}

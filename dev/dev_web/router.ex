@@ -46,7 +46,21 @@ defmodule DevWeb.Router do
     sign_in_route(
       path: "/sign-in",
       overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI],
-      auth_routes_prefix: "/auth"
+      auth_routes_prefix: "/auth",
+      webauthn_path: [user: "/webauthn", anon_user: "/passkey"]
+    )
+
+    webauthn_route(Example.Accounts.User, :webauthn,
+      path: "/webauthn",
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+
+    webauthn_route(Example.Accounts.AnonUser, :webauthn,
+      path: "/passkey",
+      as: :anon,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
     )
 
     totp_2fa_route(Example.Accounts.User, :totp,
@@ -59,6 +73,23 @@ defmodule DevWeb.Router do
       overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
     )
 
-    auth_routes(AuthController, Example.Accounts.User)
+    webauthn_setup_route(Example.Accounts.User, :webauthn,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+
+    webauthn_setup_route(Example.Accounts.AnonUser, :webauthn,
+      path: "/passkey-setup",
+      as: :anon_setup,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+
+    webauthn_2fa_route(Example.Accounts.User, :webauthn,
+      auth_routes_prefix: "/auth",
+      overrides: [DevWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+    )
+
+    auth_routes(AuthController, [Example.Accounts.User, Example.Accounts.AnonUser])
   end
 end

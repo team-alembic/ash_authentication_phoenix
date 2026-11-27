@@ -11,5 +11,10 @@ defmodule Example.Accounts do
     resource Example.Accounts.OidcConnection
     resource Example.Accounts.Token
     resource Example.Accounts.User
+    resource Example.Accounts.WebAuthnCredential
+    resource Example.Accounts.AnonUser
+    resource Example.Accounts.AnonCredential
+    resource Example.Accounts.Member
+    resource Example.Accounts.MemberCredential
   end
 end

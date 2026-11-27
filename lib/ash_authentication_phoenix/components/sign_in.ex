@@ -53,6 +53,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
 
   use AshAuthentication.Phoenix.Web, :live_component
   alias AshAuthentication.{Info, Phoenix.Components, Strategy}
+  alias AshAuthentication.Phoenix.WebAuthn, as: PhoenixWebAuthn
   alias Phoenix.LiveView.{Rendered, Socket}
   import AshAuthentication.Phoenix.Components.Helpers
   import Slug
@@ -83,6 +84,8 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
         fn _ -> true end
       )
 
+    webauthn_path = socket.assigns[:webauthn_path]
+
     strategies_by_resource =
       socket.assigns[:resources]
       |> Kernel.||(
@@ -92,20 +95,39 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       )
       |> Enum.sort_by(&Info.authentication_subject_name!/1)
       |> Enum.map(fn resource ->
-        resource
-        |> Info.authentication_strategies()
-        |> Enum.filter(filter_fn)
-        |> Enum.group_by(&strategy_style/1)
-        |> Map.update(:form, [], &sort_strategies_by_name/1)
-        |> Map.update(:link, [], &sort_strategies_by_name/1)
+        grouped =
+          resource
+          |> Info.authentication_strategies()
+          |> Enum.filter(filter_fn)
+          |> Enum.group_by(&strategy_style/1)
+          |> Map.update(:form, [], &sort_strategies_by_name/1)
+          |> Map.update(:link, [], &sort_strategies_by_name/1)
+          |> Map.put(:subject_label, subject_label(resource))
+
+        # WebAuthn strategies with a configured `webauthn_path` render as a
+        # link to their dedicated page instead of an inline form. The path
+        # may be a keyword list keyed by subject name, so resolve per
+        # strategy — strategies without a path keep their form.
+        {wa_links, rest_forms} =
+          Enum.split_with(grouped.form, fn strategy ->
+            match?(%AshAuthentication.Strategy.WebAuthn{}, strategy) &&
+              PhoenixWebAuthn.resolve_path(webauthn_path, strategy)
+          end)
+
+        %{grouped | form: rest_forms, link: grouped.link ++ wa_links}
+      end)
+      |> Enum.reject(fn grouped ->
+        !has_visible_strategies?(grouped.form ++ grouped.link)
       end)
 
     socket =
       socket
       |> assign(:strategies_by_resource, strategies_by_resource)
+      |> assign(:multiple_resources?, length(strategies_by_resource) > 1)
       |> assign_new(:gettext_fn, fn -> nil end)
       |> assign_new(:live_action, fn -> :sign_in end)
       |> assign_new(:path, fn -> "/" end)
+      |> assign_new(:webauthn_path, fn -> nil end)
       |> assign_new(:reset_path, fn -> nil end)
       |> assign_new(:register_path, fn -> nil end)
       |> assign_new(:current_tenant, fn -> nil end)
@@ -134,10 +156,20 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
       <%= for {strategies, i} <- Enum.with_index(@strategies_by_resource) do %>
         <% [top_strategies, bottom_strategies] = ordered_strategies(@overrides, strategies) %>
 
+        <%= if @multiple_resources? do %>
+          <.live_component
+            module={Components.HorizontalRule}
+            id={"sign-in-resource-hr-#{i}"}
+            overrides={@overrides}
+            text={strategies.subject_label}
+          />
+        <% end %>
+
         <.strategies
           live_action={@live_action}
           strategies={top_strategies}
           path={@path}
+          webauthn_path={@webauthn_path}
           auth_routes_prefix={@auth_routes_prefix}
           reset_path={@reset_path}
           register_path={@register_path}
@@ -160,6 +192,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           strategies={bottom_strategies}
           auth_routes_prefix={@auth_routes_prefix}
           path={@path}
+          webauthn_path={@webauthn_path}
           reset_path={@reset_path}
           register_path={@register_path}
           overrides={@overrides}
@@ -191,6 +224,7 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
           strategy={strategy}
           auth_routes_prefix={@auth_routes_prefix}
           path={@path}
+          webauthn_path={@webauthn_path}
           reset_path={@reset_path}
           register_path={@register_path}
           live_action={@live_action}
@@ -230,6 +264,13 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   # opts in by configuring the path its Swoosh mailbox preview is mounted at.
   defp dev_mailbox_path, do: Application.get_env(:ash_authentication, :dev_mailbox_path)
 
+  defp subject_label(resource) do
+    resource
+    |> Info.authentication_subject_name!()
+    |> to_string()
+    |> Phoenix.Naming.humanize()
+  end
+
   defp ordered_strategies(overrides, strategy_group) do
     case override_for(overrides, :strategy_display_order, :forms_first) do
       :links_first ->
@@ -257,13 +298,11 @@ defmodule AshAuthentication.Phoenix.Components.SignIn do
   defp strategy_style(%Strategy.RememberMe{}), do: nil
 
   defp strategy_style(%AshAuthentication.Strategy.WebAuthn{} = strategy) do
-    # 2FA mode: registration and sign-in are both disabled. The strategy only
-    # exposes `:verify`, which is reached via the dedicated 2FA page rather
-    # than the primary sign-in screen, so it shouldn't show up here.
-    sign_in_enabled? = Map.get(strategy, :sign_in_enabled?, true)
-    registration_enabled? = Map.get(strategy, :registration_enabled?, true)
-
-    if sign_in_enabled? or registration_enabled? do
+    # With sign-in off nothing of the strategy belongs on the sign-in page.
+    # That is the second-factor configuration: verification happens on the
+    # dedicated 2FA page, and the token exchange the strategy keeps for it
+    # (`sign_in_with_token`) is not a way to sign in from here.
+    if Map.get(strategy, :sign_in_enabled?, true) do
       :form
     else
       nil

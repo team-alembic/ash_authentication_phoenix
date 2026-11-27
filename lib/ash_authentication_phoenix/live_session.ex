@@ -214,7 +214,16 @@ defmodule AshAuthentication.Phoenix.LiveSession do
              when not is_map_key(claims, "act") <- Jwt.verify(token, otp_app, opts),
              {:ok, [_]} <-
                Actions.get_token(token_resource, %{"jti" => jti, "purpose" => "user"}, opts) do
-          {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
+          {:cont,
+           assign_user(
+             socket,
+             current_subject_name,
+             subject,
+             resource,
+             subject_name,
+             session,
+             opts
+           )}
         else
           _ ->
             {:cont, assign_new(socket, current_subject_name, fn -> nil end)}
@@ -226,7 +235,16 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         with subject when is_binary(subject) <- session[subject_name],
              {:ok, jti, subject} <- split_identifier(subject, resource),
              :ok <- validate_session_jti(resource, jti, opts) do
-          {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
+          {:cont,
+           assign_user(
+             socket,
+             current_subject_name,
+             subject,
+             resource,
+             subject_name,
+             session,
+             opts
+           )}
         else
           _ ->
             {:cont, assign_new(socket, current_subject_name, fn -> nil end)}
@@ -323,17 +341,37 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     end
   end
 
-  defp assign_user(socket, current_subject_name, subject, resource, opts) do
+  defp assign_user(socket, current_subject_name, subject, resource, subject_name, session, opts) do
     assign_new(socket, current_subject_name, fn ->
       case AshAuthentication.subject_to_user(
              subject,
              resource,
              opts
            ) do
-        {:ok, user} -> user
+        {:ok, user} -> restore_metadata(user, subject_name, session)
         _ -> nil
       end
     end)
+  end
+
+  # `AshAuthentication.Plug.Helpers.store_in_session/2` keeps the user's
+  # authentication metadata (`:token`, `:webauthn_verified_at`,
+  # `:totp_verified_at`, …) under its own session key, and
+  # `retrieve_from_session/2` puts it back on the user it loads. The same
+  # session reaches a LiveView's mount, so do the same here: without it a
+  # LiveView actor has no second-factor timestamps and no token to date its
+  # sign-in by, which `LiveSession.RequireWebAuthn` and the WebAuthn
+  # strategy's `add_credential_max_authentication_age` both rely on.
+  defp restore_metadata(user, subject_name, session) do
+    case Map.get(session, "#{subject_name}_metadata") do
+      metadata when is_map(metadata) ->
+        Enum.reduce(metadata, user, fn {key, value}, user ->
+          Ash.Resource.put_metadata(user, key, value)
+        end)
+
+      _ ->
+        user
+    end
   end
 
   # shamelessly copied from AshAuthentication.Plug.Helpers

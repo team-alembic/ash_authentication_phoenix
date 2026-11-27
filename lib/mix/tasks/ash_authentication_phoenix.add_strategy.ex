@@ -109,6 +109,28 @@ if Code.ensure_loaded?(Igniter) do
 
       - `--mode`, `-m` - Either `primary` or `2fa`. Defaults to `2fa`.
       - `--name`, `-n` - The name of the TOTP strategy. Defaults to `totp`.
+
+    ## WebAuthn options
+
+    Every flag reaches both `ash_authentication.add_strategy.webauthn`, which
+    writes the strategy, and `ash_authentication_phoenix.add_strategy.webauthn`,
+    which wires the JS hooks and the second-factor routes. Igniter merges the
+    schemas of the composed tasks, so a flag only one of them declares still
+    passes through this task.
+
+      - `--mode`, `-m` - Either `primary` (passkeys are the primary credential)
+        or `2fa` (passkeys are a second factor on top of another strategy, which
+        also mounts the verify and setup routes). Defaults to `primary`.
+      - `--passkey-only` - Passkey-first mode: the strategy gets
+        `require_identity? false` and the user resource no identity attribute;
+        users are resolved from the credential alone.
+      - `--cross-device` - Tunes the strategy for signing in with a passkey
+        held on a phone or tablet.
+      - `--no-config` - Leaves `config/dev.exs`, `config/test.exs` and
+        `config/runtime.exs` alone. The `Secrets` clauses are still generated,
+        for a project that resolves `rp_id`, `rp_name` and `origin` some other
+        way.
+      - `--name`, `-n` - The name of the WebAuthn strategy. Defaults to `webauthn`.
     """
 
     def info(_argv, _composing_task) do

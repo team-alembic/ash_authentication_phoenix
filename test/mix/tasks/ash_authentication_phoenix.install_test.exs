@@ -350,34 +350,235 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
     + |    )
     + |
-    + |    # Remove these if you'd like to use your own authentication views
+    + |    # Remove this if you'd like to use your own authentication views
     + |    sign_in_route(
-    + |      register_path: "/register",
-    + |      reset_path: "/reset",
     + |      auth_routes_prefix: "/auth",
     + |      on_mount: [{TestWeb.LiveUserAuth, :live_no_user}],
     + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
     + |    )
-    + |
-    + |    # Remove this if you do not want to use the reset password feature
-    + |    reset_route(
-    + |      auth_routes_prefix: "/auth",
-    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
-    + |    )
-    + |
-    + |    # Remove this if you do not use the confirmation strategy
-    + |    confirm_route(Test.Accounts.User, :confirm_new_user,
-    + |      auth_routes_prefix: "/auth",
-    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
-    + |    )
-    + |
-    + |    # Remove this if you do not use the magic link strategy.
-    + |    magic_sign_in_route(Test.Accounts.User, :magic_link,
-    + |      auth_routes_prefix: "/auth",
-    + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
-    + |    )
     + |  end
     """)
+  end
+
+  # The routes for a strategy's pages follow the strategy: none are generated
+  # for a resource without it, and the strategy's own task adds them.
+  describe "strategy routes" do
+    @password_only_routes ~w[reset_route register_path reset_path]
+    @all_strategy_routes @password_only_routes ++ ~w[confirm_route magic_sign_in_route]
+
+    test "a resource without strategies gets none of them", %{igniter: igniter} do
+      diff =
+        igniter
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+        |> diff(only: "lib/test_web/router.ex")
+
+      for route <- @all_strategy_routes, do: refute(diff =~ route)
+    end
+
+    test "a passkey-only resource gets none of them", %{igniter: igniter} do
+      diff =
+        igniter
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+        |> apply_igniter!()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", [
+          "webauthn",
+          "--passkey-only"
+        ])
+        |> diff(only: "lib/test_web/router.ex")
+
+      for route <- @all_strategy_routes, do: refute(diff =~ route)
+    end
+
+    test "adding the password strategy adds the reset route and the sign-in page's paths", %{
+      igniter: igniter,
+      base_override: base_override
+    } do
+      igniter
+      |> Igniter.compose_task("ash_authentication_phoenix.install")
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["password"])
+      |> assert_has_patch("lib/test_web/router.ex", """
+      + |      register_path: "/register",
+      + |      reset_path: "/reset"
+      """)
+      |> assert_has_patch("lib/test_web/router.ex", """
+      + |    reset_route(
+      + |      auth_routes_prefix: "/auth",
+      + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
+      + |    )
+      """)
+      |> assert_has_patch("lib/test_web/router.ex", """
+      + |    confirm_route(Test.Accounts.User, :confirm_new_user,
+      + |      auth_routes_prefix: "/auth",
+      """)
+    end
+
+    test "adding the password strategy is idempotent", %{igniter: igniter} do
+      igniter
+      |> Igniter.compose_task("ash_authentication_phoenix.install")
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["password"])
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["password"])
+      |> assert_unchanged("lib/test_web/router.ex")
+    end
+
+    test "adding the magic link strategy adds its route, named after the strategy", %{
+      igniter: igniter,
+      base_override: base_override
+    } do
+      diff =
+        igniter
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+        |> apply_igniter!()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["magic_link"])
+        |> assert_has_patch("lib/test_web/router.ex", """
+        + |    magic_sign_in_route(Test.Accounts.User, :magic_link,
+        + |      auth_routes_prefix: "/auth",
+        + |      overrides: [TestWeb.AuthOverrides, #{base_override}]
+        + |    )
+        """)
+        |> diff(only: "lib/test_web/router.ex")
+
+      for route <- @password_only_routes, do: refute(diff =~ route)
+    end
+
+    test "setting up a resource that already has the password strategy adds its routes", %{
+      igniter: igniter,
+      base_override: base_override
+    } do
+      igniter
+      |> Igniter.compose_task("ash_authentication.add_strategy.password")
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_authentication_phoenix.install")
+      |> assert_has_patch("lib/test_web/router.ex", """
+      + |    sign_in_route(
+      + |      auth_routes_prefix: "/auth",
+      + |      on_mount: [{TestWeb.LiveUserAuth, :live_no_user}],
+      + |      overrides: [TestWeb.AuthOverrides, #{base_override}],
+      + |      register_path: "/register",
+      + |      reset_path: "/reset"
+      + |    )
+      """)
+      |> assert_has_patch("lib/test_web/router.ex", """
+      + |    reset_route(
+      """)
+      |> assert_has_patch("lib/test_web/router.ex", """
+      + |    confirm_route(Test.Accounts.User, :confirm_new_user,
+      """)
+    end
+
+    test "paths set by hand on sign_in_route are kept", %{igniter: igniter} do
+      igniter =
+        igniter
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+        |> apply_igniter!()
+        |> Igniter.update_elixir_file("lib/test_web/router.ex", fn zipper ->
+          with {:ok, zipper} <-
+                 Igniter.Code.Function.move_to_function_call(zipper, :sign_in_route, 1) do
+            Igniter.Code.Function.update_nth_argument(zipper, 0, fn zipper ->
+              Igniter.Code.Keyword.set_keyword_key(zipper, :register_path, "/join")
+            end)
+          end
+        end)
+        |> apply_igniter!()
+        |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["password"])
+
+      diff = diff(igniter, only: "lib/test_web/router.ex")
+      refute diff =~ ~s|register_path: "/register"|
+      assert diff =~ ~s|reset_path: "/reset"|
+    end
+
+    test "a router with its own sign-in views is left alone", %{igniter: igniter} do
+      igniter
+      |> Igniter.compose_task("ash_authentication_phoenix.install")
+      |> apply_igniter!()
+      |> Igniter.update_elixir_file("lib/test_web/router.ex", fn zipper ->
+        with {:ok, zipper} <-
+               Igniter.Code.Function.move_to_function_call(zipper, :sign_in_route, 1) do
+          {:ok, Sourceror.Zipper.remove(zipper)}
+        end
+      end)
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_authentication_phoenix.add_strategy", ["password"])
+      |> assert_unchanged("lib/test_web/router.ex")
+    end
+  end
+
+  describe "the auth controller's flash messages" do
+    test "go through gettext when the app has a Gettext backend", %{igniter: igniter} do
+      igniter =
+        igniter
+        |> Igniter.Project.Module.create_module(TestWeb.Gettext, """
+        use Gettext.Backend, otp_app: :test
+        """)
+        |> apply_igniter!()
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+
+      controller =
+        igniter
+        |> assert_creates("lib/test_web/controllers/auth_controller.ex")
+        |> diff(only: "lib/test_web/controllers/auth_controller.ex")
+
+      assert controller =~ ~s|gettext("You are now signed out")|
+      assert controller =~ ~s|gettext("You are now signed in")|
+      assert controller =~ ~s|gettext("Incorrect email or password")|
+      assert controller =~ ~s|gettext("Authentication failed")|
+
+      assert controller =~ """
+             gettext(\"\"\"
+             """
+
+      refute controller =~ ~s|"You are now signed out"\n|
+    end
+
+    test "stay plain strings otherwise", %{igniter: igniter} do
+      controller =
+        igniter
+        |> Igniter.compose_task("ash_authentication_phoenix.install")
+        |> diff(only: "lib/test_web/controllers/auth_controller.ex")
+
+      refute controller =~ "gettext("
+    end
+  end
+
+  # A project that has ash_authentication, but not as a `{:ash_authentication,
+  # ...}` tuple in `mix.exs` — declared through a helper, or by an umbrella's
+  # parent — must not have a second one added.
+  describe "the ash_authentication dependency" do
+    defp bare_project(files) do
+      test_project(files: files)
+      |> Igniter.Project.Deps.add_dep({:simple_sat, ">= 0.0.0"})
+      |> Igniter.Project.Formatter.add_formatter_plugin(Spark.Formatter)
+      |> Igniter.Project.Module.create_module(TestWeb.Router, """
+      use TestWeb, :router
+
+      pipeline :browser do
+        plug :accepts, ["html"]
+      end
+      """)
+      |> apply_igniter!()
+    end
+
+    test "is added when the project has none, at this release's requirement" do
+      bare_project(%{})
+      |> Igniter.compose_task("ash_authentication_phoenix.install", ["--yes"])
+      |> assert_has_patch("mix.exs", """
+      + |      {:ash_authentication, "~> 5.0-rc"},
+      """)
+    end
+
+    test "is not added when the lock file already has it" do
+      lock =
+        ~s|%{\n  "ash_authentication": {:hex, :ash_authentication, "5.0.0-rc.16", "", [:mix], [], "hexpm", ""},\n}\n|
+
+      diff =
+        bare_project(%{"mix.lock" => lock})
+        |> Igniter.compose_task("ash_authentication_phoenix.install", ["--yes"])
+        |> diff(only: "mix.exs")
+
+      refute diff =~ ":ash_authentication"
+    end
   end
 
   defp maybe_add_daisy_ui(igniter, %{daisy_ui: true}) do
