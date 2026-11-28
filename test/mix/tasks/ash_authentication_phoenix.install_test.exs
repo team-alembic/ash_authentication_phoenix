@@ -55,6 +55,27 @@ defmodule Mix.Tasks.AshAuthenticationPhoenix.InstallTest do
     |> assert_unchanged()
   end
 
+  test "installation adds selected strategies to an existing authentication resource", %{
+    igniter: igniter
+  } do
+    igniter
+    |> Igniter.compose_task("ash_authentication_phoenix.install", [
+      "--auth-strategy",
+      "password",
+      "--accounts",
+      "Test.Accounts",
+      "--user",
+      "Test.Accounts.User",
+      "--token",
+      "Test.Accounts.Token"
+    ])
+    |> assert_has_patch("lib/test/accounts/user.ex", """
+    + |    strategies do
+    + |      password :password do
+    + |        identity_field(:email)
+    """)
+  end
+
   test "installation modifies the .formatter.exs", %{igniter: igniter} do
     igniter
     |> Igniter.compose_task("ash_authentication_phoenix.install")
