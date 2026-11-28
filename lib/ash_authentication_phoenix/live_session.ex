@@ -210,8 +210,8 @@ defmodule AshAuthentication.Phoenix.LiveSession do
     default_scope_subject = session["default_scope"]
     opts = [tenant: tenant, context: context]
 
-    otp_app = otp_app_from_socket(socket)
-    resources = resources || AshAuthentication.authenticated_resources(otp_app)
+    resources =
+      resources || AshAuthentication.authenticated_resources(otp_app_from_socket(socket))
 
     resources
     |> Stream.map(
@@ -227,8 +227,7 @@ defmodule AshAuthentication.Phoenix.LiveSession do
         with token when is_binary(token) <-
                session[session_key],
              {:ok, %{"sub" => subject, "jti" => jti} = claims, _}
-             when not is_map_key(claims, "act") <-
-               Jwt.verify(token, otp_app, Keyword.put(opts, :resources, resources)),
+             when not is_map_key(claims, "act") <- Jwt.verify(token, resources, opts),
              {:ok, [_]} <-
                Actions.get_token(token_resource, %{"jti" => jti, "purpose" => "user"}, opts) do
           {:cont, assign_user(socket, current_subject_name, subject, resource, opts)}
