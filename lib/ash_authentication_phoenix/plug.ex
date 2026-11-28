@@ -18,6 +18,8 @@ defmodule AshAuthentication.Phoenix.Plug do
 
   A wrapper around `AshAuthentication.Plug.Helpers.sign_in_with_remember_me/2`
   with the `otp_app` as extracted from the endpoint.
+
+  Pass `:resources`, a list of authenticated resources, to sign in only those.
   """
   @spec sign_in_with_remember_me(Conn.t(), keyword) :: Conn.t()
   def sign_in_with_remember_me(conn, opts) do
@@ -32,6 +34,11 @@ defmodule AshAuthentication.Phoenix.Plug do
 
   A wrapper around `AshAuthentication.Plug.Helpers.retrieve_from_session/2`
   with the `otp_app` as extracted from the endpoint.
+
+  Pass `:resources`, a list of authenticated resources, to load and assign
+  only those:
+
+      plug :load_from_session, resources: [MyApp.Accounts.User]
   """
   @spec load_from_session(Conn.t(), keyword) :: Conn.t()
   def load_from_session(conn, opts) do
@@ -46,6 +53,9 @@ defmodule AshAuthentication.Phoenix.Plug do
 
   A wrapper around `AshAuthentication.Plug.Helpers.retrieve_from_bearer/2` with
   the `otp_app` as extracted from the endpoint.
+
+  Pass `:resources`, a list of authenticated resources, to accept only their
+  tokens.
   """
   @spec load_from_bearer(Conn.t(), keyword) :: Conn.t()
   def load_from_bearer(conn, opts) do

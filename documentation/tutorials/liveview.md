@@ -140,6 +140,38 @@ posts = MyApp.Blog.list_posts!(scope: socket.assigns.current_scope)
 
 See the [Scopes](scopes.md) guide for the full picture.
 
+## Limiting sessions to some resources
+
+The session helpers load, assign and revoke every authenticated resource of your
+otp app. When your resources are served apart, for example customers and staff
+on two endpoints with their own session cookies, pass `:resources` to work on
+some of them only:
+
+```elixir
+pipeline :browser do
+  # ...
+  plug :load_from_session, resources: [MyApp.Accounts.User]
+end
+
+ash_authentication_live_session :authentication_required,
+  resources: [MyApp.Accounts.User] do
+  live "/protected_route", ProjectLive.Index, :index
+end
+```
+
+and in your auth controller:
+
+```elixir
+def sign_out(conn, _params) do
+  conn
+  |> clear_session(resources: [MyApp.Accounts.User])
+  |> redirect(to: ~p"/")
+end
+```
+
+A resource that is not listed is never loaded, assigned or revoked, and a token
+whose subject names it does not verify.
+
 ## Automatic Session Disconnection on Sign Out
 
 When configured, AshAuthentication.Phoenix can automatically disconnect all LiveView

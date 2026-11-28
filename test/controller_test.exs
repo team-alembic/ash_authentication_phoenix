@@ -6,6 +6,8 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
   @moduledoc false
   use AshAuthentication.Phoenix.Test.ConnCase
 
+  alias AshAuthentication.{Jwt, Phoenix.Controller, TokenResource.Actions}
+
   describe "AshAuthentication Controller" do
     test "sign-in renders", %{conn: conn} do
       assert_mount_render(conn, ~p"/sign-in", "Sign in")
@@ -104,6 +106,50 @@ defmodule AshAuthentication.Phoenix.ControllerTest do
 
       assert html_response(conn, 200) =~ "Are you sure you want to sign out?"
     end
+  end
+
+  describe "clear_session/2" do
+    test "with the resources option it revokes only the sessions of the listed resources", %{
+      conn: conn
+    } do
+      {user_jti, user_session} = signed_in_session(Example.Accounts.User, "clear-user@email")
+      {admin_jti, admin_session} = signed_in_session(Example.Accounts.Admin, "clear-admin@email")
+
+      conn =
+        conn
+        |> put_private(:phoenix_endpoint, AshAuthentication.Phoenix.Test.Endpoint)
+        |> init_test_session(%{"user" => user_session, "admin" => admin_session})
+        |> Controller.clear_session(resources: [Example.Accounts.Admin])
+
+      assert Actions.jti_revoked?(Example.Accounts.Token, admin_jti)
+      refute Actions.jti_revoked?(Example.Accounts.Token, user_jti)
+      assert get_session(conn) == %{}
+    end
+
+    test "it rejects an unknown option", %{conn: conn} do
+      assert_raise ArgumentError, fn ->
+        Controller.clear_session(conn, resource: [Example.Accounts.User])
+      end
+    end
+  end
+
+  defp signed_in_session(resource, email) do
+    resource
+    |> Ash.Changeset.for_create(:register_with_password, %{
+      email: email,
+      password: "secure-password",
+      password_confirmation: "secure-password"
+    })
+    |> Ash.create!()
+
+    signed_in =
+      resource
+      |> Ash.Query.for_read(:sign_in_with_password, %{email: email, password: "secure-password"})
+      |> Ash.read_one!()
+
+    {:ok, %{"sub" => subject, "jti" => jti}} = Jwt.peek(signed_in.__metadata__.token)
+
+    {jti, jti <> ":" <> subject}
   end
 
   defp sign_in_user(conn, strategy, email, password) do

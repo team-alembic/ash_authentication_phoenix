@@ -52,6 +52,34 @@ defmodule AshAuthentication.Phoenix.PlugTest do
     end
   end
 
+  describe "load_from_session/2" do
+    test "with the resources option it loads only the listed resources" do
+      user = register_user("load-from-session-user@example.com")
+
+      admin =
+        Example.Accounts.Admin
+        |> Ash.Changeset.for_create(:register_with_password, %{
+          email: "load-from-session-admin@example.com",
+          password: "secure-password",
+          password_confirmation: "secure-password"
+        })
+        |> Ash.create!()
+
+      conn =
+        conn(:get, "/")
+        |> Plug.Conn.put_private(:phoenix_endpoint, AshAuthentication.Phoenix.Test.Endpoint)
+        |> init_test_session(%{
+          "user" => "jti:" <> AshAuthentication.user_to_subject(user),
+          "admin" => "jti:" <> AshAuthentication.user_to_subject(admin)
+        })
+        |> AuthPlug.load_from_session(resources: [Example.Accounts.User])
+
+      assert conn.assigns.current_user.id == user.id
+      refute Map.has_key?(conn.assigns, :current_admin)
+      assert Plug.Conn.get_session(conn, "admin")
+    end
+  end
+
   describe "set_scope/2" do
     test "wraps the current subject and tenant in the scope struct" do
       user = register_user("set-scope-user@example.com")

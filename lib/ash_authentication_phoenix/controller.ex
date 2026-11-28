@@ -272,13 +272,37 @@ defmodule AshAuthentication.Phoenix.Controller do
   Clears the session and revokes bearer and session tokens.
 
   This ensures that session tokens & bearer tokens are revoked on logout.
+
+  Takes the otp app whose authenticated resources to sign out, or options:
+
+    * `:resources` - a list of authenticated resources to sign out, in place of
+      every authenticated resource of the otp app. Remember me cookies, bearer
+      tokens and session tokens of any other resource are left alone.
+    * `:otp_app` - the otp app. Defaults to the endpoint's.
+
+  ```elixir
+  clear_session(conn, resources: [MyApp.Accounts.User])
+  ```
   """
-  def clear_session(conn, otp_app) do
+  def clear_session(conn, otp_app_or_opts) do
+    {otp_app, opts} = otp_app_and_opts(conn, otp_app_or_opts)
+
     conn
-    |> RememberMe.Plug.Helpers.delete_all_remember_me_cookies(otp_app)
-    |> Helpers.revoke_bearer_tokens(otp_app)
-    |> Helpers.revoke_session_tokens(otp_app)
+    |> RememberMe.Plug.Helpers.delete_all_remember_me_cookies(otp_app, opts)
+    |> Helpers.revoke_bearer_tokens(otp_app, opts)
+    |> Helpers.revoke_session_tokens(otp_app, opts)
     |> Plug.Conn.clear_session()
+  end
+
+  defp otp_app_and_opts(conn, otp_app_or_opts) do
+    if Keyword.keyword?(otp_app_or_opts) do
+      opts = Keyword.validate!(otp_app_or_opts, [:otp_app, :resources])
+      otp_app = opts[:otp_app] || conn.private.phoenix_endpoint.config(:otp_app)
+
+      {otp_app, Keyword.take(opts, [:resources])}
+    else
+      {otp_app_or_opts, []}
+    end
   end
 
   @doc """
